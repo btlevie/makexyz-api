@@ -7,6 +7,37 @@
 import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
+export class AddressSchema extends BaseModel {
+  static $columns = ['city', 'country', 'createdAt', 'customerId', 'id', 'label', 'line1', 'line2', 'ownerType', 'postalCode', 'state', 'updatedAt', 'vendorId'] as const
+  $columns = AddressSchema.$columns
+  @column()
+  declare city: string
+  @column()
+  declare country: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare label: string | null
+  @column()
+  declare line1: string
+  @column()
+  declare line2: string | null
+  @column()
+  declare ownerType: string
+  @column()
+  declare postalCode: string
+  @column()
+  declare state: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number | null
+}
+
 export class AuthAccessTokenSchema extends BaseModel {
   static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
   $columns = AuthAccessTokenSchema.$columns
@@ -32,6 +63,33 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class CustomerSchema extends BaseModel {
+  static $columns = ['companyName', 'createdAt', 'firstName', 'id', 'lastName', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
+  $columns = CustomerSchema.$columns
+  @column()
+  declare companyName: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare firstName: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare lastName: string | null
+  @column()
+  declare paypalCustomerId: string | null
+  @column()
+  declare quickbooksCustomerId: string | null
+  @column()
+  declare stripeCustomerId: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number | null
+  @column()
+  declare uuid: string
+}
+
 export class RememberMeTokenSchema extends BaseModel {
   static $columns = ['createdAt', 'expiresAt', 'hash', 'id', 'tokenableId', 'updatedAt'] as const
   $columns = RememberMeTokenSchema.$columns
@@ -50,7 +108,7 @@ export class RememberMeTokenSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'updatedAt'] as const
+  static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'role', 'updatedAt'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -62,6 +120,33 @@ export class UserSchema extends BaseModel {
   declare id: number
   @column({ serializeAs: null })
   declare password: string
+  @column()
+  declare role: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+}
+
+export class VendorSchema extends BaseModel {
+  static $columns = ['createdAt', 'displayName', 'id', 'paypalAccountId', 'quickbooksVendorId', 'stripeAccountId', 'taxStatus', 'updatedAt', 'userId', 'uuid'] as const
+  $columns = VendorSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare displayName: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare paypalAccountId: string | null
+  @column()
+  declare quickbooksVendorId: string | null
+  @column()
+  declare stripeAccountId: string | null
+  @column()
+  declare taxStatus: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number | null
+  @column()
+  declare uuid: string
 }
