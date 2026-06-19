@@ -5,5 +5,338 @@
  */
 
 import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { DateTime } from 'luxon'
 
+export class AddressSchema extends BaseModel {
+  static $columns = ['city', 'country', 'createdAt', 'customerId', 'id', 'label', 'line1', 'line2', 'ownerType', 'postalCode', 'state', 'updatedAt', 'vendorId'] as const
+  $columns = AddressSchema.$columns
+  @column()
+  declare city: string
+  @column()
+  declare country: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare label: string | null
+  @column()
+  declare line1: string
+  @column()
+  declare line2: string | null
+  @column()
+  declare ownerType: string
+  @column()
+  declare postalCode: string
+  @column()
+  declare state: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number | null
+}
 
+export class AuthAccessTokenSchema extends BaseModel {
+  static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
+  $columns = AuthAccessTokenSchema.$columns
+  @column()
+  declare abilities: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+  @column()
+  declare hash: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column.dateTime()
+  declare lastUsedAt: DateTime | null
+  @column()
+  declare name: string | null
+  @column()
+  declare tokenableId: number
+  @column()
+  declare type: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class CustomerSchema extends BaseModel {
+  static $columns = ['companyName', 'createdAt', 'firstName', 'id', 'lastName', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
+  $columns = CustomerSchema.$columns
+  @column()
+  declare companyName: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare firstName: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare lastName: string | null
+  @column()
+  declare paypalCustomerId: string | null
+  @column()
+  declare quickbooksCustomerId: string | null
+  @column()
+  declare stripeCustomerId: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number | null
+  @column()
+  declare uuid: string
+}
+
+export class FeeSchema extends BaseModel {
+  static $columns = ['createdAt', 'defaultAmount', 'description', 'id', 'name', 'updatedAt'] as const
+  $columns = FeeSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare defaultAmount: string
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare name: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class OrderFeeSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'feeId', 'id', 'orderId'] as const
+  $columns = OrderFeeSchema.$columns
+  @column()
+  declare amount: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare feeId: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare orderId: number | null
+}
+
+export class OrderStatusHistorySchema extends BaseModel {
+  static $columns = ['changedById', 'createdAt', 'id', 'newStatus', 'oldStatus', 'orderId'] as const
+  $columns = OrderStatusHistorySchema.$columns
+  @column()
+  declare changedById: number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare newStatus: string
+  @column()
+  declare oldStatus: string
+  @column()
+  declare orderId: number | null
+}
+
+export class OrderSchema extends BaseModel {
+  static $columns = ['createdAt', 'customerId', 'externalReference', 'id', 'orderNumber', 'projectId', 'quoteId', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid', 'vendorId'] as const
+  $columns = OrderSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column()
+  declare externalReference: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare orderNumber: string
+  @column()
+  declare projectId: number | null
+  @column()
+  declare quoteId: number | null
+  @column()
+  declare status: string
+  @column()
+  declare subtotal: string
+  @column()
+  declare tax: string
+  @column()
+  declare total: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+  @column()
+  declare vendorId: number | null
+}
+
+export class ProjectFileSchema extends BaseModel {
+  static $columns = ['color', 'createdAt', 'fileSize', 'id', 'infill', 'layerHeight', 'material', 'mimeType', 'originalName', 'projectId', 'quantity', 'storagePath', 'updatedAt', 'volume', 'x', 'y', 'z'] as const
+  $columns = ProjectFileSchema.$columns
+  @column()
+  declare color: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare fileSize: bigint | number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare infill: number
+  @column()
+  declare layerHeight: number
+  @column()
+  declare material: string
+  @column()
+  declare mimeType: string
+  @column()
+  declare originalName: string
+  @column()
+  declare projectId: number | null
+  @column()
+  declare quantity: number
+  @column()
+  declare storagePath: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare volume: number
+  @column()
+  declare x: number
+  @column()
+  declare y: number
+  @column()
+  declare z: number
+}
+
+export class ProjectSchema extends BaseModel {
+  static $columns = ['createdAt', 'customerId', 'description', 'id', 'metadata', 'status', 'title', 'updatedAt', 'uuid'] as const
+  $columns = ProjectSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare metadata: any | null
+  @column()
+  declare status: string
+  @column()
+  declare title: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+}
+
+export class QuoteFeeSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'feeId', 'id', 'quoteId'] as const
+  $columns = QuoteFeeSchema.$columns
+  @column()
+  declare amount: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare feeId: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare quoteId: number | null
+}
+
+export class QuoteSchema extends BaseModel {
+  static $columns = ['createdAt', 'createdById', 'id', 'notes', 'projectId', 'revision', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
+  $columns = QuoteSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare createdById: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare notes: string | null
+  @column()
+  declare projectId: number | null
+  @column()
+  declare revision: number
+  @column()
+  declare status: string
+  @column()
+  declare subtotal: string
+  @column()
+  declare tax: string
+  @column()
+  declare total: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+}
+
+export class RememberMeTokenSchema extends BaseModel {
+  static $columns = ['createdAt', 'expiresAt', 'hash', 'id', 'tokenableId', 'updatedAt'] as const
+  $columns = RememberMeTokenSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column()
+  declare hash: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare tokenableId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime
+}
+
+export class UserSchema extends BaseModel {
+  static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'role', 'updatedAt', 'uuid'] as const
+  $columns = UserSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare email: string
+  @column()
+  declare fullName: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column({ serializeAs: null })
+  declare password: string
+  @column()
+  declare role: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+}
+
+export class VendorSchema extends BaseModel {
+  static $columns = ['createdAt', 'displayName', 'id', 'paypalAccountId', 'quickbooksVendorId', 'stripeAccountId', 'taxStatus', 'updatedAt', 'userId', 'uuid'] as const
+  $columns = VendorSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare displayName: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare paypalAccountId: string | null
+  @column()
+  declare quickbooksVendorId: string | null
+  @column()
+  declare stripeAccountId: string | null
+  @column()
+  declare taxStatus: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number | null
+  @column()
+  declare uuid: string
+}
