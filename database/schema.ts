@@ -90,6 +90,68 @@ export class CustomerSchema extends BaseModel {
   declare uuid: string
 }
 
+export class ProjectFileSchema extends BaseModel {
+  static $columns = ['color', 'createdAt', 'fileSize', 'id', 'infill', 'layerHeight', 'material', 'mimeType', 'originalName', 'projectId', 'quantity', 'storagePath', 'updatedAt', 'volume', 'x', 'y', 'z'] as const
+  $columns = ProjectFileSchema.$columns
+  @column()
+  declare color: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare fileSize: bigint | number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare infill: number
+  @column()
+  declare layerHeight: number
+  @column()
+  declare material: string
+  @column()
+  declare mimeType: string
+  @column()
+  declare originalName: string
+  @column()
+  declare projectId: number | null
+  @column()
+  declare quantity: number
+  @column()
+  declare storagePath: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare volume: number
+  @column()
+  declare x: number
+  @column()
+  declare y: number
+  @column()
+  declare z: number
+}
+
+export class ProjectSchema extends BaseModel {
+  static $columns = ['createdAt', 'customerId', 'description', 'id', 'metadata', 'status', 'title', 'updatedAt', 'uuid'] as const
+  $columns = ProjectSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare metadata: any | null
+  @column()
+  declare status: string
+  @column()
+  declare title: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+}
+
 export class RememberMeTokenSchema extends BaseModel {
   static $columns = ['createdAt', 'expiresAt', 'hash', 'id', 'tokenableId', 'updatedAt'] as const
   $columns = RememberMeTokenSchema.$columns
