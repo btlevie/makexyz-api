@@ -63,6 +63,25 @@ export class AuthAccessTokenSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class CheckoutSessionSchema extends BaseModel {
+  static $columns = ['createdAt', 'customerId', 'id', 'projetId', 'quoteId', 'status', 'updatedAt'] as const
+  $columns = CheckoutSessionSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare projetId: number | null
+  @column()
+  declare quoteId: number | null
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class CustomerSchema extends BaseModel {
   static $columns = ['companyName', 'createdAt', 'firstName', 'id', 'lastName', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
   $columns = CustomerSchema.$columns
@@ -170,6 +189,41 @@ export class OrderSchema extends BaseModel {
   declare uuid: string
   @column()
   declare vendorId: number | null
+}
+
+export class PaymentSchema extends BaseModel {
+  static $columns = ['amount', 'authorizedAt', 'cancelledAt', 'capturedAt', 'checkoutSessionId', 'createdAt', 'failedAt', 'id', 'netAmount', 'provider', 'providerFee', 'refundedAt', 'status', 'transactionId', 'updatedAt'] as const
+  $columns = PaymentSchema.$columns
+  @column()
+  declare amount: string
+  @column.dateTime()
+  declare authorizedAt: DateTime | null
+  @column.dateTime()
+  declare cancelledAt: DateTime | null
+  @column.dateTime()
+  declare capturedAt: DateTime | null
+  @column()
+  declare checkoutSessionId: number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column.dateTime()
+  declare failedAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare netAmount: string
+  @column()
+  declare provider: string | null
+  @column()
+  declare providerFee: string
+  @column.dateTime()
+  declare refundedAt: DateTime | null
+  @column()
+  declare status: string
+  @column()
+  declare transactionId: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class ProjectFileSchema extends BaseModel {
