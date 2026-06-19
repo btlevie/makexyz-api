@@ -15,7 +15,6 @@ export default class extends BaseSchema {
       table.double('x').notNullable()
       table.double('y').notNullable()
       table.double('z').notNullable()
-      table.integer('quantity').notNullable()
       table.string('color').notNullable()
       table.integer('infill').notNullable()
       table.double('layer_height').notNullable()

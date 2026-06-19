@@ -227,7 +227,7 @@ export class PaymentSchema extends BaseModel {
 }
 
 export class ProjectFileSchema extends BaseModel {
-  static $columns = ['color', 'createdAt', 'fileSize', 'id', 'infill', 'layerHeight', 'material', 'mimeType', 'originalName', 'projectId', 'quantity', 'storagePath', 'updatedAt', 'volume', 'x', 'y', 'z'] as const
+  static $columns = ['color', 'createdAt', 'fileSize', 'id', 'infill', 'layerHeight', 'material', 'mimeType', 'originalName', 'projectId', 'storagePath', 'updatedAt', 'volume', 'x', 'y', 'z'] as const
   $columns = ProjectFileSchema.$columns
   @column()
   declare color: string
@@ -249,8 +249,6 @@ export class ProjectFileSchema extends BaseModel {
   declare originalName: string
   @column()
   declare projectId: number | null
-  @column()
-  declare quantity: number
   @column()
   declare storagePath: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -301,6 +299,31 @@ export class QuoteFeeSchema extends BaseModel {
   declare id: number
   @column()
   declare quoteId: number | null
+}
+
+export class QuoteItemSchema extends BaseModel {
+  static $columns = ['createdAt', 'description', 'id', 'itemType', 'projectFileId', 'quantity', 'quoteId', 'total', 'unitPrice', 'updatedAt'] as const
+  $columns = QuoteItemSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare itemType: string | null
+  @column()
+  declare projectFileId: number | null
+  @column()
+  declare quantity: number
+  @column()
+  declare quoteId: number | null
+  @column()
+  declare total: string
+  @column()
+  declare unitPrice: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class QuoteSchema extends BaseModel {
