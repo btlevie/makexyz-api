@@ -15,6 +15,7 @@ export default class extends BaseSchema {
       table.decimal('total', 12, 2).notNullable()
       table.enum('status', ['draft', 'sent', 'accepted', 'rejected']).notNullable().defaultTo('draft')
       table.text('notes').nullable()
+      table.enum('generated_by', ['system', 'user']).notNullable().defaultTo('system')
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

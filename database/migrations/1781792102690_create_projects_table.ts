@@ -10,7 +10,7 @@ export default class extends BaseSchema {
       table.integer('customer_id').unsigned().references('id').inTable('customers').onDelete('SET NULL')
       table.string('title')
       table.text('description').nullable()
-      table.enum('status', ['draft', 'submitted', 'quoted', 'awaiting_checkout', 'ordered', 'fulfilled', 'cancelled']).notNullable().defaultTo('draft')
+      table.enum('status', ['draft' , 'quoted', 'awaiting_checkout', 'ordered', 'fulfilled', 'cancelled']).notNullable().defaultTo('draft')
       table.jsonb('metadata').nullable()
 
       table.timestamp('created_at')

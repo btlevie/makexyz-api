@@ -7,6 +7,7 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table.integer('project_id').unsigned().references('id').inTable('projects').onDelete('SET NULL')
+      table.integer('material_id').unsigned().references('id').inTable('materials').onDelete('SET NULL')
       table.string('storage_path').notNullable()
       table.string('original_name').notNullable()
       table.string('mime_type').notNullable()
@@ -18,7 +19,6 @@ export default class extends BaseSchema {
       table.string('color').notNullable()
       table.integer('infill').notNullable()
       table.double('layer_height').notNullable()
-      table.string('material').notNullable()
 
       table.timestamp('created_at')
       table.timestamp('updated_at')
