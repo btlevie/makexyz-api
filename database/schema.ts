@@ -533,6 +533,23 @@ export class UserSchema extends BaseModel {
   declare uuid: string
 }
 
+export class VendorPayoutRateSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'materialId', 'percentage', 'updatedAt', 'vendorId'] as const
+  $columns = VendorPayoutRateSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare materialId: number | null
+  @column()
+  declare percentage: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number | null
+}
+
 export class VendorPayoutSchema extends BaseModel {
   static $columns = ['amount', 'createdAt', 'id', 'orderId', 'paidAt', 'provider', 'providerTransactionId', 'status', 'updatedAt', 'vendorId'] as const
   $columns = VendorPayoutSchema.$columns
