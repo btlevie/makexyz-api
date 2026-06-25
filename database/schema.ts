@@ -38,6 +38,27 @@ export class AddressSchema extends BaseModel {
   declare vendorId: number | null
 }
 
+export class AuditEventSchema extends BaseModel {
+  static $columns = ['createdAt', 'entityId', 'entityType', 'eventType', 'id', 'payload', 'updatedAt', 'userId'] as const
+  $columns = AuditEventSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare entityId: number
+  @column()
+  declare entityType: string
+  @column()
+  declare eventType: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare payload: any | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number | null
+}
+
 export class AuthAccessTokenSchema extends BaseModel {
   static $columns = ['abilities', 'createdAt', 'expiresAt', 'hash', 'id', 'lastUsedAt', 'name', 'tokenableId', 'type', 'updatedAt'] as const
   $columns = AuthAccessTokenSchema.$columns
@@ -399,6 +420,23 @@ export class QuoteSchema extends BaseModel {
   declare uuid: string
 }
 
+export class RefundSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'id', 'paymentId', 'reason', 'updatedAt'] as const
+  $columns = RefundSchema.$columns
+  @column()
+  declare amount: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare paymentId: number | null
+  @column()
+  declare reason: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class RememberMeTokenSchema extends BaseModel {
   static $columns = ['createdAt', 'expiresAt', 'hash', 'id', 'tokenableId', 'updatedAt'] as const
   $columns = RememberMeTokenSchema.$columns
@@ -414,6 +452,64 @@ export class RememberMeTokenSchema extends BaseModel {
   declare tokenableId: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+}
+
+export class ShipmentSchema extends BaseModel {
+  static $columns = ['addressId', 'cancelledAt', 'carrier', 'createdAt', 'deliveredAt', 'id', 'inTransitAt', 'labelCreatedAt', 'orderId', 'serviceLevel', 'shippedAt', 'status', 'trackingNumber', 'updatedAt', 'vendorId'] as const
+  $columns = ShipmentSchema.$columns
+  @column()
+  declare addressId: number | null
+  @column.dateTime()
+  declare cancelledAt: DateTime | null
+  @column()
+  declare carrier: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column.dateTime()
+  declare deliveredAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column.dateTime()
+  declare inTransitAt: DateTime | null
+  @column.dateTime()
+  declare labelCreatedAt: DateTime | null
+  @column()
+  declare orderId: number | null
+  @column()
+  declare serviceLevel: string | null
+  @column.dateTime()
+  declare shippedAt: DateTime | null
+  @column()
+  declare status: string
+  @column()
+  declare trackingNumber: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number | null
+}
+
+export class ShippingLabelSchema extends BaseModel {
+  static $columns = ['cost', 'createdAt', 'id', 'labelPdfUrl', 'labelUrl', 'provider', 'shipmentId', 'updatedAt', 'voidedAt'] as const
+  $columns = ShippingLabelSchema.$columns
+  @column()
+  declare cost: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare labelPdfUrl: string | null
+  @column()
+  declare labelUrl: string | null
+  @column()
+  declare provider: string
+  @column()
+  declare shipmentId: number | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column.dateTime()
+  declare voidedAt: DateTime | null
 }
 
 export class UserSchema extends BaseModel {
@@ -435,6 +531,31 @@ export class UserSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare uuid: string
+}
+
+export class VendorPayoutSchema extends BaseModel {
+  static $columns = ['amount', 'createdAt', 'id', 'orderId', 'paidAt', 'provider', 'providerTransactionId', 'status', 'updatedAt', 'vendorId'] as const
+  $columns = VendorPayoutSchema.$columns
+  @column()
+  declare amount: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare orderId: number | null
+  @column.dateTime()
+  declare paidAt: DateTime | null
+  @column()
+  declare provider: string
+  @column()
+  declare providerTransactionId: string | null
+  @column()
+  declare status: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number | null
 }
 
 export class VendorSchema extends BaseModel {
