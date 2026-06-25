@@ -98,7 +98,7 @@ export class CheckoutSessionSchema extends BaseModel {
   @column()
   declare quoteId: number | null
   @column()
-  declare status: string
+  declare status: 'active' | 'expired' | 'completed' | 'failed'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
@@ -239,7 +239,7 @@ export class OrderSchema extends BaseModel {
   @column()
   declare quoteId: number | null
   @column()
-  declare status: string
+  declare status: 'pending' | 'paid' | 'open' | 'accepted' | 'rejected' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'delivered' | 'refunded' | 'cancelled'
   @column()
   declare subtotal: string
   @column()
@@ -282,7 +282,7 @@ export class PaymentSchema extends BaseModel {
   @column.dateTime()
   declare refundedAt: DateTime | null
   @column()
-  declare status: string
+  declare status: 'pending' | 'authorized' | 'captured' | 'failed' | 'refunded' | 'cancelled'
   @column()
   declare transactionId: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -342,7 +342,7 @@ export class ProjectSchema extends BaseModel {
   @column()
   declare metadata: any | null
   @column()
-  declare status: string
+  declare status: 'draft' | 'quoted' | 'awaiting_checkout' | 'ordered' | 'fulfilled' | 'cancelled'
   @column()
   declare title: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -409,7 +409,7 @@ export class QuoteSchema extends BaseModel {
   @column()
   declare revision: number
   @column()
-  declare status: string
+  declare status: 'draft' | 'sent' | 'accepted' | 'rejected'
   @column()
   declare subtotal: string
   @column()
@@ -482,7 +482,7 @@ export class ShipmentSchema extends BaseModel {
   @column.dateTime()
   declare shippedAt: DateTime | null
   @column()
-  declare status: string
+  declare status: 'pending' | 'label_created' | 'shipped' | 'in_transit' | 'delivered' | 'cancelled'
   @column()
   declare trackingNumber: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -528,7 +528,7 @@ export class UserSchema extends BaseModel {
   @column({ serializeAs: null })
   declare password: string
   @column()
-  declare role: string
+  declare role: 'admin' | 'customer' | 'vendor'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
@@ -570,7 +570,7 @@ export class VendorPayoutSchema extends BaseModel {
   @column()
   declare providerTransactionId: string | null
   @column()
-  declare status: string
+  declare status: 'pending' | 'paid' | 'failed' | 'processing'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()

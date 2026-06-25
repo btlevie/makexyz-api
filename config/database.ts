@@ -67,6 +67,10 @@ const dbConfig = defineConfig({
         paths: ['database/migrations'],
       },
       debug: app.inDev,
+      schemaGeneration: {
+        enabled: true,
+        rulesPaths: ['./database/schema_rules.js']
+      }
     },
 
     /**
