@@ -290,7 +290,7 @@ export class PaymentSchema extends BaseModel {
 }
 
 export class ProjectFileSchema extends BaseModel {
-  static $columns = ['color', 'createdAt', 'fileSize', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'originalName', 'projectId', 'storagePath', 'updatedAt', 'volume', 'x', 'y', 'z'] as const
+  static $columns = ['color', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'originalName', 'projectId', 'updatedAt', 'volume', 'x', 'y', 'z'] as const
   $columns = ProjectFileSchema.$columns
   @column()
   declare color: string
@@ -298,6 +298,10 @@ export class ProjectFileSchema extends BaseModel {
   declare createdAt: DateTime | null
   @column()
   declare fileSize: bigint | number
+  @column()
+  declare fileStorageKey: string
+  @column()
+  declare gcodeStorageKey: string
   @column({ isPrimary: true })
   declare id: number
   @column()
@@ -312,8 +316,6 @@ export class ProjectFileSchema extends BaseModel {
   declare originalName: string
   @column()
   declare projectId: number | null
-  @column()
-  declare storagePath: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
