@@ -19,7 +19,7 @@ export default {
     ['projects']: {
       columns: {
         ['status']: {
-          tsType: "'draft' | 'quoted' | 'awaiting_checkout' | 'ordered' | 'fulfilled' | 'cancelled'"
+          tsType: "'draft' | 'quoted' | 'awaiting_checkout' | 'ordered' | 'fulfilled' | 'cancelled' | 'expired'"
         }
       }
     },

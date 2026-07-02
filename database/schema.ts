@@ -85,16 +85,24 @@ export class AuthAccessTokenSchema extends BaseModel {
 }
 
 export class CheckoutSessionSchema extends BaseModel {
-  static $columns = ['createdAt', 'customerId', 'id', 'projetId', 'quoteId', 'status', 'updatedAt'] as const
+  static $columns = ['completedAt', 'createdAt', 'customerId', 'expiredAt', 'expiresAt', 'failedAt', 'id', 'projectId', 'quoteId', 'status', 'updatedAt'] as const
   $columns = CheckoutSessionSchema.$columns
+  @column.dateTime()
+  declare completedAt: DateTime | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare customerId: number | null
+  @column.dateTime()
+  declare expiredAt: DateTime | null
+  @column.dateTime()
+  declare expiresAt: DateTime | null
+  @column.dateTime()
+  declare failedAt: DateTime | null
   @column({ isPrimary: true })
   declare id: number
   @column()
-  declare projetId: number | null
+  declare projectId: number | null
   @column()
   declare quoteId: number | null
   @column()
@@ -290,10 +298,10 @@ export class PaymentSchema extends BaseModel {
 }
 
 export class ProjectFileSchema extends BaseModel {
-  static $columns = ['color', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'originalName', 'projectId', 'updatedAt', 'volume', 'x', 'y', 'z'] as const
+  static $columns = ['color', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'originalName', 'projectId', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
   $columns = ProjectFileSchema.$columns
   @column()
-  declare color: string
+  declare color: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
@@ -301,13 +309,13 @@ export class ProjectFileSchema extends BaseModel {
   @column()
   declare fileStorageKey: string
   @column()
-  declare gcodeStorageKey: string
+  declare gcodeStorageKey: string | null
   @column({ isPrimary: true })
   declare id: number
   @column()
-  declare infill: number
+  declare infill: number | null
   @column()
-  declare layerHeight: number
+  declare layerHeight: number | null
   @column()
   declare materialId: number | null
   @column()
@@ -319,30 +327,38 @@ export class ProjectFileSchema extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
-  declare volume: number
+  declare uuid: string
   @column()
-  declare x: number
+  declare volume: number | null
   @column()
-  declare y: number
+  declare x: number | null
   @column()
-  declare z: number
+  declare y: number | null
+  @column()
+  declare z: number | null
 }
 
 export class ProjectSchema extends BaseModel {
-  static $columns = ['createdAt', 'customerId', 'description', 'id', 'metadata', 'status', 'title', 'updatedAt', 'uuid'] as const
+  static $columns = ['cancelledAt', 'createdAt', 'customerId', 'description', 'expiredAt', 'fulfilledAt', 'id', 'metadata', 'status', 'title', 'updatedAt', 'uuid'] as const
   $columns = ProjectSchema.$columns
+  @column.dateTime()
+  declare cancelledAt: DateTime | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare customerId: number | null
   @column()
   declare description: string | null
+  @column.dateTime()
+  declare expiredAt: DateTime | null
+  @column.dateTime()
+  declare fulfilledAt: DateTime | null
   @column({ isPrimary: true })
   declare id: number
   @column()
   declare metadata: any | null
   @column()
-  declare status: 'draft' | 'quoted' | 'awaiting_checkout' | 'ordered' | 'fulfilled' | 'cancelled'
+  declare status: 'draft' | 'quoted' | 'awaiting_checkout' | 'ordered' | 'fulfilled' | 'cancelled' | 'expired'
   @column()
   declare title: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })

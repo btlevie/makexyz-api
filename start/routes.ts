@@ -21,6 +21,7 @@ router
       .group(() => {
         router.post('signup', [controllers.NewAccount, 'store'])
         router.post('login', [controllers.AccessTokens, 'store'])
+        router.post('new-customer', [controllers.NewCustomer, 'store'])
       })
       .prefix('auth')
       .as('auth')
@@ -33,5 +34,13 @@ router
       .prefix('account')
       .as('profile')
       .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.post('files', [controllers.ProjectFiles, 'store']).use(middleware.auth())
+      })
+      .prefix('projects')
+      .as('projects')
+      
   })
-  .prefix('/api/v1')
+  .prefix('/v1')

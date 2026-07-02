@@ -10,9 +10,11 @@ export default class extends BaseSchema {
       table.integer('customer_id').unsigned().references('id').inTable('customers').onDelete('SET NULL')
       table.string('title')
       table.text('description').nullable()
-      table.enum('status', ['draft' , 'quoted', 'awaiting_checkout', 'ordered', 'fulfilled', 'cancelled']).notNullable().defaultTo('draft')
+      table.enum('status', ['draft' , 'quoted', 'awaiting_checkout', 'ordered', 'fulfilled', 'cancelled', 'expired']).notNullable().defaultTo('draft')
       table.jsonb('metadata').nullable()
-
+      table.timestamp('expired_at').nullable()
+      table.timestamp('cancelled_at').nullable()
+      table.timestamp('fulfilled_at').nullable()
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

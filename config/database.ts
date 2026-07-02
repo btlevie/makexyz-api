@@ -10,44 +10,27 @@ const dbConfig = defineConfig({
 
   connections: {
     /**
-     * SQLite connection (default).
+     * SQLite connection (used in tests).
      */
-    // sqlite: {
-    //   client: 'better-sqlite3',
+    sqlite: {
+      client: 'better-sqlite3',
 
-    //   connection: {
-    //     filename: app.tmpPath('db.sqlite3'),
-    //   },
+      connection: {
+        filename: app.tmpPath('test-db.sqlite3'),
+      },
 
-    //   /**
-    //    * Required by Knex for SQLite defaults.
-    //    */
-    //   useNullAsDefault: true,
+      useNullAsDefault: true,
 
-    //   migrations: {
-    //     /**
-    //      * Sort migration files naturally by filename.
-    //      */
-    //     naturalSort: true,
+      migrations: {
+        naturalSort: true,
+        paths: ['database/migrations'],
+      },
 
-    //     /**
-    //      * Paths containing migration files.
-    //      */
-    //     paths: ['database/migrations'],
-    //   },
-
-    //   schemaGeneration: {
-    //     /**
-    //      * Enable schema generation from Lucid models.
-    //      */
-    //     enabled: true,
-
-    //     /**
-    //      * Custom schema rules file paths.
-    //      */
-    //     rulesPaths: ['./database/schema_rules.js'],
-    //   },
-    // },
+      schemaGeneration: {
+        enabled: true,
+        rulesPaths: ['./database/schema_rules.js'],
+      },
+    },
 
     /**
      * PostgreSQL connection.
