@@ -38,9 +38,11 @@ router
     router
       .group(() => {
         router.post('files', [controllers.ProjectFiles, 'store']).use(middleware.auth())
+        router
+          .patch('files/:uuid/slicing-result', [controllers.ProjectFiles, 'updateSlicingResult'])
+          .use(middleware.slicerCallbackAuth())
       })
       .prefix('projects')
       .as('projects')
-      
   })
   .prefix('/v1')

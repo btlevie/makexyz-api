@@ -5,6 +5,7 @@ import drive from '@adonisjs/drive/services/main'
 import { test } from '@japa/runner'
 import testUtils from '@adonisjs/core/services/test_utils'
 import Customer from '#models/customer'
+import Material from '#models/material'
 import Project from '#models/project'
 import ProjectFile from '#models/project_file'
 import User from '#models/user'
@@ -35,7 +36,7 @@ test.group('Projects | file upload', (group) => {
 
     const unauthenticatedResponse = await client
       .post('/v1/projects/files')
-      .file('files[]', stl, { filename: 'cube.stl', contentType: 'model/stl' })
+      .file('files[0]', stl, { filename: 'cube.stl', contentType: 'model/stl' })
 
     unauthenticatedResponse.assertStatus(401)
 
@@ -59,13 +60,10 @@ test.group('Projects | file upload', (group) => {
     assert.equal(customer.firstName, 'Flow')
     assert.equal(customer.lastName, 'User')
 
-    const projectUuid = string.uuid()
-
     const uploadResponse = await client
       .post('/v1/projects/files')
       .withSession(signupResponse.session())
-      .field('projectUuid', projectUuid)
-      .file('files[]', stl, { filename: 'cube.stl', contentType: 'model/stl' })
+      .file('files[0]', stl, { filename: 'cube.stl', contentType: 'model/stl' })
 
     uploadResponse.assertStatus(200)
     uploadResponse.assertBodyContains({
@@ -84,6 +82,9 @@ test.group('Projects | file upload', (group) => {
     const projectFiles = await ProjectFile.query().where('projectId', project.id)
     assert.lengthOf(projectFiles, 1)
     assert.equal(projectFiles[0].originalName, 'cube.stl')
+
+    const plaMaterial = await Material.findByOrFail('name', 'PLA')
+    assert.equal(projectFiles[0].materialId, plaMaterial.id)
 
     const storageKey = `${env.get('S3_FILE_STORAGE_KEY')}/${project.uuid}/${projectFiles[0].uuid}.stl`
     assert.isTrue(await drive.use('s3').exists(storageKey))

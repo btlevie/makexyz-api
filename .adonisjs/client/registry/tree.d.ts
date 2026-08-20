@@ -9,6 +9,9 @@ export interface ApiDefinition {
     accessTokens: {
       store: typeof routes['auth.access_tokens.store']
     }
+    newCustomer: {
+      store: typeof routes['auth.new_customer.store']
+    }
   }
   profile: {
     profile: {
@@ -16,6 +19,12 @@ export interface ApiDefinition {
     }
     accessTokens: {
       destroy: typeof routes['profile.access_tokens.destroy']
+    }
+  }
+  projects: {
+    projectFiles: {
+      store: typeof routes['projects.project_files.store']
+      updateSlicingResult: typeof routes['projects.project_files.update_slicing_result']
     }
   }
 }

@@ -64,6 +64,7 @@
     "@adonisjs/session": "^8.1.0",
     "@adonisjs/shield": "^9.0.0",
     "@aws-sdk/client-s3": "^3.1077.0",
+    "@aws-sdk/client-sqs": "^3.1108.0",
     "@aws-sdk/s3-request-presigner": "^3.1077.0",
     "@japa/api-client": "^3.2.1",
     "@tuyau/core": "^1.2.2",

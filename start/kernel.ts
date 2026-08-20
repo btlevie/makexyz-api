@@ -46,4 +46,5 @@ router.use([
  */
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
+  slicerCallbackAuth: () => import('#middleware/slicer_callback_auth_middleware'),
 })

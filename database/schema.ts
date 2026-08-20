@@ -297,8 +297,33 @@ export class PaymentSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class ProjectFileSliceVariantSchema extends BaseModel {
+  static $columns = ['createdAt', 'filamentUsedGrams', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'printTimeEstimatedSeconds', 'projectFileId', 'updatedAt', 'variant'] as const
+  $columns = ProjectFileSliceVariantSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare filamentUsedGrams: number
+  @column()
+  declare gcodeStorageKey: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare infill: number
+  @column()
+  declare layerHeight: number
+  @column()
+  declare printTimeEstimatedSeconds: number
+  @column()
+  declare projectFileId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare variant: 'baseline' | 'infill_probe' | 'layer_height_probe' | 'support_probe'
+}
+
 export class ProjectFileSchema extends BaseModel {
-  static $columns = ['color', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'originalName', 'projectId', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
+  static $columns = ['color', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'modelMaterialGrams', 'originalName', 'printTimeEstimatedSeconds', 'projectId', 'status', 'supportMaterialGrams', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
   $columns = ProjectFileSchema.$columns
   @column()
   declare color: string | null
@@ -321,9 +346,17 @@ export class ProjectFileSchema extends BaseModel {
   @column()
   declare mimeType: string
   @column()
+  declare modelMaterialGrams: number | null
+  @column()
   declare originalName: string
   @column()
+  declare printTimeEstimatedSeconds: number | null
+  @column()
   declare projectId: number | null
+  @column()
+  declare status: 'pending' | 'processing' | 'completed' | 'failed'
+  @column()
+  declare supportMaterialGrams: number | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
@@ -470,6 +503,19 @@ export class RememberMeTokenSchema extends BaseModel {
   declare tokenableId: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+}
+
+export class SessionSchema extends BaseModel {
+  static $columns = ['data', 'expiresAt', 'id', 'userId'] as const
+  $columns = SessionSchema.$columns
+  @column()
+  declare data: string
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column({ isPrimary: true })
+  declare id: string
+  @column()
+  declare userId: string | null
 }
 
 export class ShipmentSchema extends BaseModel {

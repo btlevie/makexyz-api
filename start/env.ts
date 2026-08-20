@@ -51,5 +51,15 @@ export default await Env.create(new URL('../', import.meta.url), {
   | Variables for configuring the drive package
   |----------------------------------------------------------
   */
-  DRIVE_DISK: Env.schema.enum(['s3'] as const)
+  DRIVE_DISK: Env.schema.enum(['s3'] as const),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for the slicing microservice integration
+  |----------------------------------------------------------
+  | SQS_SLICING_QUEUE_URL is optional for now because the queue/Lambda
+  | infra hasn't been provisioned yet - the SQS service no-ops until it's set.
+  */
+  SQS_SLICING_QUEUE_URL: Env.schema.string.optional(),
+  SLICER_CALLBACK_SECRET: Env.schema.string(),
 })
