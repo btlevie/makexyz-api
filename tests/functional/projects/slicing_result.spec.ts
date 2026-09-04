@@ -13,7 +13,7 @@ function sign(payload: Record<string, unknown>) {
   return createHmac('sha256', env.get('SLICER_CALLBACK_SECRET')).update(rawBody).digest('hex')
 }
 
-async function createPendingProjectFile() {
+async function createPendingProjectFile(technology?: 'fdm' | 'sla' | 'sls') {
   const customer = await Customer.create({ uuid: string.uuid() })
   const project = await Project.create({
     uuid: string.uuid(),
@@ -28,13 +28,14 @@ async function createPendingProjectFile() {
     mimeType: 'model/stl',
     fileSize: 1024,
     status: 'pending',
+    ...(technology ? { technology } : {}),
   })
 }
 
 function buildVariants(overrides: { filamentUsedGrams?: number } = {}) {
   return [
     {
-      variant: 'baseline',
+      variant: 'baseline' as const,
       infill: 20,
       layerHeight: 0.2,
       filamentUsedGrams: overrides.filamentUsedGrams ?? 5,
@@ -42,7 +43,7 @@ function buildVariants(overrides: { filamentUsedGrams?: number } = {}) {
       gcodeStorageKey: 'projects/foo/bar.gcode',
     },
     {
-      variant: 'infill_probe',
+      variant: 'infill_probe' as const,
       infill: 100,
       layerHeight: 0.2,
       filamentUsedGrams: overrides.filamentUsedGrams ?? 12,
@@ -50,12 +51,31 @@ function buildVariants(overrides: { filamentUsedGrams?: number } = {}) {
       gcodeStorageKey: 'projects/foo/bar_infill_probe.gcode',
     },
     {
-      variant: 'layer_height_probe',
+      variant: 'layer_height_probe' as const,
       infill: 20,
       layerHeight: 0.1,
       filamentUsedGrams: overrides.filamentUsedGrams ?? 5,
       printTimeEstimatedSeconds: 3200,
       gcodeStorageKey: 'projects/foo/bar_layer_height_probe.gcode',
+    },
+  ]
+}
+
+function buildSlaVariants() {
+  return [
+    {
+      variant: 'baseline' as const,
+      layerHeight: 0.05,
+      filamentUsedGrams: 33.77,
+      printTimeEstimatedSeconds: 6199,
+      gcodeStorageKey: 'projects/foo/bar.sl1',
+    },
+    {
+      variant: 'layer_height_probe' as const,
+      layerHeight: 0.025,
+      filamentUsedGrams: 33.89,
+      printTimeEstimatedSeconds: 12111,
+      gcodeStorageKey: 'projects/foo/bar_layer_height_probe.sl1',
     },
   ]
 }
@@ -77,7 +97,7 @@ test.group('Projects | slicing result callback', (group) => {
   test('rejects requests with a missing or invalid signature', async ({ client, assert }) => {
     const projectFile = await createPendingProjectFile()
     const payload = {
-      status: 'completed',
+      status: 'completed' as const,
       gcodeStorageKey: 'projects/foo/bar.gcode',
       volume: 12.5,
       x: 1,
@@ -103,7 +123,7 @@ test.group('Projects | slicing result callback', (group) => {
   test('marks a project file completed with gcode results', async ({ client, assert }) => {
     const projectFile = await createPendingProjectFile()
     const payload = {
-      status: 'completed',
+      status: 'completed' as const,
       gcodeStorageKey: 'projects/foo/bar.gcode',
       volume: 12.5,
       x: 10,
@@ -136,9 +156,57 @@ test.group('Projects | slicing result callback', (group) => {
     assert.equal(projectFile.printTimeEstimatedSeconds, payload.printTimeEstimatedSeconds)
   })
 
+  test('accepts an SLS callback with surfaceAreaMm2 and no gcode', async ({ client, assert }) => {
+    const projectFile = await createPendingProjectFile('sls')
+    const payload = {
+      status: 'completed' as const,
+      volume: 12.5,
+      x: 10,
+      y: 20,
+      z: 30,
+      surfaceAreaMm2: 850.5,
+      printTimeEstimatedSeconds: 5080,
+    }
+
+    const response = await client
+      .patch(`/v1/projects/files/${projectFile.uuid}/slicing-result`)
+      .header('x-slicer-signature', sign(payload))
+      .json(payload)
+
+    response.assertStatus(200)
+
+    await projectFile.refresh()
+    assert.equal(projectFile.status, 'completed')
+    assert.isNull(projectFile.gcodeStorageKey)
+    assert.equal(projectFile.volume, payload.volume)
+    assert.equal(projectFile.surfaceAreaMm2, payload.surfaceAreaMm2)
+    assert.equal(projectFile.printTimeEstimatedSeconds, payload.printTimeEstimatedSeconds)
+  })
+
+  test('rejects an SLS callback missing surfaceAreaMm2', async ({ client, assert }) => {
+    const projectFile = await createPendingProjectFile('sls')
+    const payload = {
+      status: 'completed' as const,
+      volume: 12.5,
+      x: 10,
+      y: 20,
+      z: 30,
+    }
+
+    const response = await client
+      .patch(`/v1/projects/files/${projectFile.uuid}/slicing-result`)
+      .header('x-slicer-signature', sign(payload))
+      .json(payload)
+
+    response.assertStatus(400)
+
+    await projectFile.refresh()
+    assert.equal(projectFile.status, 'pending')
+  })
+
   test('marks a project file failed on slicing failure', async ({ client, assert }) => {
     const projectFile = await createPendingProjectFile()
-    const payload = { status: 'failed', error: 'unsupported geometry' }
+    const payload = { status: 'failed' as const, error: 'unsupported geometry' }
 
     const response = await client
       .patch(`/v1/projects/files/${projectFile.uuid}/slicing-result`)
@@ -154,7 +222,7 @@ test.group('Projects | slicing result callback', (group) => {
   })
 
   test('returns 404 for an unknown project file uuid', async ({ client }) => {
-    const payload = { status: 'failed', error: 'unsupported geometry' }
+    const payload = { status: 'failed' as const, error: 'unsupported geometry' }
 
     const response = await client
       .patch(`/v1/projects/files/${string.uuid()}/slicing-result`)
@@ -167,7 +235,7 @@ test.group('Projects | slicing result callback', (group) => {
   test('stores 3 variant rows on completion', async ({ client, assert }) => {
     const projectFile = await createPendingProjectFile()
     const payload = {
-      status: 'completed',
+      status: 'completed' as const,
       gcodeStorageKey: 'projects/foo/bar.gcode',
       volume: 12.5,
       x: 10,
@@ -195,13 +263,78 @@ test.group('Projects | slicing result callback', (group) => {
     assert.equal(variants[0].gcodeStorageKey, 'projects/foo/bar.gcode')
   })
 
+  test('accepts an SLA-shaped variants payload with no infill on either variant', async ({
+    client,
+    assert,
+  }) => {
+    const projectFile = await createPendingProjectFile()
+    const payload = {
+      status: 'completed' as const,
+      gcodeStorageKey: 'projects/foo/bar.sl1',
+      volume: 27,
+      x: 30,
+      y: 30,
+      z: 30,
+      layerHeight: 0.05,
+      printTimeEstimatedSeconds: 6199,
+      variants: buildSlaVariants(),
+    }
+
+    const response = await client
+      .patch(`/v1/projects/files/${projectFile.uuid}/slicing-result`)
+      .header('x-slicer-signature', sign(payload))
+      .json(payload)
+
+    response.assertStatus(200)
+
+    await projectFile.refresh()
+    assert.isNull(projectFile.infill)
+    assert.equal(projectFile.layerHeight, 0.05)
+
+    const variants = await ProjectFileSliceVariant.query()
+      .where('projectFileId', projectFile.id)
+      .orderBy('variant')
+    assert.lengthOf(variants, 2)
+    for (const variant of variants) {
+      assert.isNull(variant.infill)
+    }
+  })
+
+  test('rejects a variants array with an unknown variant name', async ({ client }) => {
+    const projectFile = await createPendingProjectFile()
+    const payload = {
+      status: 'completed' as const,
+      gcodeStorageKey: 'projects/foo/bar.gcode',
+      volume: 12.5,
+      x: 10,
+      y: 20,
+      z: 30,
+      variants: [
+        {
+          variant: 'not_a_real_variant',
+          layerHeight: 0.2,
+          filamentUsedGrams: 5,
+          printTimeEstimatedSeconds: 1800,
+          gcodeStorageKey: 'projects/foo/bar.gcode',
+        },
+      ],
+    } as any
+
+    const response = await client
+      .patch(`/v1/projects/files/${projectFile.uuid}/slicing-result`)
+      .header('x-slicer-signature', sign(payload))
+      .json(payload)
+
+    response.assertStatus(422)
+  })
+
   test('is idempotent when the same variants payload is delivered twice', async ({
     client,
     assert,
   }) => {
     const projectFile = await createPendingProjectFile()
     const payload = {
-      status: 'completed',
+      status: 'completed' as const,
       gcodeStorageKey: 'projects/foo/bar.gcode',
       volume: 12.5,
       x: 10,
@@ -227,7 +360,7 @@ test.group('Projects | slicing result callback', (group) => {
   test('upserts variant rows in place when values change on retry', async ({ client, assert }) => {
     const projectFile = await createPendingProjectFile()
     const firstPayload = {
-      status: 'completed',
+      status: 'completed' as const,
       gcodeStorageKey: 'projects/foo/bar.gcode',
       volume: 12.5,
       x: 10,
@@ -262,7 +395,7 @@ test.group('Projects | slicing result callback', (group) => {
   }) => {
     const projectFile = await createPendingProjectFile()
     const payload = {
-      status: 'completed',
+      status: 'completed' as const,
       gcodeStorageKey: 'projects/foo/bar.gcode',
       volume: 12.5,
       x: 10,
@@ -288,7 +421,7 @@ test.group('Projects | slicing result callback', (group) => {
   }) => {
     const projectFile = await createPendingProjectFile()
     const basePayload = {
-      status: 'completed',
+      status: 'completed' as const,
       gcodeStorageKey: 'projects/foo/bar.gcode',
       volume: 12.5,
       x: 10,
@@ -296,6 +429,8 @@ test.group('Projects | slicing result callback', (group) => {
       z: 30,
     }
 
+    // Deliberately malformed, so it is cast past the request payload type - the
+    // point of the test is that validation rejects it at runtime.
     const missingField = {
       ...basePayload,
       variants: [
@@ -308,7 +443,7 @@ test.group('Projects | slicing result callback', (group) => {
           gcodeStorageKey: 'projects/foo/bar.gcode',
         },
       ],
-    }
+    } as any
     const missingFieldResponse = await client
       .patch(`/v1/projects/files/${projectFile.uuid}/slicing-result`)
       .header('x-slicer-signature', sign(missingField))
@@ -329,7 +464,7 @@ test.group('Projects | slicing result callback', (group) => {
   test('a failed status ignores any variants in the payload', async ({ client, assert }) => {
     const projectFile = await createPendingProjectFile()
     const payload = {
-      status: 'failed',
+      status: 'failed' as const,
       error: 'unsupported geometry',
       variants: buildVariants(),
     }

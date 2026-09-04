@@ -9,4 +9,6 @@ export const controllers = {
   NewCustomer: () => import('#controllers/new_customer_controller'),
   Profile: () => import('#controllers/profile_controller'),
   ProjectFiles: () => import('#controllers/project_files_controller'),
+  Projects: () => import('#controllers/projects_controller'),
+  Quotes: () => import('#controllers/quotes_controller'),
 }

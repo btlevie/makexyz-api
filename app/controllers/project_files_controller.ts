@@ -1,38 +1,89 @@
 import string from '@adonisjs/core/helpers/string'
 import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
+import drive from '@adonisjs/drive/services/main'
+import db from '@adonisjs/lucid/services/db'
 import Customer from '#models/customer'
 import Project from '#models/project'
-import { uploadProjectFileValidator, sliceResultValidator } from '#validators/project_file'
+import {
+  uploadProjectFileValidator,
+  sliceResultValidator,
+  updateProjectFileTechnologyValidator,
+  updateProjectFileMaterialValidator,
+  updateProjectFileColorValidator,
+} from '#validators/project_file'
 import InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
+import ProjectFileTransformer from '#transformers/project_file_transformer'
 import env from '#start/env'
+import AuditEvent from '#models/audit_event'
 import ProjectFile from '#models/project_file'
-import Material from '#models/material'
 import { enqueueSlicingJob } from '#services/sqs_service'
+import {
+  isStaff,
+  issueGrant,
+  resolveProject,
+  resolveProjectFile,
+} from '#services/project_grant_service'
+import { autoQuoteProjectIfReady } from '#services/auto_quote_service'
+import { findTechnologyLock } from '#services/technology_lock_service'
+import {
+  findColorByUuid,
+  findMaterialByUuid,
+  resolveColorForMaterialChange,
+  resolveDefaultColor,
+  resolveDefaultMaterial,
+} from '#services/material_service'
 
 export default class ProjectFilesController {
-  async store({ auth, request, serialize }: HttpContext) {
-    const user = auth.getUserOrFail()
-    const { files, projectUuid } = await request.validateUsing(uploadProjectFileValidator)
+  /**
+   * The public instant-quote entry point: upload models, get a price, no account
+   * required. Deliberately not called `store` - a separate flow for uploading
+   * into a manually created project is coming
+   * (`POST /v1/projects/:projectUuid/files`), and the two must stay
+   * distinguishable.
+   *
+   * Anonymous callers get an unowned project plus a signed grant, which is what
+   * authorizes their follow-up requests. A customer is attached later, and only
+   * if they opt into having the quote emailed.
+   */
+  async storeInstantQuoteFiles(ctx: HttpContext) {
+    const { auth, request, response, serialize } = ctx
+    const {
+      files,
+      projectUuid,
+      technology: requestedTechnology,
+    } = await request.validateUsing(uploadProjectFileValidator)
+    const technology = requestedTechnology ?? 'fdm'
 
-    const customer = await Customer.firstOrCreate(
-      { userId: user.id },
-      { userId: user.id, uuid: string.uuid() }
-    )
+    // Populated-or-null by the global SilentAuthMiddleware; this route is public.
+    const user = auth.user
+    const customer = user
+      ? await Customer.firstOrCreate({ userId: user.id }, { userId: user.id, uuid: string.uuid() })
+      : null
 
     let project: Project
 
     if (!projectUuid) {
       project = await Project.create({
         uuid: string.uuid(),
-        customerId: customer.id,
+        customerId: customer?.id ?? null,
         status: 'draft',
+        // Explicit rather than leaning on the column default, so the manual
+        // flow's 'manual' reads as a deliberate counterpart.
+        source: 'instant_quote',
       })
     } else {
-      project = await Project.findByOrFail('uuid', projectUuid)
+      // Previously findByOrFail with no ownership check - a cross-tenant write
+      // under auth, and anonymous write-to-any-project now the route is public.
+      const existing = await resolveProject(ctx, projectUuid)
+      if (!existing) {
+        return response.notFound({ error: 'Project not found' })
+      }
+      project = existing
     }
 
-    const material = await Material.firstOrCreate({ name: 'PLA' })
+    const material = await resolveDefaultMaterial(technology)
+    const color = resolveDefaultColor(material)
 
     for (const entry of files) {
       const file = entry
@@ -47,12 +98,314 @@ export default class ProjectFilesController {
         mimeType: file.type ?? 'application/octet-stream',
         fileSize: file.size,
         materialId: material.id,
+        colorId: color.id,
+        technology,
         status: 'pending',
       })
-      await enqueueSlicingJob(projectFile, material.name)
+
+      await enqueueSlicingJob(projectFile, technology, material.name)
     }
 
-    return await serialize(InstantQuoteFileTransformer.transform(project))
+    // Only anonymous callers need a grant; an authenticated owner is already
+    // authorized through their Customer.
+    return await serialize(
+      InstantQuoteFileTransformer.transform(project, customer ? null : issueGrant(project))
+    )
+  }
+
+  /**
+   * Switches a project file between manufacturing technologies and re-queues it
+   * for slicing.
+   *
+   * Slice results are technology-specific, so they are discarded rather than
+   * carried over: SLA sends no infill and no support/model split, and
+   * updateSlicingResult only ever assigns fields it receives - so without a
+   * reset, FDM numbers would survive under an SLA label and feed pricing.
+   * Dimensions go too, because SLA slices unoriented (the slicer skips Tweaker-3)
+   * and can legitimately report a different bounding box for the same geometry.
+   *
+   * Once a part has been quoted to the customer it is locked (see
+   * QUOTE_STATUSES_LOCKING_TECHNOLOGY): the quote itself is an immutable snapshot
+   * and cannot be corrupted, but letting the part change underneath an
+   * outstanding quote would mean the customer accepts one thing and receives
+   * another. Staff can override to correct a mistake, which is recorded.
+   */
+  async updateTechnology(ctx: HttpContext) {
+    const { auth, params, request, response, serialize } = ctx
+    const { technology } = await request.validateUsing(updateProjectFileTechnologyValidator)
+
+    // Anonymous instant-quote visitors authorize with their project grant; there
+    // may be no user at all. 404 rather than 403 for someone else's file - no
+    // reason to confirm it exists.
+    const projectFile = await resolveProjectFile(ctx, params.uuid)
+    if (!projectFile) {
+      return response.notFound({ error: 'Project file not found' })
+    }
+
+    // A redundant call must not throw away slice data that is still valid - and
+    // needs no override, since nothing actually changes.
+    if (projectFile.technology === technology) {
+      return await serialize(ProjectFileTransformer.transform(projectFile))
+    }
+
+    const lock = await findTechnologyLock(projectFile)
+    const canOverrideLock = isStaff(ctx)
+
+    if (lock && !canOverrideLock) {
+      return response.conflict({
+        error: `Project file ${projectFile.uuid} can no longer change technology because ${lock.description}`,
+      })
+    }
+
+    // TODO: once orders exist, refuse the override too from order status
+    // 'in_progress' onward - past that point a technology change is a new order,
+    // not a correction. Payment is not the right line to draw with instant
+    // quotes, since checkout pays immediately.
+
+    // Collect output keys before the rows holding them are deleted. Never the
+    // uploaded source model, which lives under the same project prefix - that is
+    // also why these are deleted key by key rather than by prefix.
+    const staleOutputKeys = new Set<string>()
+    for (const key of [
+      projectFile.gcodeStorageKey,
+      ...projectFile.sliceVariants.map((variant) => variant.gcodeStorageKey),
+    ]) {
+      if (key && key !== projectFile.fileStorageKey) {
+        staleOutputKeys.add(key)
+      }
+    }
+
+    const material = await resolveDefaultMaterial(technology)
+    const color = resolveColorForMaterialChange(projectFile.color, material)
+    const previousTechnology = projectFile.technology
+
+    await db.transaction(async (trx) => {
+      projectFile.useTransaction(trx)
+
+      await projectFile.related('sliceVariants').query().delete()
+
+      projectFile.gcodeStorageKey = null
+      projectFile.volume = null
+      projectFile.x = null
+      projectFile.y = null
+      projectFile.z = null
+      projectFile.infill = null
+      projectFile.layerHeight = null
+      projectFile.supportMaterialGrams = null
+      projectFile.modelMaterialGrams = null
+      projectFile.printTimeEstimatedSeconds = null
+      projectFile.surfaceAreaMm2 = null
+
+      projectFile.technology = technology
+      projectFile.materialId = material.id
+      projectFile.colorId = color.id
+      projectFile.status = 'pending'
+
+      await projectFile.save()
+
+      // Only when a lock was actually overridden - an ordinary pre-checkout
+      // change is not an exception worth recording. Overriding requires staff,
+      // so auth.user is always present here.
+      if (lock) {
+        await AuditEvent.create(
+          {
+            entityType: 'project_file',
+            entityId: projectFile.id,
+            eventType: 'updated',
+            userId: auth.user!.id,
+            payload: {
+              reason: 'technology_changed_after_lock',
+              projectFileUuid: projectFile.uuid,
+              from: previousTechnology,
+              to: technology,
+              overriddenByRole: auth.user!.role,
+              lockReason: lock.reason,
+              lockDescription: lock.description,
+            },
+          },
+          { client: trx }
+        )
+      }
+    })
+
+    // Best effort, after the commit: orphaned S3 objects are a cleanup chore,
+    // whereas failing here would leave the switch half-applied.
+    for (const key of staleOutputKeys) {
+      try {
+        await drive.use('s3').delete(key)
+      } catch (error) {
+        logger.warn(
+          { projectFileUuid: projectFile.uuid, storageKey: key, error: String(error) },
+          'Failed to delete a stale slicer output after a technology change'
+        )
+      }
+    }
+
+    await enqueueSlicingJob(projectFile, technology, material.name)
+
+    logger.info(
+      {
+        projectFileUuid: projectFile.uuid,
+        from: previousTechnology,
+        to: technology,
+        deletedOutputs: staleOutputKeys.size,
+        overrodeLock: lock ? lock.reason : null,
+      },
+      'Project file technology changed; re-queued for slicing'
+    )
+
+    // The FK changed but the preloaded relation object doesn't auto-refresh.
+    projectFile.$setRelated('material', material)
+    projectFile.$setRelated('color', color)
+    return await serialize(ProjectFileTransformer.transform(projectFile))
+  }
+
+  /**
+   * Switches a project file's material without re-slicing.
+   *
+   * Slicer-reported grams are density-dependent (the slicer is told which
+   * filament profile to use, not just geometry), so a bare materialId swap
+   * would leave grams computed for the old material's density. Rather than
+   * force a re-slice, existing grams are rescaled by the new/old density
+   * ratio when both are known - a real correction, not a heuristic. Materials
+   * without a known density simply skip rescaling.
+   *
+   * Quote regeneration reuses autoQuoteProjectIfReady (same as the slicer
+   * callback) rather than any new pricing code - status is never reset to
+   * pending here, so a completed file stays completed and reprices
+   * immediately.
+   *
+   * Locking mirrors updateTechnology: findTechnologyLock's predicate (active
+   * checkout, or a sent/accepted quote) isn't actually technology-specific,
+   * so it applies here unchanged.
+   */
+  async updateMaterial(ctx: HttpContext) {
+    const { auth, params, request, response, serialize } = ctx
+    const { materialUuid } = await request.validateUsing(updateProjectFileMaterialValidator)
+
+    const projectFile = await resolveProjectFile(ctx, params.uuid)
+    if (!projectFile) {
+      return response.notFound({ error: 'Project file not found' })
+    }
+
+    const newMaterial = await findMaterialByUuid(materialUuid)
+    if (!newMaterial) {
+      return response.notFound({ error: `Material ${materialUuid} not found` })
+    }
+    if (newMaterial.technology !== projectFile.technology) {
+      return response.unprocessableEntity({
+        error: `Material ${materialUuid} is not a ${projectFile.technology} material`,
+      })
+    }
+
+    // A redundant call must not need a lock override, since nothing changes.
+    if (projectFile.materialId === newMaterial.id) {
+      projectFile.$setRelated('material', newMaterial)
+      return await serialize(ProjectFileTransformer.transform(projectFile))
+    }
+
+    const lock = await findTechnologyLock(projectFile)
+    const canOverrideLock = isStaff(ctx)
+
+    if (lock && !canOverrideLock) {
+      return response.conflict({
+        error: `Project file ${projectFile.uuid} can no longer change material because ${lock.description}`,
+      })
+    }
+
+    const oldMaterial = projectFile.material
+    const ratio =
+      oldMaterial?.densityGPerCm3 && newMaterial.densityGPerCm3
+        ? Number(newMaterial.densityGPerCm3) / Number(oldMaterial.densityGPerCm3)
+        : null
+    const color = resolveColorForMaterialChange(projectFile.color, newMaterial)
+
+    await db.transaction(async (trx) => {
+      projectFile.useTransaction(trx)
+
+      if (ratio !== null && ratio !== 1) {
+        if (projectFile.modelMaterialGrams !== null) {
+          projectFile.modelMaterialGrams *= ratio
+        }
+        if (projectFile.supportMaterialGrams !== null) {
+          projectFile.supportMaterialGrams *= ratio
+        }
+        await projectFile
+          .related('sliceVariants')
+          .query()
+          .update({
+            filament_used_grams: db.raw('filament_used_grams * ?', [ratio]),
+          })
+      }
+
+      projectFile.materialId = newMaterial.id
+      projectFile.colorId = color.id
+      await projectFile.save()
+
+      // Only when a lock was actually overridden - an ordinary pre-checkout
+      // change is not an exception worth recording. Overriding requires staff,
+      // so auth.user is always present here.
+      if (lock) {
+        await AuditEvent.create(
+          {
+            entityType: 'project_file',
+            entityId: projectFile.id,
+            eventType: 'updated',
+            userId: auth.user!.id,
+            payload: {
+              reason: 'material_changed_after_lock',
+              projectFileUuid: projectFile.uuid,
+              from: oldMaterial?.uuid ?? null,
+              to: newMaterial.uuid,
+              overriddenByRole: auth.user!.role,
+              lockReason: lock.reason,
+              lockDescription: lock.description,
+            },
+          },
+          { client: trx }
+        )
+      }
+    })
+
+    projectFile.$setRelated('material', newMaterial)
+    projectFile.$setRelated('color', color)
+    await autoQuoteProjectIfReady(projectFile.projectId)
+
+    return await serialize(ProjectFileTransformer.transform(projectFile))
+  }
+
+  /**
+   * Switches a project file's color. No lock check, unlike technology/material -
+   * color doesn't affect grams, density, or price, so there's no
+   * financial-commitment reason to freeze it once a quote exists or checkout
+   * starts.
+   */
+  async updateColor(ctx: HttpContext) {
+    const { params, request, response, serialize } = ctx
+    const { colorUuid } = await request.validateUsing(updateProjectFileColorValidator)
+
+    const projectFile = await resolveProjectFile(ctx, params.uuid)
+    if (!projectFile) {
+      return response.notFound({ error: 'Project file not found' })
+    }
+    if (!projectFile.material) {
+      return response.unprocessableEntity({
+        error: `Project file ${projectFile.uuid} has no material assigned`,
+      })
+    }
+
+    const chosen = findColorByUuid(projectFile.material, colorUuid)
+    if (!chosen) {
+      return response.unprocessableEntity({
+        error: `Color ${colorUuid} is not available on material "${projectFile.material.name}"`,
+      })
+    }
+
+    projectFile.colorId = chosen.id
+    await projectFile.save()
+
+    projectFile.$setRelated('color', chosen)
+    return await serialize(ProjectFileTransformer.transform(projectFile))
   }
 
   async updateSlicingResult({ params, request, response, serialize }: HttpContext) {
@@ -64,20 +417,32 @@ export default class ProjectFilesController {
     }
 
     if (payload.status === 'completed') {
+      // SLS has no G-code at all (no toolpath was ever generated) but does need
+      // surfaceAreaMm2, which no other technology reports - see mesh_geometry.py
+      // in the prusa-slicer repo.
+      const requiresGcode = projectFile.technology !== 'sls'
+      const requiresSurfaceArea = projectFile.technology === 'sls'
+
       if (
-        payload.gcodeStorageKey === undefined ||
+        (requiresGcode && payload.gcodeStorageKey === undefined) ||
         payload.volume === undefined ||
         payload.x === undefined ||
         payload.y === undefined ||
-        payload.z === undefined
+        payload.z === undefined ||
+        (requiresSurfaceArea && payload.surfaceAreaMm2 === undefined)
       ) {
         return response.badRequest({ error: 'Missing slicing result fields' })
       }
-      projectFile.gcodeStorageKey = payload.gcodeStorageKey
+      if (payload.gcodeStorageKey !== undefined) {
+        projectFile.gcodeStorageKey = payload.gcodeStorageKey
+      }
       projectFile.volume = payload.volume
       projectFile.x = payload.x
       projectFile.y = payload.y
       projectFile.z = payload.z
+      if (payload.surfaceAreaMm2 !== undefined) {
+        projectFile.surfaceAreaMm2 = payload.surfaceAreaMm2
+      }
       if (payload.infill !== undefined) {
         projectFile.infill = payload.infill
       }
@@ -104,7 +469,7 @@ export default class ProjectFilesController {
         await projectFile.related('sliceVariants').updateOrCreateMany(
           payload.variants.map((variant) => ({
             variant: variant.variant,
-            infill: variant.infill,
+            infill: variant.infill ?? null, // absent for SLA variants
             layerHeight: variant.layerHeight,
             filamentUsedGrams: variant.filamentUsedGrams,
             printTimeEstimatedSeconds: variant.printTimeEstimatedSeconds,
@@ -126,6 +491,8 @@ export default class ProjectFilesController {
       projectFile.status = 'failed'
       await projectFile.save()
     }
+
+    await autoQuoteProjectIfReady(projectFile.projectId)
 
     return serialize({ uuid: projectFile.uuid, status: projectFile.status })
   }

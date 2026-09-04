@@ -6,7 +6,7 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
-      table.enum('entity_type', ['order', 'project', 'quote', 'payment', 'refund', 'vendor_payout']).notNullable()
+      table.enum('entity_type', ['order', 'project', 'project_file', 'quote', 'payment', 'refund', 'vendor_payout']).notNullable()
       table.integer('entity_id').unsigned().notNullable().index()
       table.enum('event_type', ['created', 'updated', 'deleted']).notNullable()
       table.json('payload').nullable()

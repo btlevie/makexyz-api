@@ -11,7 +11,7 @@ export default {
     },
     ['addresses']: {
       columns: {
-        ['ownerType']: {
+        ['owner_type']: {
           tsType: "'customer' | 'vendor'",
         },
       },
@@ -22,12 +22,25 @@ export default {
           tsType:
             "'draft' | 'quoted' | 'awaiting_checkout' | 'ordered' | 'fulfilled' | 'cancelled' | 'expired'",
         },
+        ['source']: {
+          tsType: "'instant_quote' | 'manual'",
+        },
       },
     },
     ['project_files']: {
       columns: {
         ['status']: {
           tsType: "'pending' | 'processing' | 'completed' | 'failed'",
+        },
+        ['technology']: {
+          tsType: "'fdm' | 'sla' | 'sls'",
+        },
+      },
+    },
+    ['materials']: {
+      columns: {
+        ['technology']: {
+          tsType: "'fdm' | 'sla' | 'sls'",
         },
       },
     },
@@ -38,13 +51,23 @@ export default {
         },
       },
     },
+    ['pricing_configs']: {
+      columns: {
+        ['technology']: {
+          tsType: "'fdm'",
+        },
+      },
+    },
     ['quotes']: {
       columns: {
         ['status']: {
           tsType: "'draft' | 'sent' | 'accepted' | 'rejected'",
         },
-        ['generatedBy']: {
+        ['generated_by']: {
           tsType: "'system' | 'user'",
+        },
+        ['rejection_reason']: {
+          tsType: "'abandoned' | 'declined'",
         },
       },
     },

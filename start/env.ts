@@ -62,4 +62,39 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   SQS_SLICING_QUEUE_URL: Env.schema.string.optional(),
   SLICER_CALLBACK_SECRET: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the limiter package
+  |----------------------------------------------------------
+  */
+  LIMITER_STORE: Env.schema.enum(['database', 'memory'] as const),
+
+  /*
+  |----------------------------------------------------------
+  | Instant-quote rate limiting
+  |----------------------------------------------------------
+  | The instant-quote upload is public and costs money per call (an S3 write
+  | plus a slicing Lambda invocation), so it is throttled per IP. Optional
+  | with defaults in start/limiter.ts so a missing value can't disable the
+  | limit outright.
+  */
+  INSTANT_QUOTE_RATE_LIMIT_REQUESTS: Env.schema.number.optional(),
+  INSTANT_QUOTE_RATE_LIMIT_WINDOW: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Anonymous instant-quote grants and abandoned-project cleanup
+  |----------------------------------------------------------
+  */
+  ANONYMOUS_GRANT_TTL: Env.schema.string.optional(),
+  ANONYMOUS_PROJECT_TTL_DAYS: Env.schema.number.optional(),
+  PROJECT_PURGE_GRACE_DAYS: Env.schema.number.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring @adonisjs/queue
+  |----------------------------------------------------------
+  */
+  QUEUE_DRIVER: Env.schema.enum(['redis', 'database', 'sync'] as const)
 })

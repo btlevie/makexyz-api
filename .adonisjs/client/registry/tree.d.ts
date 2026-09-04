@@ -23,8 +23,17 @@ export interface ApiDefinition {
   }
   projects: {
     projectFiles: {
-      store: typeof routes['projects.project_files.store']
+      storeInstantQuoteFiles: typeof routes['projects.project_files.store_instant_quote_files']
+      updateTechnology: typeof routes['projects.project_files.update_technology']
+      updateMaterial: typeof routes['projects.project_files.update_material']
+      updateColor: typeof routes['projects.project_files.update_color']
       updateSlicingResult: typeof routes['projects.project_files.update_slicing_result']
+    }
+    quotes: {
+      store: typeof routes['projects.quotes.store']
+    }
+    projects: {
+      captureEmail: typeof routes['projects.projects.capture_email']
     }
   }
 }

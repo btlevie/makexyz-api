@@ -1,0 +1,43 @@
+/*
+|--------------------------------------------------------------------------
+| Scheduler
+|--------------------------------------------------------------------------
+|
+| This file is used to define scheduled jobs. You can schedule jobs to run
+| at specific intervals using cron expressions or duration strings.
+|
+| Example:
+|
+|   import SendWeeklyReport from '#jobs/send_weekly_report'
+|
+|   SendWeeklyReport.schedule({ userId: 1 })
+|     .cron('0 9 * * MON')
+|     .run()
+|
+| These require a worker to be running: `node ace queue:work`.
+|
+*/
+
+import ExpireAbandonedProjects from '#jobs/expire_abandoned_projects'
+import PurgeExpiredProjects from '#jobs/purge_expired_projects'
+
+/**
+ * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
+ * while: expire first (marking the project expired and its open quotes rejected
+ * as `abandoned`), then reclaim the storage after a grace window.
+ *
+ * Both are daily - the TTLs are measured in days, so there is nothing to gain
+ * from running them more often.
+ *
+ * The stable `id()` matters: this file is preloaded on every boot, so without
+ * one each restart would register another copy of the same schedule.
+ *
+ * This scheduler has no withoutOverlapping(); both jobs are written to be safe
+ * if they do overlap - expire re-queries by cutoff, and purge locks each project
+ * row and re-checks before acting.
+ */
+ExpireAbandonedProjects.schedule({}).id('expire-abandoned-projects').cron('15 3 * * *').run()
+
+// An hour after expire, so a project expired by tonight's run isn't purged by a
+// sweep running alongside it.
+PurgeExpiredProjects.schedule({}).id('purge-expired-projects').cron('15 4 * * *').run()

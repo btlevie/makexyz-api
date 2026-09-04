@@ -67,7 +67,7 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/access_tokens_controller').default['destroy']>>>
     }
   }
-  'projects.project_files.store': {
+  'projects.project_files.store_instant_quote_files': {
     methods: ["POST"]
     pattern: '/v1/projects/files'
     types: {
@@ -75,8 +75,44 @@ export interface Registry {
       paramsTuple: []
       params: {}
       query: ExtractQuery<InferInput<(typeof import('#validators/project_file').uploadProjectFileValidator)>>
-      response: ExtractResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['store']>>>
-      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['storeInstantQuoteFiles']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['storeInstantQuoteFiles']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'projects.project_files.update_technology': {
+    methods: ["PATCH"]
+    pattern: '/v1/projects/files/:uuid/technology'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/project_file').updateProjectFileTechnologyValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/project_file').updateProjectFileTechnologyValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateTechnology']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateTechnology']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'projects.project_files.update_material': {
+    methods: ["PATCH"]
+    pattern: '/v1/projects/files/:uuid/material'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/project_file').updateProjectFileMaterialValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/project_file').updateProjectFileMaterialValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateMaterial']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateMaterial']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'projects.project_files.update_color': {
+    methods: ["PATCH"]
+    pattern: '/v1/projects/files/:uuid/color'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/project_file').updateProjectFileColorValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/project_file').updateProjectFileColorValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateColor']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateColor']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'projects.project_files.update_slicing_result': {
@@ -89,6 +125,30 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/project_file').sliceResultValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateSlicingResult']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/project_files_controller').default['updateSlicingResult']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'projects.quotes.store': {
+    methods: ["POST"]
+    pattern: '/v1/projects/:projectUuid/quotes'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/quote').createQuoteValidator)>>
+      paramsTuple: [ParamValue]
+      params: { projectUuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/quote').createQuoteValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'projects.projects.capture_email': {
+    methods: ["POST"]
+    pattern: '/v1/projects/:projectUuid/email'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/project').captureProjectEmailValidator)>>
+      paramsTuple: [ParamValue]
+      params: { projectUuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/project').captureProjectEmailValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/projects_controller').default['captureEmail']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/projects_controller').default['captureEmail']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
 }

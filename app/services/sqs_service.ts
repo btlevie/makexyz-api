@@ -10,7 +10,11 @@ const client = new SQSClient({ region: env.get('AWS_REGION') })
  * when SQS_SLICING_QUEUE_URL isn't set, since the queue/Lambda infra for the
  * slicer microservice hasn't been provisioned yet.
  */
-export async function enqueueSlicingJob(projectFile: ProjectFile, material: string) {
+export async function enqueueSlicingJob(
+  projectFile: ProjectFile,
+  technology: 'fdm' | 'sla' | 'sls',
+  material?: string
+) {
   const queueUrl = env.get('SQS_SLICING_QUEUE_URL')
   if (!queueUrl) {
     logger.warn(
@@ -26,7 +30,11 @@ export async function enqueueSlicingJob(projectFile: ProjectFile, material: stri
       MessageBody: JSON.stringify({
         projectFileUuid: projectFile.uuid,
         fileStorageKey: projectFile.fileStorageKey,
-        material,
+        technology,
+        // SLA jobs don't have a material - omit the key entirely rather than
+        // sending material: undefined (which JSON.stringify would drop anyway,
+        // but being explicit here documents the intent).
+        ...(material ? { material } : {}),
       }),
     })
   )

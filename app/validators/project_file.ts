@@ -17,12 +17,35 @@ const ALLOWED_EXTENSIONS = [
 
 export const uploadProjectFileValidator = vine.create({
   projectUuid: vine.string().uuid().optional(),
+  technology: vine.enum(['fdm', 'sla', 'sls'] as const).optional(),
   files: vine.array(
     vine.file({
-      size: '20mb',
+      size: '100mb',
       extnames: [...ALLOWED_EXTENSIONS],
     })
   ),
+})
+
+/**
+ * Required, not optional - setting the technology is the entire point of the
+ * endpoint that uses this.
+ */
+export const updateProjectFileTechnologyValidator = vine.create({
+  technology: vine.enum(['fdm', 'sla', 'sls'] as const),
+})
+
+/**
+ * Required, not optional - same reasoning as technology above.
+ */
+export const updateProjectFileMaterialValidator = vine.create({
+  materialUuid: vine.string().uuid(),
+})
+
+/**
+ * Required, not optional - same reasoning as technology/material above.
+ */
+export const updateProjectFileColorValidator = vine.create({
+  colorUuid: vine.string().uuid(),
 })
 
 const SLICE_VARIANTS = ['baseline', 'infill_probe', 'layer_height_probe'] as const
@@ -39,12 +62,13 @@ export const sliceResultValidator = vine.create({
   supportMaterialGrams: vine.number().optional(),
   modelMaterialGrams: vine.number().optional(),
   printTimeEstimatedSeconds: vine.number().optional(),
+  surfaceAreaMm2: vine.number().optional(),
   error: vine.string().optional(),
   variants: vine
     .array(
       vine.object({
         variant: vine.enum(SLICE_VARIANTS),
-        infill: vine.number(),
+        infill: vine.number().optional(), // absent for SLA variants - no infill analog
         layerHeight: vine.number(),
         filamentUsedGrams: vine.number(),
         printTimeEstimatedSeconds: vine.number(),

@@ -27,7 +27,7 @@ export class AddressSchema extends BaseModel {
   @column()
   declare line2: string | null
   @column()
-  declare ownerType: string
+  declare ownerType: 'customer' | 'vendor'
   @column()
   declare postalCode: string
   @column()
@@ -112,12 +112,14 @@ export class CheckoutSessionSchema extends BaseModel {
 }
 
 export class CustomerSchema extends BaseModel {
-  static $columns = ['companyName', 'createdAt', 'firstName', 'id', 'lastName', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
+  static $columns = ['companyName', 'createdAt', 'email', 'firstName', 'id', 'lastName', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
   $columns = CustomerSchema.$columns
   @column()
   declare companyName: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
+  @column()
+  declare email: string | null
   @column()
   declare firstName: string | null
   @column({ isPrimary: true })
@@ -138,6 +140,43 @@ export class CustomerSchema extends BaseModel {
   declare uuid: string
 }
 
+export class FdmPricingConfigValueSchema extends BaseModel {
+  static $columns = ['bulkFloorBreakGrams', 'bulkFloorLargeMultiplier', 'bulkFloorSigmoidWidthGrams', 'bulkFloorSmallMultiplier', 'createdAt', 'failureBufferMultiplier', 'fixedLineItemCharge', 'id', 'machineRatePerHour', 'modelMaterialRatePerGram', 'oversizeMultiplier', 'oversizeThresholdMm', 'pricingConfigId', 'quantityDecayConstant', 'supportMaterialRatePerGram', 'updatedAt'] as const
+  $columns = FdmPricingConfigValueSchema.$columns
+  @column()
+  declare bulkFloorBreakGrams: string
+  @column()
+  declare bulkFloorLargeMultiplier: string
+  @column()
+  declare bulkFloorSigmoidWidthGrams: string
+  @column()
+  declare bulkFloorSmallMultiplier: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare failureBufferMultiplier: string
+  @column()
+  declare fixedLineItemCharge: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare machineRatePerHour: string
+  @column()
+  declare modelMaterialRatePerGram: string
+  @column()
+  declare oversizeMultiplier: string
+  @column()
+  declare oversizeThresholdMm: string
+  @column()
+  declare pricingConfigId: number
+  @column()
+  declare quantityDecayConstant: string
+  @column()
+  declare supportMaterialRatePerGram: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class FeeSchema extends BaseModel {
   static $columns = ['createdAt', 'defaultAmount', 'description', 'id', 'name', 'updatedAt'] as const
   $columns = FeeSchema.$columns
@@ -155,21 +194,50 @@ export class FeeSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
-export class MaterialSchema extends BaseModel {
-  static $columns = ['colorOptions', 'createdAt', 'description', 'id', 'name', 'updatedAt'] as const
-  $columns = MaterialSchema.$columns
-  @column()
-  declare colorOptions: any | null
+export class MaterialColorSchema extends BaseModel {
+  static $columns = ['createdAt', 'hex', 'id', 'isDefault', 'materialId', 'name', 'updatedAt', 'uuid'] as const
+  $columns = MaterialColorSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
+  @column()
+  declare hex: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isDefault: boolean
+  @column()
+  declare materialId: number
+  @column()
+  declare name: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+}
+
+export class MaterialSchema extends BaseModel {
+  static $columns = ['createdAt', 'densityGPerCm3', 'description', 'id', 'isDefault', 'name', 'technology', 'trueCostPerGram', 'updatedAt', 'uuid'] as const
+  $columns = MaterialSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare densityGPerCm3: string | null
   @column()
   declare description: string | null
   @column({ isPrimary: true })
   declare id: number
   @column()
+  declare isDefault: boolean
+  @column()
   declare name: string
+  @column()
+  declare technology: 'fdm' | 'sla' | 'sls'
+  @column()
+  declare trueCostPerGram: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
 }
 
 export class OrderFeeSchema extends BaseModel {
@@ -297,6 +365,31 @@ export class PaymentSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class PricingConfigSchema extends BaseModel {
+  static $columns = ['activatedAt', 'createdAt', 'createdById', 'id', 'isActive', 'name', 'notes', 'technology', 'updatedAt', 'version'] as const
+  $columns = PricingConfigSchema.$columns
+  @column.dateTime()
+  declare activatedAt: DateTime | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare createdById: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isActive: boolean
+  @column()
+  declare name: string
+  @column()
+  declare notes: string | null
+  @column()
+  declare technology: 'fdm'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare version: number
+}
+
 export class ProjectFileSliceVariantSchema extends BaseModel {
   static $columns = ['createdAt', 'filamentUsedGrams', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'printTimeEstimatedSeconds', 'projectFileId', 'updatedAt', 'variant'] as const
   $columns = ProjectFileSliceVariantSchema.$columns
@@ -309,7 +402,7 @@ export class ProjectFileSliceVariantSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
-  declare infill: number
+  declare infill: number | null
   @column()
   declare layerHeight: number
   @column()
@@ -323,10 +416,10 @@ export class ProjectFileSliceVariantSchema extends BaseModel {
 }
 
 export class ProjectFileSchema extends BaseModel {
-  static $columns = ['color', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'modelMaterialGrams', 'originalName', 'printTimeEstimatedSeconds', 'projectId', 'status', 'supportMaterialGrams', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
+  static $columns = ['colorId', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'modelMaterialGrams', 'originalName', 'printTimeEstimatedSeconds', 'projectId', 'status', 'supportMaterialGrams', 'surfaceAreaMm2', 'technology', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
   $columns = ProjectFileSchema.$columns
   @column()
-  declare color: string | null
+  declare colorId: number | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
@@ -357,6 +450,10 @@ export class ProjectFileSchema extends BaseModel {
   declare status: 'pending' | 'processing' | 'completed' | 'failed'
   @column()
   declare supportMaterialGrams: number | null
+  @column()
+  declare surfaceAreaMm2: number | null
+  @column()
+  declare technology: 'fdm' | 'sla' | 'sls'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
@@ -372,7 +469,7 @@ export class ProjectFileSchema extends BaseModel {
 }
 
 export class ProjectSchema extends BaseModel {
-  static $columns = ['cancelledAt', 'createdAt', 'customerId', 'description', 'expiredAt', 'fulfilledAt', 'id', 'metadata', 'status', 'title', 'updatedAt', 'uuid'] as const
+  static $columns = ['cancelledAt', 'createdAt', 'customerId', 'description', 'expiredAt', 'fulfilledAt', 'id', 'metadata', 'source', 'status', 'title', 'updatedAt', 'uuid'] as const
   $columns = ProjectSchema.$columns
   @column.dateTime()
   declare cancelledAt: DateTime | null
@@ -391,6 +488,8 @@ export class ProjectSchema extends BaseModel {
   @column()
   declare metadata: any | null
   @column()
+  declare source: 'instant_quote' | 'manual'
+  @column()
   declare status: 'draft' | 'quoted' | 'awaiting_checkout' | 'ordered' | 'fulfilled' | 'cancelled' | 'expired'
   @column()
   declare title: string | null
@@ -398,6 +497,70 @@ export class ProjectSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare uuid: string
+}
+
+export class QueueJobSchema extends BaseModel {
+  static $columns = ['acquiredAt', 'data', 'dedupAt', 'dedupId', 'dedupTtl', 'error', 'executeAt', 'finishedAt', 'id', 'queue', 'score', 'status', 'workerId'] as const
+  $columns = QueueJobSchema.$columns
+  @column()
+  declare acquiredAt: bigint | number | null
+  @column()
+  declare data: string
+  @column()
+  declare dedupAt: bigint | number | null
+  @column()
+  declare dedupId: string | null
+  @column()
+  declare dedupTtl: bigint | number | null
+  @column()
+  declare error: string | null
+  @column()
+  declare executeAt: bigint | number | null
+  @column()
+  declare finishedAt: bigint | number | null
+  @column({ isPrimary: true })
+  declare id: string
+  @column()
+  declare queue: string
+  @column()
+  declare score: bigint | number | null
+  @column()
+  declare status: string
+  @column()
+  declare workerId: string | null
+}
+
+export class QueueScheduleSchema extends BaseModel {
+  static $columns = ['createdAt', 'cronExpression', 'everyMs', 'fromDate', 'id', 'lastRunAt', 'name', 'nextRunAt', 'payload', 'runCount', 'runLimit', 'status', 'timezone', 'toDate'] as const
+  $columns = QueueScheduleSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column()
+  declare cronExpression: string | null
+  @column()
+  declare everyMs: bigint | number | null
+  @column.dateTime()
+  declare fromDate: DateTime | null
+  @column({ isPrimary: true })
+  declare id: string
+  @column.dateTime()
+  declare lastRunAt: DateTime | null
+  @column()
+  declare name: string
+  @column.dateTime()
+  declare nextRunAt: DateTime | null
+  @column()
+  declare payload: string
+  @column()
+  declare runCount: number
+  @column()
+  declare runLimit: number | null
+  @column()
+  declare status: string
+  @column()
+  declare timezone: string
+  @column.dateTime()
+  declare toDate: DateTime | null
 }
 
 export class QuoteFeeSchema extends BaseModel {
@@ -416,7 +579,7 @@ export class QuoteFeeSchema extends BaseModel {
 }
 
 export class QuoteItemSchema extends BaseModel {
-  static $columns = ['createdAt', 'description', 'id', 'itemType', 'projectFileId', 'quantity', 'quoteId', 'total', 'unitPrice', 'updatedAt'] as const
+  static $columns = ['createdAt', 'description', 'id', 'itemType', 'pricingConfigId', 'pricingSnapshot', 'projectFileId', 'quantity', 'quoteId', 'total', 'unitPrice', 'updatedAt'] as const
   $columns = QuoteItemSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
@@ -426,6 +589,10 @@ export class QuoteItemSchema extends BaseModel {
   declare id: number
   @column()
   declare itemType: string | null
+  @column()
+  declare pricingConfigId: number | null
+  @column()
+  declare pricingSnapshot: any | null
   @column()
   declare projectFileId: number | null
   @column()
@@ -441,20 +608,24 @@ export class QuoteItemSchema extends BaseModel {
 }
 
 export class QuoteSchema extends BaseModel {
-  static $columns = ['createdAt', 'createdById', 'generatedBy', 'id', 'notes', 'projectId', 'revision', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
+  static $columns = ['createdAt', 'createdById', 'generatedBy', 'id', 'notes', 'projectId', 'rejectedAt', 'rejectionReason', 'revision', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
   $columns = QuoteSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare createdById: number | null
   @column()
-  declare generatedBy: string
+  declare generatedBy: 'system' | 'user'
   @column({ isPrimary: true })
   declare id: number
   @column()
   declare notes: string | null
   @column()
   declare projectId: number | null
+  @column.dateTime()
+  declare rejectedAt: DateTime | null
+  @column()
+  declare rejectionReason: 'abandoned' | 'declined' | null
   @column()
   declare revision: number
   @column()
@@ -469,6 +640,17 @@ export class QuoteSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare uuid: string
+}
+
+export class RateLimitSchema extends BaseModel {
+  static $columns = ['expire', 'key', 'points'] as const
+  $columns = RateLimitSchema.$columns
+  @column()
+  declare expire: bigint | number | null
+  @column({ isPrimary: true })
+  declare key: string
+  @column()
+  declare points: number
 }
 
 export class RefundSchema extends BaseModel {

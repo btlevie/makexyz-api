@@ -7,6 +7,8 @@
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
+import type ProjectFileTransformer from '#transformers/project_file_transformer'
+import type QuoteTransformer from '#transformers/quote_transformer'
 import type UserTransformer from '#transformers/user_transformer'
 
 export namespace Data {
@@ -17,6 +19,14 @@ export namespace Data {
   export type InstantQuoteFile = InferData<InstantQuoteFileTransformer>
   export namespace InstantQuoteFile {
     export type Variants = InferVariants<InstantQuoteFileTransformer>
+  }
+  export type ProjectFile = InferData<ProjectFileTransformer>
+  export namespace ProjectFile {
+    export type Variants = InferVariants<ProjectFileTransformer>
+  }
+  export type Quote = InferData<QuoteTransformer>
+  export namespace Quote {
+    export type Variants = InferVariants<QuoteTransformer>
   }
   export type User = InferData<UserTransformer>
   export namespace User {

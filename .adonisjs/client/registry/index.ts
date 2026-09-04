@@ -36,17 +36,47 @@ const routes = {
     tokens: [{"old":"/v1/account/logout","type":0,"val":"v1","end":""},{"old":"/v1/account/logout","type":0,"val":"account","end":""},{"old":"/v1/account/logout","type":0,"val":"logout","end":""}],
     types: placeholder as Registry['profile.access_tokens.destroy']['types'],
   },
-  'projects.project_files.store': {
+  'projects.project_files.store_instant_quote_files': {
     methods: ["POST"],
     pattern: '/v1/projects/files',
     tokens: [{"old":"/v1/projects/files","type":0,"val":"v1","end":""},{"old":"/v1/projects/files","type":0,"val":"projects","end":""},{"old":"/v1/projects/files","type":0,"val":"files","end":""}],
-    types: placeholder as Registry['projects.project_files.store']['types'],
+    types: placeholder as Registry['projects.project_files.store_instant_quote_files']['types'],
+  },
+  'projects.project_files.update_technology': {
+    methods: ["PATCH"],
+    pattern: '/v1/projects/files/:uuid/technology',
+    tokens: [{"old":"/v1/projects/files/:uuid/technology","type":0,"val":"v1","end":""},{"old":"/v1/projects/files/:uuid/technology","type":0,"val":"projects","end":""},{"old":"/v1/projects/files/:uuid/technology","type":0,"val":"files","end":""},{"old":"/v1/projects/files/:uuid/technology","type":1,"val":"uuid","end":""},{"old":"/v1/projects/files/:uuid/technology","type":0,"val":"technology","end":""}],
+    types: placeholder as Registry['projects.project_files.update_technology']['types'],
+  },
+  'projects.project_files.update_material': {
+    methods: ["PATCH"],
+    pattern: '/v1/projects/files/:uuid/material',
+    tokens: [{"old":"/v1/projects/files/:uuid/material","type":0,"val":"v1","end":""},{"old":"/v1/projects/files/:uuid/material","type":0,"val":"projects","end":""},{"old":"/v1/projects/files/:uuid/material","type":0,"val":"files","end":""},{"old":"/v1/projects/files/:uuid/material","type":1,"val":"uuid","end":""},{"old":"/v1/projects/files/:uuid/material","type":0,"val":"material","end":""}],
+    types: placeholder as Registry['projects.project_files.update_material']['types'],
+  },
+  'projects.project_files.update_color': {
+    methods: ["PATCH"],
+    pattern: '/v1/projects/files/:uuid/color',
+    tokens: [{"old":"/v1/projects/files/:uuid/color","type":0,"val":"v1","end":""},{"old":"/v1/projects/files/:uuid/color","type":0,"val":"projects","end":""},{"old":"/v1/projects/files/:uuid/color","type":0,"val":"files","end":""},{"old":"/v1/projects/files/:uuid/color","type":1,"val":"uuid","end":""},{"old":"/v1/projects/files/:uuid/color","type":0,"val":"color","end":""}],
+    types: placeholder as Registry['projects.project_files.update_color']['types'],
   },
   'projects.project_files.update_slicing_result': {
     methods: ["PATCH"],
     pattern: '/v1/projects/files/:uuid/slicing-result',
     tokens: [{"old":"/v1/projects/files/:uuid/slicing-result","type":0,"val":"v1","end":""},{"old":"/v1/projects/files/:uuid/slicing-result","type":0,"val":"projects","end":""},{"old":"/v1/projects/files/:uuid/slicing-result","type":0,"val":"files","end":""},{"old":"/v1/projects/files/:uuid/slicing-result","type":1,"val":"uuid","end":""},{"old":"/v1/projects/files/:uuid/slicing-result","type":0,"val":"slicing-result","end":""}],
     types: placeholder as Registry['projects.project_files.update_slicing_result']['types'],
+  },
+  'projects.quotes.store': {
+    methods: ["POST"],
+    pattern: '/v1/projects/:projectUuid/quotes',
+    tokens: [{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"quotes","end":""}],
+    types: placeholder as Registry['projects.quotes.store']['types'],
+  },
+  'projects.projects.capture_email': {
+    methods: ["POST"],
+    pattern: '/v1/projects/:projectUuid/email',
+    tokens: [{"old":"/v1/projects/:projectUuid/email","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/email","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/email","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/email","type":0,"val":"email","end":""}],
+    types: placeholder as Registry['projects.projects.capture_email']['types'],
   },
 } as const satisfies Record<string, AdonisEndpoint>
 

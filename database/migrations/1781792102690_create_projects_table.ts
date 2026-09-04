@@ -11,6 +11,11 @@ export default class extends BaseSchema {
       table.string('title')
       table.text('description').nullable()
       table.enum('status', ['draft' , 'quoted', 'awaiting_checkout', 'ordered', 'fulfilled', 'cancelled', 'expired']).notNullable().defaultTo('draft')
+      // Which flow this request arrived through. Fixed at creation and shared by
+      // every quote revision, so it lives here rather than on quotes. Drives
+      // funnel segmentation and tells the cleanup jobs which projects are
+      // theirs to expire.
+      table.enum('source', ['instant_quote', 'manual']).notNullable().defaultTo('instant_quote')
       table.jsonb('metadata').nullable()
       table.timestamp('expired_at').nullable()
       table.timestamp('cancelled_at').nullable()

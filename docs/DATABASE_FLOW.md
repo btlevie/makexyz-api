@@ -110,14 +110,21 @@ A project may contain multiple files.
 Each file stores manufacturing-specific information including:
 
 * Material
-* Volume
-* Dimensions
+* Volume (cm³)
+* Dimensions (millimeters)
+* Surface area (mm²)
 * Color
 * Layer height
 * Infill
+* Model material grams and support material grams
+* Estimated print time (seconds)
 * Generated G-code
 
 These records represent the manufacturing inputs that are later used to generate quotes and order items.
+
+The material split, print time, and dimensions are produced by the slicer service and are what the pricing engine consumes. A file must have finished slicing before it can be priced.
+
+SLS files get a geometry-only analysis instead of a traditional slice: PrusaSlicer has no powder-bed-fusion process, so the slicer service reads volume, bounding box, and surface area directly from the mesh (`prusa-slicer --info` plus a small surface-area calculation) rather than generating toolpaths. There's no G-code, no support/model material split (the surrounding powder bed is the support, reclaimed after the build), and `printTimeEstimatedSeconds` is a geometry-based approximation rather than a physics-simulated slicer output. Like SLA, SLS files aren't priceable yet - no pricing algorithm exists for either.
 
 ---
 
@@ -163,6 +170,37 @@ Quote items are associated with project files and contain:
 * Quantity
 * Unit price
 * Total
+* The pricing configuration used
+* A pricing snapshot
+
+Unit price is a rounded, display-oriented figure. Because it is rounded before
+being multiplied out, `unit price × quantity` does not always equal `total` — the
+authoritative figures are `total` and the pricing snapshot.
+
+---
+
+## Pricing Configuration
+
+Manufacturing prices are calculated from constants held in the database rather
+than in application code, so they can be tuned without a deploy.
+
+`pricing_configs` is the technology-scoped, versioned header: technology,
+version, active flag, and who activated it when. The constants themselves live
+in a per-technology values table — currently `fdm_pricing_config_values` — so
+adding a technology means adding a table rather than widening a shared one with
+columns that are null for everything else.
+
+Exactly one configuration is active per technology. Changing prices means
+creating a new version and activating it, never editing an active row: each
+quote item records the configuration that produced it plus a full snapshot of
+the calculation, so a historical quote can still be explained months later after
+the constants have moved on.
+
+The FDM engine prices manufacturing only — model material, support material,
+machine time, a failure buffer, a fixed per-line charge, a quantity discount
+that decays toward a material-cost floor, and an oversize surcharge. Shipping,
+tax, fees and any minimum order value are deliberately excluded; those belong to
+checkout.
 
 ---
 
