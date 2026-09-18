@@ -20,6 +20,7 @@
 
 import ExpireAbandonedProjects from '#jobs/expire_abandoned_projects'
 import PurgeExpiredProjects from '#jobs/purge_expired_projects'
+import EscalateOrderRouting from '#jobs/escalate_order_routing'
 
 /**
  * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
@@ -41,3 +42,9 @@ ExpireAbandonedProjects.schedule({}).id('expire-abandoned-projects').cron('15 3 
 // An hour after expire, so a project expired by tonight's run isn't purged by a
 // sweep running alongside it.
 PurgeExpiredProjects.schedule({}).id('purge-expired-projects').cron('15 4 * * *').run()
+
+/**
+ * Hourly: moves any order past its preferred-routing window into the open
+ * queue so it isn't stuck waiting on preferred vendors indefinitely.
+ */
+EscalateOrderRouting.schedule({}).id('escalate-order-routing').cron('0 * * * *').run()

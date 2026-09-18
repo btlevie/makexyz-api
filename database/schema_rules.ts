@@ -80,6 +80,16 @@ export default {
           tsType:
             "'pending' | 'paid' | 'open' | 'accepted' | 'rejected' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'delivered' | 'refunded' | 'cancelled'",
         },
+        ['routing_stage']: {
+          tsType: "'preferred' | 'open'",
+        },
+      },
+    },
+    ['vendor_technology_capabilities']: {
+      columns: {
+        ['technology']: {
+          tsType: "'fdm' | 'sla' | 'sls'",
+        },
       },
     },
     ['checkout_sessions']: {
