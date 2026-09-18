@@ -96,5 +96,15 @@ export default await Env.create(new URL('../', import.meta.url), {
   | Variables for configuring @adonisjs/queue
   |----------------------------------------------------------
   */
-  QUEUE_DRIVER: Env.schema.enum(['redis', 'database', 'sync'] as const)
+  QUEUE_DRIVER: Env.schema.enum(['redis', 'database', 'sync'] as const),
+
+  /*
+  |----------------------------------------------------------
+  | Tax provider credentials
+  |----------------------------------------------------------
+  | Optional for now - no real Stripe credentials exist yet. getTaxCalculator
+  | always resolves to its in-memory Fake in test env regardless of this, so
+  | tests never need it either.
+  */
+  STRIPE_SECRET_KEY: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
 })
