@@ -371,7 +371,7 @@ test.group('Projects | change file material | locks', (group) => {
 
   test('an active checkout session locks the change', async ({ client, assert }) => {
     const { project, projectFile, grant, material } = await createSlicedFdmFile()
-    await CheckoutSession.create({ projectId: project.id, status: 'active' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'active' })
     const petg = await createFdmMaterial('PETG', '1.24')
 
     const response = await patchMaterial(client, projectFile)
@@ -386,7 +386,7 @@ test.group('Projects | change file material | locks', (group) => {
 
   test('a completed checkout session locks the change', async ({ client, assert }) => {
     const { project, projectFile, grant, material } = await createSlicedFdmFile()
-    await CheckoutSession.create({ projectId: project.id, status: 'completed' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'completed' })
     const petg = await createFdmMaterial('PETG', '1.24')
 
     const response = await patchMaterial(client, projectFile)
@@ -400,7 +400,7 @@ test.group('Projects | change file material | locks', (group) => {
 
   test('an expired checkout session does not lock', async ({ client, assert }) => {
     const { project, projectFile, grant } = await createSlicedFdmFile()
-    await CheckoutSession.create({ projectId: project.id, status: 'expired' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'expired' })
     const petg = await createFdmMaterial('PETG', '1.24')
 
     const response = await patchMaterial(client, projectFile)
@@ -453,7 +453,7 @@ test.group('Projects | change file material | locks', (group) => {
       await promote(staff.user, role)
 
       const { project, projectFile, material } = await createSlicedFdmFile()
-      await CheckoutSession.create({ projectId: project.id, status: 'active' })
+      await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'active' })
       const petg = await createFdmMaterial('PETG', '1.24')
 
       const response = await patchMaterial(client, projectFile)

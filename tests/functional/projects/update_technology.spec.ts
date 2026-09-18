@@ -378,7 +378,7 @@ test.group('Projects | change file technology | locks', (group) => {
 
   test('an active checkout session locks the change', async ({ client, assert }) => {
     const { project, projectFile, grant } = await createSlicedFdmFile()
-    await CheckoutSession.create({ projectId: project.id, status: 'active' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'active' })
 
     const response = await patchTechnology(client, projectFile)
       .header('x-project-grant', grant)
@@ -393,7 +393,7 @@ test.group('Projects | change file technology | locks', (group) => {
 
   test('a completed checkout session locks the change', async ({ client, assert }) => {
     const { project, projectFile, grant } = await createSlicedFdmFile()
-    await CheckoutSession.create({ projectId: project.id, status: 'completed' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'completed' })
 
     const response = await patchTechnology(client, projectFile)
       .header('x-project-grant', grant)
@@ -406,7 +406,7 @@ test.group('Projects | change file technology | locks', (group) => {
 
   test('an expired checkout session does not lock', async ({ client, assert }) => {
     const { project, projectFile, grant } = await createSlicedFdmFile()
-    await CheckoutSession.create({ projectId: project.id, status: 'expired' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'expired' })
 
     const response = await patchTechnology(client, projectFile)
       .header('x-project-grant', grant)
@@ -482,7 +482,7 @@ test.group('Projects | change file technology | locks', (group) => {
       await promote(staff.user, role)
 
       const { project, projectFile } = await createSlicedFdmFile()
-      await CheckoutSession.create({ projectId: project.id, status: 'active' })
+      await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'active' })
 
       const response = await patchTechnology(client, projectFile)
         .withSession(staff.session)

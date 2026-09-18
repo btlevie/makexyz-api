@@ -212,7 +212,7 @@ test.group('Projects | expiring abandoned instant quotes', (group) => {
 
   test('skips a project with checkout underway', async ({ assert }) => {
     const project = await createProject({ ageDays: 45 })
-    await CheckoutSession.create({ projectId: project.id, status: 'active' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'active' })
 
     await runJob(ExpireAbandonedProjects)
 

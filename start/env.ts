@@ -100,11 +100,14 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
-  | Tax provider credentials
+  | Payment/tax provider credentials
   |----------------------------------------------------------
-  | Optional for now - no real Stripe credentials exist yet. getTaxCalculator
-  | always resolves to its in-memory Fake in test env regardless of this, so
-  | tests never need it either.
+  | All optional for now - no real Stripe/PayPal credentials exist yet.
+  | getPaymentGateway/getTaxCalculator always resolve to their in-memory Fake
+  | in test env regardless of these, so tests never need them either.
   */
   STRIPE_SECRET_KEY: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  PAYPAL_CLIENT_ID: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  PAYPAL_CLIENT_SECRET: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  PAYPAL_API_BASE_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
 })

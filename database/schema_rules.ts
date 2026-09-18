@@ -80,6 +80,9 @@ export default {
           tsType:
             "'pending' | 'paid' | 'open' | 'accepted' | 'rejected' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'delivered' | 'refunded' | 'cancelled'",
         },
+        ['shipping_method']: {
+          tsType: "'free' | 'ups_2day' | 'ups_overnight' | 'international_expedited'",
+        },
         ['routing_stage']: {
           tsType: "'preferred' | 'open'",
         },

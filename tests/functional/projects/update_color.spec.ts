@@ -334,7 +334,7 @@ test.group('Projects | change file color | locks', (group) => {
       { name: 'White', isDefault: false },
     ])
     const { project, projectFile, grant } = await createSlicedFile('fdm', material)
-    await CheckoutSession.create({ projectId: project.id, status: 'active' })
+    await CheckoutSession.create({ uuid: string.uuid(), projectId: project.id, status: 'active' })
     const white = await MaterialColor.query()
       .where('materialId', material.id)
       .where('name', 'White')
