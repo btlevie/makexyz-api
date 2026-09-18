@@ -69,6 +69,9 @@ export default {
         ['rejection_reason']: {
           tsType: "'abandoned' | 'declined'",
         },
+        ['shipping_method']: {
+          tsType: "'free' | 'ups_2day' | 'ups_overnight' | 'international_expedited'",
+        },
       },
     },
     ['orders']: {
