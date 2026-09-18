@@ -48,6 +48,16 @@ export const updateProjectFileColorValidator = vine.create({
   colorUuid: vine.string().uuid(),
 })
 
+/**
+ * No `error` field - the slicer pipeline has no partial/recoverable-warning
+ * state to report. Every failure is fatal and already goes through
+ * sliceResultValidator's `status: 'failed'` path instead.
+ */
+export const slicingProgressValidator = vine.create({
+  stage: vine.string(),
+  percent: vine.number().min(0).max(100),
+})
+
 const SLICE_VARIANTS = ['baseline', 'infill_probe', 'layer_height_probe'] as const
 
 export const sliceResultValidator = vine.create({

@@ -3,11 +3,13 @@ import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
 import drive from '@adonisjs/drive/services/main'
 import db from '@adonisjs/lucid/services/db'
+import transmit from '@adonisjs/transmit/services/main'
 import Customer from '#models/customer'
 import Project from '#models/project'
 import {
   uploadProjectFileValidator,
   sliceResultValidator,
+  slicingProgressValidator,
   updateProjectFileTechnologyValidator,
   updateProjectFileMaterialValidator,
   updateProjectFileColorValidator,
@@ -408,11 +410,66 @@ export default class ProjectFilesController {
     return await serialize(ProjectFileTransformer.transform(projectFile))
   }
 
+  /**
+   * Read-only lookup for a single project file. Exists primarily so a client
+   * that reconnects mid-slice (a backgrounded tab, a network blip) can recover
+   * current status/progress with a plain GET - transmit doesn't buffer missed
+   * events, so the live stream alone can't answer "what's the state right now".
+   */
+  async show(ctx: HttpContext) {
+    const { params, response, serialize } = ctx
+    const projectFile = await resolveProjectFile(ctx, params.uuid)
+    if (!projectFile) {
+      return response.notFound({ error: 'Project file not found' })
+    }
+
+    return await serialize(ProjectFileTransformer.transform(projectFile))
+  }
+
+  /**
+   * Best-effort progress callback from the slicer microservice - percentage
+   * and stage only, no `error` field, since a fatal failure already goes
+   * through updateSlicingResult's `status: 'failed'` path instead. Flips
+   * status to 'processing' on the first progress update (previously that
+   * transition never happened at all) and broadcasts to any subscribed
+   * client so the frontend can move off polling.
+   */
+  async updateSlicingProgress({ params, request, response, serialize }: HttpContext) {
+    const { stage, percent } = await request.validateUsing(slicingProgressValidator)
+
+    const projectFile = await ProjectFile.query()
+      .where('uuid', params.uuid)
+      .preload('project')
+      .first()
+    if (!projectFile || !projectFile.project) {
+      return response.notFound({ error: 'Project file not found' })
+    }
+
+    if (projectFile.status === 'pending') {
+      projectFile.status = 'processing'
+    }
+    projectFile.slicingProgressPercent = percent
+    projectFile.slicingProgressStage = stage
+    await projectFile.save()
+
+    transmit.broadcast(`projects/${projectFile.project.uuid}/progress`, {
+      fileUuid: projectFile.uuid,
+      status: projectFile.status,
+      stage,
+      percent,
+    })
+
+    return serialize({ uuid: projectFile.uuid, status: projectFile.status })
+  }
+
   async updateSlicingResult({ params, request, response, serialize }: HttpContext) {
     const payload = await request.validateUsing(sliceResultValidator)
 
-    const projectFile = await ProjectFile.findBy('uuid', params.uuid)
-    if (!projectFile) {
+    const projectFile = await ProjectFile.query()
+      .where('uuid', params.uuid)
+      .preload('project')
+      .first()
+    if (!projectFile || !projectFile.project) {
       return response.notFound({ error: 'Project file not found' })
     }
 
@@ -491,6 +548,14 @@ export default class ProjectFilesController {
       projectFile.status = 'failed'
       await projectFile.save()
     }
+
+    // Terminal event on the same channel progress updates use, so the
+    // frontend reacts to push instead of needing to poll once the stream
+    // goes quiet.
+    transmit.broadcast(`projects/${projectFile.project.uuid}/progress`, {
+      fileUuid: projectFile.uuid,
+      status: projectFile.status,
+    })
 
     await autoQuoteProjectIfReady(projectFile.projectId)
 

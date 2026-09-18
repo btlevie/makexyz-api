@@ -10,6 +10,12 @@ export default class ProjectFileTransformer extends BaseTransformer<ProjectFile>
       size: this.resource.fileSize,
       technology: this.resource.technology,
       status: this.resource.status,
+      // Last-known progress from the slicer's best-effort progress callback -
+      // both null until the first progress event arrives. Lets a client that
+      // reconnects mid-slice (transmit doesn't buffer missed events) recover
+      // current state from a plain GET instead of only the live stream.
+      slicingProgressPercent: this.resource.slicingProgressPercent,
+      slicingProgressStage: this.resource.slicingProgressStage,
       material: this.resource.material
         ? { uuid: this.resource.material.uuid, name: this.resource.material.name }
         : null,

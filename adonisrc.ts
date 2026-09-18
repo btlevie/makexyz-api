@@ -56,7 +56,8 @@ export default defineConfig({
     () => import('@adonisjs/drive/drive_provider'),
     () => import('#providers/api_provider'),
     () => import('@adonisjs/limiter/limiter_provider'),
-    () => import('@adonisjs/queue/queue_provider')
+    () => import('@adonisjs/queue/queue_provider'),
+    () => import('@adonisjs/transmit/transmit_provider')
   ],
 
   /*
@@ -71,6 +72,7 @@ export default defineConfig({
     () => import('#start/routes'),
     () => import('#start/kernel'),
     () => import('#start/validator'),
+    () => import('#start/transmit'),
     {
       file: () => import('#start/scheduler'),
       environment: ['web'],

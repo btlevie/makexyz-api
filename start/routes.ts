@@ -9,12 +9,19 @@
 
 import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
+import transmit from '@adonisjs/transmit/services/main'
 import { controllers } from '#generated/controllers'
 import { instantQuoteThrottle } from '#start/limiter'
 
 router.get('/', () => {
   return { hello: 'world' }
 })
+
+// __transmit/subscribe and __transmit/unsubscribe stay public - channel
+// authorization (start/transmit.ts) does the real access check per-channel,
+// the same grant/customer/staff pattern as the rest of this flow, so there's
+// no additional route-level middleware to add here.
+transmit.registerRoutes()
 
 router
   .group(() => {
@@ -67,6 +74,17 @@ router
         router
           .patch('files/:uuid/slicing-result', [controllers.ProjectFiles, 'updateSlicingResult'])
           .use(middleware.slicerCallbackAuth())
+        // Best-effort progress pings from the slicer, same auth as the
+        // terminal slicing-result callback above.
+        router
+          .patch('files/:uuid/slicing-progress', [controllers.ProjectFiles, 'updateSlicingProgress'])
+          .use(middleware.slicerCallbackAuth())
+        // Public, same grant/customer/staff authorization as the other
+        // project-file endpoints - lets a client recover current
+        // status/progress with a plain GET after reconnecting. Not throttled:
+        // unlike the mutation endpoints above, a read here costs no S3 write
+        // or Lambda invocation.
+        router.get('files/:uuid', [controllers.ProjectFiles, 'show'])
         router.post(':projectUuid/quotes', [controllers.Quotes, 'store']).use(middleware.auth())
         // Public: instant-quote customers are anonymous and authorize with
         // their project grant, same as the file-mutation endpoints above.
