@@ -101,5 +101,17 @@ router
     // Public: feeds the checkout/quote-configuration address form's country
     // dropdown. Not project-scoped, so it lives outside the projects group.
     router.get('serviceable-countries', [controllers.ServiceableCountries, 'index'])
+
+    // Vendor-authenticated - middleware.auth() resolves the user, the
+    // controller does the role/Vendor-record check (no policy/ability
+    // convention exists yet in this codebase, see CLAUDE.md).
+    router
+      .group(() => {
+        router.get('orders', [controllers.VendorOrders, 'index'])
+        router.patch('orders/:uuid/accept', [controllers.VendorOrders, 'accept'])
+      })
+      .prefix('vendor')
+      .as('vendor')
+      .use(middleware.auth())
   })
   .prefix('/v1')
