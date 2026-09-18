@@ -76,5 +76,9 @@ router
       })
       .prefix('projects')
       .as('projects')
+
+    // Public: feeds the checkout/quote-configuration address form's country
+    // dropdown. Not project-scoped, so it lives outside the projects group.
+    router.get('serviceable-countries', [controllers.ServiceableCountries, 'index'])
   })
   .prefix('/v1')
