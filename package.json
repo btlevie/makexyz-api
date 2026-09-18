@@ -18,6 +18,7 @@
     "typecheck": "tsc --noEmit"
   },
   "imports": {
+    "#constants/*": "./app/constants/*.js",
     "#controllers/*": "./app/controllers/*.js",
     "#exceptions/*": "./app/exceptions/*.js",
     "#models/*": "./app/models/*.js",
@@ -57,6 +58,7 @@
     "youch": "^4.1.1"
   },
   "dependencies": {
+    "@adonisjs/application": "^9.1.0",
     "@adonisjs/auth": "^10.1.0",
     "@adonisjs/core": "^7.3.3",
     "@adonisjs/cors": "^3.0.0",
@@ -66,6 +68,7 @@
     "@adonisjs/queue": "^0.6.2",
     "@adonisjs/session": "^8.1.0",
     "@adonisjs/shield": "^9.0.0",
+    "@adonisjs/transmit": "^3.0.2",
     "@aws-sdk/client-s3": "^3.1077.0",
     "@aws-sdk/client-sqs": "^3.1108.0",
     "@aws-sdk/s3-request-presigner": "^3.1077.0",
@@ -75,7 +78,8 @@
     "better-sqlite3": "^12.10.0",
     "luxon": "^3.7.2",
     "pg": "^8.21.0",
-    "reflect-metadata": "^0.2.2"
+    "reflect-metadata": "^0.2.2",
+    "stripe": "^22.6.1"
   },
   "hotHook": {
     "boundaries": [
