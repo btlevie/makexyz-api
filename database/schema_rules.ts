@@ -54,7 +54,7 @@ export default {
     ['pricing_configs']: {
       columns: {
         ['technology']: {
-          tsType: "'fdm'",
+          tsType: "'fdm' | 'sla' | 'sls'",
         },
       },
     },

@@ -10,7 +10,7 @@ export default class extends BaseSchema {
       // themselves live in a per-technology values table (e.g.
       // fdm_pricing_config_values) rather than here, so a future technology
       // adds a table instead of widening this one with nullable columns.
-      table.enum('technology', ['fdm']).notNullable()
+      table.enum('technology', ['fdm', 'sla', 'sls']).notNullable()
       table.string('name').notNullable()
       table.integer('version').notNullable()
       // Exactly one active row per technology. Not enforced by a partial unique

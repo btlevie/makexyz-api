@@ -11,6 +11,11 @@ export default class QuoteTransformer extends BaseTransformer<Quote> {
       subtotal: this.resource.subtotal,
       tax: this.resource.tax,
       total: this.resource.total,
+      destinationCountry: this.resource.destinationCountry,
+      shippingMethod: this.resource.shippingMethod,
+      shippingFeeAmount: this.resource.shippingFeeAmount,
+      productionTimeBusinessDays: this.resource.productionTimeBusinessDays,
+      productionTimeFeeAmount: this.resource.productionTimeFeeAmount,
       items: this.resource.items.map((item) => ({
         itemType: item.itemType,
         description: item.description,

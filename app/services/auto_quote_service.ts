@@ -61,13 +61,13 @@ export async function autoQuoteProjectIfReady(projectId: number | null): Promise
       return
     }
 
-    const config = await getActiveFdmConfig()
+    const configs = { fdm: await getActiveFdmConfig() }
 
     const pricedLines: { projectFile: ProjectFile; result: FdmPricingResult }[] = []
     for (const projectFile of completed) {
       const line: QuoteLineRequest = { projectFile, quantity: DEFAULT_QUANTITY }
       try {
-        pricedLines.push({ projectFile, result: priceLine(project, line, config) })
+        pricedLines.push({ projectFile, result: priceLine(project, line, configs) })
       } catch (error) {
         if (error instanceof UnpriceableLineError) {
           // e.g. an SLA file, which has no material and no SLA pricing config yet.
@@ -85,7 +85,7 @@ export async function autoQuoteProjectIfReady(projectId: number | null): Promise
       return
     }
 
-    const quote = await persistQuote(project, pricedLines, config)
+    const quote = await persistQuote(project, pricedLines)
 
     logger.info(
       {

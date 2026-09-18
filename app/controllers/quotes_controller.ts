@@ -1,21 +1,26 @@
-import string from '@adonisjs/core/helpers/string'
 import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
-import db from '@adonisjs/lucid/services/db'
 import Customer from '#models/customer'
 import Project from '#models/project'
 import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import QuoteTransformer from '#transformers/quote_transformer'
-import { createQuoteValidator } from '#validators/quote'
-import {
-  calculateFdmPrice,
-  roundCurrency,
-  InvalidPricingInputError,
-  type FdmPricingResult,
-} from '#services/fdm_pricing_calculator'
+import { configureQuoteValidator, createQuoteValidator } from '#validators/quote'
+import type { FdmPricingResult } from '#services/fdm_pricing_calculator'
 import { getActiveFdmConfig, PricingConfigurationError } from '#services/pricing_config_service'
-import { buildFdmPricingInputs } from '#services/project_file_pricing_inputs'
+import {
+  configureQuote,
+  persistQuote,
+  priceLine,
+  ProductionTimeInfeasibleError,
+  QuoteNotConfigurableError,
+  UnpriceableLineError,
+  type ResolvedPricingConfigs,
+} from '#services/quote_generation_service'
+import { InvalidShippingSelectionError } from '#services/shipping_service'
+import { InvalidProductionTimeSelectionError } from '#services/production_time_service'
+import { isServiceableCountry } from '#services/serviceable_country_service'
+import { isStaff, resolveProject } from '#services/project_grant_service'
 
 export default class QuotesController {
   /**
@@ -24,6 +29,10 @@ export default class QuotesController {
    *
    * Manufacturing price only - shipping, tax, fees and any cart minimum are
    * checkout concerns and deliberately absent here.
+   *
+   * Delegates the actual pricing/persistence to quote_generation_service, the
+   * same functions the slicer-callback auto-quote path uses, so the two can
+   * never price a file differently.
    */
   async store({ auth, params, request, response, serialize }: HttpContext) {
     const user = auth.getUserOrFail()
@@ -45,9 +54,9 @@ export default class QuotesController {
 
     // One configuration snapshot for the whole quote: every line must be priced
     // against the same version, even if an admin activates a new one mid-request.
-    let config
+    let configs: ResolvedPricingConfigs
     try {
-      config = await getActiveFdmConfig()
+      configs = { fdm: await getActiveFdmConfig() }
     } catch (error) {
       if (error instanceof PricingConfigurationError) {
         logger.error(
@@ -77,49 +86,11 @@ export default class QuotesController {
         })
       }
 
-      if (!projectFile.material) {
-        return response.unprocessableEntity({
-          error: `Project file ${projectFile.uuid} has no material assigned`,
-        })
-      }
-
       try {
-        const inputs = buildFdmPricingInputs(projectFile, projectFile.material, item.quantity)
-        const result = calculateFdmPrice(inputs, config)
-
-        if (result.calculation.bulkFloorExceedsVariablePrice) {
-          logger.warn(
-            {
-              projectFileUuid: projectFile.uuid,
-              pricingConfigId: config.id,
-              bulkFloorPrice: result.calculation.bulkFloorPrice,
-              variablePrice: result.calculation.variablePrice,
-            },
-            'Bulk floor exceeds the variable price; unit price rises with quantity'
-          )
-        }
-
-        logger.info(
-          {
-            projectUuid: project.uuid,
-            projectFileUuid: projectFile.uuid,
-            pricingConfigId: config.id,
-            pricingConfigVersion: config.version,
-            quantity: result.quantity,
-            modelGrams: result.slicerInputs.modelGrams,
-            supportGrams: result.slicerInputs.supportGrams,
-            printHours: result.slicerInputs.printHours,
-            variablePrice: result.calculation.variablePrice,
-            bulkUnitPrice: result.calculation.bulkUnitPrice,
-            isOversize: result.calculation.isOversize,
-            finalPrice: result.calculation.finalPrice,
-          },
-          'Priced quote line item'
-        )
-
+        const result = priceLine(project, { projectFile, quantity: item.quantity }, configs)
         pricedLines.push({ projectFile, result })
       } catch (error) {
-        if (error instanceof InvalidPricingInputError) {
+        if (error instanceof UnpriceableLineError) {
           logger.warn(
             { projectFileUuid: projectFile.uuid, error: error.message },
             'Refused to price a project file'
@@ -130,52 +101,125 @@ export default class QuotesController {
       }
     }
 
-    const subtotal = roundCurrency(
-      pricedLines.reduce((sum, line) => sum + line.result.calculation.finalPriceRounded, 0)
-    )
+    const quote = await persistQuote(project, pricedLines, { createdById: user.id })
+    await quote.load('items')
 
-    const quote = await db.transaction(async (trx) => {
-      const latest = await Quote.query({ client: trx })
-        .where('projectId', project.id)
-        .orderBy('revision', 'desc')
-        .first()
+    return await serialize(QuoteTransformer.transform(quote))
+  }
 
-      const created = await Quote.create(
-        {
-          uuid: string.uuid(),
-          projectId: project.id,
-          createdById: user.id,
-          revision: (latest?.revision ?? 0) + 1,
-          subtotal: subtotal.toFixed(2),
-          // Tax is a checkout concern; the column is NOT NULL so it is recorded
-          // as zero here rather than calculated.
-          tax: '0.00',
-          total: subtotal.toFixed(2),
-          status: 'draft',
-          generatedBy: 'system',
-        },
-        { client: trx }
-      )
+  /**
+   * Sets/updates shipping, production time, and tax on a quote before the
+   * customer accepts it. Public: instant-quote customers are anonymous and
+   * authorize with their project grant, same as the rest of this flow.
+   */
+  async configure(ctx: HttpContext) {
+    const { params, request, response, serialize } = ctx
+    const { destinationCountry, shippingMethod, productionTimeBusinessDays } =
+      await request.validateUsing(configureQuoteValidator)
 
-      await created.related('items').createMany(
-        pricedLines.map(({ projectFile, result }) => ({
-          projectFileId: projectFile.id,
-          itemType: 'printing',
-          description: projectFile.originalName,
-          quantity: result.quantity,
-          // Display convenience only. Because it is rounded before display,
-          // unitPrice * quantity will not always equal total - the authoritative
-          // figures are total and the full-precision pricingSnapshot.
-          unitPrice: roundCurrency(result.calculation.finalPrice / result.quantity).toFixed(2),
-          total: result.calculation.finalPriceRounded.toFixed(2),
-          pricingConfigId: config.id,
-          pricingSnapshot: result,
-        }))
-      )
+    const project = isStaff(ctx)
+      ? await Project.findBy('uuid', params.projectUuid)
+      : await resolveProject(ctx, params.projectUuid)
+    if (!project) {
+      return response.notFound({ error: 'Project not found' })
+    }
 
-      return created
-    })
+    if (!(await isServiceableCountry(destinationCountry))) {
+      return response.unprocessableEntity({
+        error: `We don't currently ship to "${destinationCountry}"`,
+      })
+    }
 
+    const latestQuote = await Quote.query()
+      .where('uuid', params.uuid)
+      .where('projectId', project.id)
+      .first()
+    if (!latestQuote) {
+      return response.notFound({ error: 'Quote not found' })
+    }
+
+    try {
+      const configured = await configureQuote(project, latestQuote, {
+        destinationCountry,
+        shippingMethod,
+        productionTimeBusinessDays,
+      })
+      await configured.load('items')
+      return await serialize(QuoteTransformer.transform(configured))
+    } catch (error) {
+      if (error instanceof QuoteNotConfigurableError) {
+        return response.conflict({ error: error.message })
+      }
+      if (
+        error instanceof ProductionTimeInfeasibleError ||
+        error instanceof InvalidShippingSelectionError ||
+        error instanceof InvalidProductionTimeSelectionError
+      ) {
+        return response.unprocessableEntity({ error: error.message })
+      }
+      if (error instanceof PricingConfigurationError) {
+        logger.error(
+          { projectUuid: project.uuid, error: error.message },
+          'Production-time configuration unavailable'
+        )
+        return response.serviceUnavailable({
+          error: 'Pricing is unavailable because no valid configuration is active',
+        })
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Freezes a fully-configured quote so checkout can authorize payment
+   * against it. Public, same access as configure above.
+   */
+  async accept(ctx: HttpContext) {
+    const { params, response, serialize } = ctx
+
+    const project = isStaff(ctx)
+      ? await Project.findBy('uuid', params.projectUuid)
+      : await resolveProject(ctx, params.projectUuid)
+    if (!project) {
+      return response.notFound({ error: 'Project not found' })
+    }
+
+    const quote = await Quote.query()
+      .where('uuid', params.uuid)
+      .where('projectId', project.id)
+      .first()
+    if (!quote) {
+      return response.notFound({ error: 'Quote not found' })
+    }
+
+    if (quote.status === 'accepted') {
+      // Idempotent - re-accepting an already-accepted quote is a no-op, not
+      // an error.
+      await quote.load('items')
+      return await serialize(QuoteTransformer.transform(quote))
+    }
+    if (quote.status === 'rejected') {
+      return response.conflict({ error: `Quote ${quote.uuid} was rejected and cannot be accepted` })
+    }
+    if (!quote.destinationCountry || !quote.shippingMethod || quote.productionTimeBusinessDays === null) {
+      return response.unprocessableEntity({
+        error:
+          'Quote must be configured (destination, shipping, and production time) before it can be accepted',
+      })
+    }
+
+    const latest = await Quote.query()
+      .where('projectId', project.id)
+      .orderBy('revision', 'desc')
+      .firstOrFail()
+    if (latest.id !== quote.id) {
+      return response.conflict({
+        error: `Quote ${quote.uuid} (revision ${quote.revision}) is no longer the latest revision for this project`,
+      })
+    }
+
+    quote.status = 'accepted'
+    await quote.save()
     await quote.load('items')
 
     return await serialize(QuoteTransformer.transform(quote))

@@ -68,6 +68,15 @@ router
           .patch('files/:uuid/slicing-result', [controllers.ProjectFiles, 'updateSlicingResult'])
           .use(middleware.slicerCallbackAuth())
         router.post(':projectUuid/quotes', [controllers.Quotes, 'store']).use(middleware.auth())
+        // Public: instant-quote customers are anonymous and authorize with
+        // their project grant, same as the file-mutation endpoints above.
+        // Throttled since it calls out to the tax calculator.
+        router
+          .patch(':projectUuid/quotes/:uuid/configure', [controllers.Quotes, 'configure'])
+          .use(instantQuoteThrottle)
+        router
+          .patch(':projectUuid/quotes/:uuid/accept', [controllers.Quotes, 'accept'])
+          .use(instantQuoteThrottle)
         // Optional lead capture, offered after the price is shown. Public and
         // authorized by the project grant, so it is throttled too.
         router
