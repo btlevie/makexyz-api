@@ -5,13 +5,20 @@
 
 /// <reference path="./manifest.d.ts" />
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
+import type CheckoutSessionTransformer from '#transformers/checkout_session_transformer'
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
+import type OrderTransformer from '#transformers/order_transformer'
 import type ProjectFileTransformer from '#transformers/project_file_transformer'
 import type QuoteTransformer from '#transformers/quote_transformer'
+import type ServiceableCountryTransformer from '#transformers/serviceable_country_transformer'
 import type UserTransformer from '#transformers/user_transformer'
 
 export namespace Data {
+  export type CheckoutSession = InferData<CheckoutSessionTransformer>
+  export namespace CheckoutSession {
+    export type Variants = InferVariants<CheckoutSessionTransformer>
+  }
   export type Customer = InferData<CustomerTransformer>
   export namespace Customer {
     export type Variants = InferVariants<CustomerTransformer>
@@ -20,6 +27,10 @@ export namespace Data {
   export namespace InstantQuoteFile {
     export type Variants = InferVariants<InstantQuoteFileTransformer>
   }
+  export type Order = InferData<OrderTransformer>
+  export namespace Order {
+    export type Variants = InferVariants<OrderTransformer>
+  }
   export type ProjectFile = InferData<ProjectFileTransformer>
   export namespace ProjectFile {
     export type Variants = InferVariants<ProjectFileTransformer>
@@ -27,6 +38,10 @@ export namespace Data {
   export type Quote = InferData<QuoteTransformer>
   export namespace Quote {
     export type Variants = InferVariants<QuoteTransformer>
+  }
+  export type ServiceableCountry = InferData<ServiceableCountryTransformer>
+  export namespace ServiceableCountry {
+    export type Variants = InferVariants<ServiceableCountryTransformer>
   }
   export type User = InferData<UserTransformer>
   export namespace User {

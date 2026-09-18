@@ -85,7 +85,7 @@ export class AuthAccessTokenSchema extends BaseModel {
 }
 
 export class CheckoutSessionSchema extends BaseModel {
-  static $columns = ['completedAt', 'createdAt', 'customerId', 'expiredAt', 'expiresAt', 'failedAt', 'id', 'projectId', 'quoteId', 'status', 'updatedAt'] as const
+  static $columns = ['completedAt', 'createdAt', 'customerId', 'expiredAt', 'expiresAt', 'failedAt', 'id', 'projectId', 'quoteId', 'status', 'updatedAt', 'uuid'] as const
   $columns = CheckoutSessionSchema.$columns
   @column.dateTime()
   declare completedAt: DateTime | null
@@ -109,6 +109,8 @@ export class CheckoutSessionSchema extends BaseModel {
   declare status: 'active' | 'expired' | 'completed' | 'failed'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
 }
 
 export class CustomerSchema extends BaseModel {
@@ -280,6 +282,31 @@ export class OrderItemSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class OrderRoutingConfigSchema extends BaseModel {
+  static $columns = ['activatedAt', 'createdAt', 'createdById', 'id', 'isActive', 'name', 'notes', 'preferredWindowHours', 'updatedAt', 'version'] as const
+  $columns = OrderRoutingConfigSchema.$columns
+  @column.dateTime()
+  declare activatedAt: DateTime | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare createdById: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isActive: boolean
+  @column()
+  declare name: string
+  @column()
+  declare notes: string | null
+  @column()
+  declare preferredWindowHours: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare version: number
+}
+
 export class OrderStatusHistorySchema extends BaseModel {
   static $columns = ['changedById', 'createdAt', 'id', 'newStatus', 'oldStatus', 'orderId'] as const
   $columns = OrderStatusHistorySchema.$columns
@@ -298,7 +325,7 @@ export class OrderStatusHistorySchema extends BaseModel {
 }
 
 export class OrderSchema extends BaseModel {
-  static $columns = ['createdAt', 'customerId', 'externalReference', 'id', 'orderNumber', 'projectId', 'quoteId', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid', 'vendorId'] as const
+  static $columns = ['createdAt', 'customerId', 'externalReference', 'id', 'orderNumber', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'quoteId', 'routingExpiresAt', 'routingStage', 'shippingFeeAmount', 'shippingMethod', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = OrderSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
@@ -311,9 +338,21 @@ export class OrderSchema extends BaseModel {
   @column()
   declare orderNumber: string
   @column()
+  declare productionTimeBusinessDays: number | null
+  @column()
+  declare productionTimeFeeAmount: string | null
+  @column()
   declare projectId: number | null
   @column()
   declare quoteId: number | null
+  @column.dateTime()
+  declare routingExpiresAt: DateTime | null
+  @column()
+  declare routingStage: 'preferred' | 'open' | null
+  @column()
+  declare shippingFeeAmount: string | null
+  @column()
+  declare shippingMethod: 'free' | 'ups_2day' | 'ups_overnight' | 'international_expedited' | null
   @column()
   declare status: 'pending' | 'paid' | 'open' | 'accepted' | 'rejected' | 'in_progress' | 'ready_to_ship' | 'shipped' | 'delivered' | 'refunded' | 'cancelled'
   @column()
@@ -383,11 +422,55 @@ export class PricingConfigSchema extends BaseModel {
   @column()
   declare notes: string | null
   @column()
-  declare technology: 'fdm'
+  declare technology: 'fdm' | 'sla' | 'sls'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
   declare version: number
+}
+
+export class ProductionTimeConfigSchema extends BaseModel {
+  static $columns = ['activatedAt', 'baseFee', 'createdAt', 'createdById', 'growthRate', 'id', 'isActive', 'name', 'notes', 'standardBusinessDays', 'updatedAt', 'version'] as const
+  $columns = ProductionTimeConfigSchema.$columns
+  @column.dateTime()
+  declare activatedAt: DateTime | null
+  @column()
+  declare baseFee: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare createdById: number | null
+  @column()
+  declare growthRate: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isActive: boolean
+  @column()
+  declare name: string
+  @column()
+  declare notes: string | null
+  @column()
+  declare standardBusinessDays: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare version: number
+}
+
+export class ProductionTimeTierSchema extends BaseModel {
+  static $columns = ['businessDays', 'createdAt', 'id', 'productionTimeConfigId', 'updatedAt'] as const
+  $columns = ProductionTimeTierSchema.$columns
+  @column()
+  declare businessDays: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare productionTimeConfigId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class ProjectFileSliceVariantSchema extends BaseModel {
@@ -416,7 +499,7 @@ export class ProjectFileSliceVariantSchema extends BaseModel {
 }
 
 export class ProjectFileSchema extends BaseModel {
-  static $columns = ['colorId', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'modelMaterialGrams', 'originalName', 'printTimeEstimatedSeconds', 'projectId', 'status', 'supportMaterialGrams', 'surfaceAreaMm2', 'technology', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
+  static $columns = ['colorId', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'modelMaterialGrams', 'originalName', 'printTimeEstimatedSeconds', 'projectId', 'slicingProgressPercent', 'slicingProgressStage', 'status', 'supportMaterialGrams', 'surfaceAreaMm2', 'technology', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
   $columns = ProjectFileSchema.$columns
   @column()
   declare colorId: number | null
@@ -446,6 +529,10 @@ export class ProjectFileSchema extends BaseModel {
   declare printTimeEstimatedSeconds: number | null
   @column()
   declare projectId: number | null
+  @column()
+  declare slicingProgressPercent: number | null
+  @column()
+  declare slicingProgressStage: string | null
   @column()
   declare status: 'pending' | 'processing' | 'completed' | 'failed'
   @column()
@@ -608,18 +695,24 @@ export class QuoteItemSchema extends BaseModel {
 }
 
 export class QuoteSchema extends BaseModel {
-  static $columns = ['createdAt', 'createdById', 'generatedBy', 'id', 'notes', 'projectId', 'rejectedAt', 'rejectionReason', 'revision', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
+  static $columns = ['createdAt', 'createdById', 'destinationCountry', 'generatedBy', 'id', 'notes', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'rejectedAt', 'rejectionReason', 'revision', 'shippingFeeAmount', 'shippingMethod', 'status', 'stripeTaxCalculationId', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
   $columns = QuoteSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare createdById: number | null
   @column()
+  declare destinationCountry: string | null
+  @column()
   declare generatedBy: 'system' | 'user'
   @column({ isPrimary: true })
   declare id: number
   @column()
   declare notes: string | null
+  @column()
+  declare productionTimeBusinessDays: number | null
+  @column()
+  declare productionTimeFeeAmount: string | null
   @column()
   declare projectId: number | null
   @column.dateTime()
@@ -629,7 +722,13 @@ export class QuoteSchema extends BaseModel {
   @column()
   declare revision: number
   @column()
+  declare shippingFeeAmount: string | null
+  @column()
+  declare shippingMethod: 'free' | 'ups_2day' | 'ups_overnight' | 'international_expedited' | null
+  @column()
   declare status: 'draft' | 'sent' | 'accepted' | 'rejected'
+  @column()
+  declare stripeTaxCalculationId: string | null
   @column()
   declare subtotal: string
   @column()
@@ -685,6 +784,21 @@ export class RememberMeTokenSchema extends BaseModel {
   declare tokenableId: number
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+}
+
+export class ServiceableCountrySchema extends BaseModel {
+  static $columns = ['countryCode', 'countryName', 'createdAt', 'isActive', 'updatedAt'] as const
+  $columns = ServiceableCountrySchema.$columns
+  @column({ isPrimary: true })
+  declare countryCode: string
+  @column()
+  declare countryName: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare isActive: boolean
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
 }
 
 export class SessionSchema extends BaseModel {
@@ -819,6 +933,23 @@ export class VendorPayoutSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare vendorId: number | null
+}
+
+export class VendorTechnologyCapabilitySchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'isPreferred', 'technology', 'updatedAt', 'vendorId'] as const
+  $columns = VendorTechnologyCapabilitySchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isPreferred: boolean
+  @column()
+  declare technology: 'fdm' | 'sla' | 'sls'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number
 }
 
 export class VendorSchema extends BaseModel {
