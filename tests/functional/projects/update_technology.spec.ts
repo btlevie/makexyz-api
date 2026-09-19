@@ -8,6 +8,7 @@ import CheckoutSession from '#models/checkout_session'
 import Customer from '#models/customer'
 import Material from '#models/material'
 import MaterialColor from '#models/material_color'
+import Order from '#models/order'
 import Project from '#models/project'
 import ProjectFile from '#models/project_file'
 import ProjectFileSliceVariant from '#models/project_file_slice_variant'
@@ -152,6 +153,18 @@ async function quoteFile(
   })
 
   return quote
+}
+
+async function createOrderForProject(project: Project, status: Order['status']) {
+  return Order.create({
+    uuid: string.uuid(),
+    projectId: project.id,
+    orderNumber: `ORD-${string.generateRandom(6).toUpperCase()}`,
+    subtotal: '23.45',
+    tax: '0.00',
+    total: '23.45',
+    status,
+  })
 }
 
 function patchTechnology(client: any, projectFile: ProjectFile) {
@@ -448,6 +461,43 @@ test.group('Projects | change file technology | locks', (group) => {
       assert.equal(projectFile.technology, 'sla')
     })
   }
+
+  test('an order already in production locks the change, even for staff', async ({
+    client,
+    assert,
+  }) => {
+    const staff = await signup(client)
+    await promote(staff.user, 'admin')
+
+    const { project, projectFile } = await createSlicedFdmFile()
+    await createOrderForProject(project, 'in_progress')
+
+    const response = await patchTechnology(client, projectFile)
+      .withSession(staff.session)
+      .json({ technology: 'sla' })
+
+    response.assertStatus(409)
+    await projectFile.refresh()
+    assert.equal(projectFile.technology, 'fdm')
+    // Refused, not overridden - no audit event for an override that never happened.
+    assert.lengthOf(await AuditEvent.all(), 0)
+  })
+
+  test('an order only accepted (not yet in production) does not lock the change', async ({
+    client,
+    assert,
+  }) => {
+    const { project, projectFile, grant } = await createSlicedFdmFile()
+    await createOrderForProject(project, 'accepted')
+
+    const response = await patchTechnology(client, projectFile)
+      .header('x-project-grant', grant)
+      .json({ technology: 'sla' })
+
+    response.assertStatus(200)
+    await projectFile.refresh()
+    assert.equal(projectFile.technology, 'sla')
+  })
 
   test('a sibling file left off the quote is not locked', async ({ client, assert }) => {
     const { project, projectFile, grant } = await createSlicedFdmFile()

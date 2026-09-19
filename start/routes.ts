@@ -138,7 +138,12 @@ router
     router
       .group(() => {
         router.get('orders', [controllers.VendorOrders, 'index'])
+        // This vendor's own orders already accepted and still in production -
+        // index above is only ever the open queue available to accept.
+        router.get('orders/active', [controllers.VendorOrders, 'active'])
         router.patch('orders/:uuid/accept', [controllers.VendorOrders, 'accept'])
+        router.patch('orders/:uuid/start-production', [controllers.VendorOrders, 'startProduction'])
+        router.patch('orders/:uuid/ready-to-ship', [controllers.VendorOrders, 'readyToShip'])
 
         // The vendor's own saved-address book (e.g. return/pickup addresses).
         router.get('addresses', [controllers.VendorAddresses, 'index'])

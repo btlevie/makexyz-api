@@ -8,6 +8,7 @@ import {
   OrderNotAvailableError,
   VendorNotEligibleError,
 } from '#services/order_acceptance_service'
+import { startProduction, markReadyToShip } from '#services/order_production_service'
 
 export default class VendorOrdersController {
   /**
@@ -41,6 +42,28 @@ export default class VendorOrdersController {
   }
 
   /**
+   * This vendor's own orders already accepted and still in the production
+   * pipeline - index above only ever shows the open queue available to
+   * accept, so without this there's no way to find an order again after
+   * accepting it.
+   */
+  async active(ctx: HttpContext) {
+    const { response, serialize } = ctx
+    const vendor = await this.resolveVendor(ctx)
+    if (!vendor) {
+      return response.forbidden({ error: 'No vendor record for this account' })
+    }
+
+    const orders = await Order.query()
+      .where('vendorId', vendor.id)
+      .whereIn('status', ['accepted', 'in_progress', 'ready_to_ship'])
+      .orderBy('createdAt', 'asc')
+      .preload('items')
+      .preload('address')
+    return await serialize(OrderTransformer.transform(orders))
+  }
+
+  /**
    * Accepts an order, which triggers payment capture - see
    * order_acceptance_service#acceptOrder.
    */
@@ -60,6 +83,62 @@ export default class VendorOrdersController {
       const accepted = await acceptOrder(order, vendor, ctx.auth.getUserOrFail().id)
       await accepted.load('items')
       return await serialize(OrderTransformer.transform(accepted))
+    } catch (error) {
+      if (error instanceof VendorNotEligibleError) {
+        return response.forbidden({ error: error.message })
+      }
+      if (error instanceof OrderNotAvailableError) {
+        return response.conflict({ error: error.message })
+      }
+      throw error
+    }
+  }
+
+  /** Marks an already-accepted order as being worked on - see order_production_service.ts. */
+  async startProduction(ctx: HttpContext) {
+    const { params, response, serialize } = ctx
+    const vendor = await this.resolveVendor(ctx)
+    if (!vendor) {
+      return response.forbidden({ error: 'No vendor record for this account' })
+    }
+
+    const order = await Order.findBy('uuid', params.uuid)
+    if (!order) {
+      return response.notFound({ error: 'Order not found' })
+    }
+
+    try {
+      const updated = await startProduction(order, vendor, ctx.auth.getUserOrFail().id)
+      await updated.load('items')
+      return await serialize(OrderTransformer.transform(updated))
+    } catch (error) {
+      if (error instanceof VendorNotEligibleError) {
+        return response.forbidden({ error: error.message })
+      }
+      if (error instanceof OrderNotAvailableError) {
+        return response.conflict({ error: error.message })
+      }
+      throw error
+    }
+  }
+
+  /** Marks a produced order ready for pickup/shipment - see order_production_service.ts. */
+  async readyToShip(ctx: HttpContext) {
+    const { params, response, serialize } = ctx
+    const vendor = await this.resolveVendor(ctx)
+    if (!vendor) {
+      return response.forbidden({ error: 'No vendor record for this account' })
+    }
+
+    const order = await Order.findBy('uuid', params.uuid)
+    if (!order) {
+      return response.notFound({ error: 'Order not found' })
+    }
+
+    try {
+      const updated = await markReadyToShip(order, vendor, ctx.auth.getUserOrFail().id)
+      await updated.load('items')
+      return await serialize(OrderTransformer.transform(updated))
     } catch (error) {
       if (error instanceof VendorNotEligibleError) {
         return response.forbidden({ error: error.message })

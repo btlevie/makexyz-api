@@ -130,7 +130,10 @@ export default class ProjectFilesController {
    * QUOTE_STATUSES_LOCKING_TECHNOLOGY): the quote itself is an immutable snapshot
    * and cannot be corrupted, but letting the part change underneath an
    * outstanding quote would mean the customer accepts one thing and receives
-   * another. Staff can override to correct a mistake, which is recorded.
+   * another. Staff can override to correct a mistake, which is recorded - except
+   * once the order is already in production (see technology_lock_service.ts's
+   * `overridable` field), where a technology change is a new order, not a
+   * correction, and nobody can override it.
    */
   async updateTechnology(ctx: HttpContext) {
     const { auth, params, request, response, serialize } = ctx
@@ -151,18 +154,16 @@ export default class ProjectFilesController {
     }
 
     const lock = await findTechnologyLock(projectFile)
-    const canOverrideLock = isStaff(ctx)
+    // Staff may override a checkout/quote lock to correct a mistake, but
+    // never an order already in production (lock.overridable === false) -
+    // past that point a technology change is a new order, not a correction.
+    const canOverrideLock = isStaff(ctx) && lock?.overridable !== false
 
     if (lock && !canOverrideLock) {
       return response.conflict({
         error: `Project file ${projectFile.uuid} can no longer change technology because ${lock.description}`,
       })
     }
-
-    // TODO: once orders exist, refuse the override too from order status
-    // 'in_progress' onward - past that point a technology change is a new order,
-    // not a correction. Payment is not the right line to draw with instant
-    // quotes, since checkout pays immediately.
 
     // Collect output keys before the rows holding them are deleted. Never the
     // uploaded source model, which lives under the same project prefix - that is
