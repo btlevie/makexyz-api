@@ -55,7 +55,7 @@ test.group('Vendor | addresses', (group) => {
 
     const listResponse = await client.get('/v1/vendor/addresses').withSession(session)
     listResponse.assertStatus(200)
-    assert.lengthOf(listResponse.body().data, 1)
+    assert.lengthOf(listResponse.body().data as Record<string, any>[], 1)
   })
 
   test('shows, updates, and deletes an address', async ({ client, assert }) => {
@@ -68,7 +68,7 @@ test.group('Vendor | addresses', (group) => {
       .withSession(session)
       .json({ city: 'Shelbyville' })
     updateResponse.assertStatus(200)
-    assert.equal((updateResponse.body().data as { city: string }).city, 'Shelbyville')
+    assert.equal(((updateResponse.body() as any).data as { city: string }).city, 'Shelbyville')
 
     const deleteResponse = await client.delete(`/v1/vendor/addresses/${uuid}`).withSession(session)
     deleteResponse.assertStatus(204)

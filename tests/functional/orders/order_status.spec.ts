@@ -111,7 +111,7 @@ test.group('Orders | status', (group) => {
     }
   })
 
-  test("returns the customer's order, with items and shipping address", async ({
+  test("returns the customer's orders, with items and shipping address", async ({
     client,
     assert,
   }) => {
@@ -123,11 +123,12 @@ test.group('Orders | status', (group) => {
       .header('x-project-grant', grant)
 
     response.assertStatus(200)
-    const data = response.body().data as Record<string, any>
-    assert.equal(data.status, 'open')
-    assert.equal(data.total, quote.total)
-    assert.lengthOf(data.items, 1)
-    assert.equal(data.shippingAddress.recipientName, 'Jane Doe')
+    const data = response.body().data as Record<string, any>[]
+    assert.lengthOf(data, 1)
+    assert.equal(data[0].status, 'open')
+    assert.equal(data[0].total, quote.total)
+    assert.lengthOf(data[0].items, 1)
+    assert.equal(data[0].shippingAddress.recipientName, 'Jane Doe')
   })
 
   test('an authenticated customer who owns the project can also fetch it', async ({
@@ -141,7 +142,8 @@ test.group('Orders | status', (group) => {
     const response = await client.get(`/v1/projects/${project.uuid}/order`).withSession(session)
 
     response.assertStatus(200)
-    assert.equal((response.body().data as { status: string }).status, 'open')
+    const data = response.body().data as { status: string }[]
+    assert.equal(data[0].status, 'open')
   })
 
   test('returns 404 without the right grant', async ({ client }) => {
@@ -153,13 +155,14 @@ test.group('Orders | status', (group) => {
     response.assertStatus(404)
   })
 
-  test('returns 404 when checkout never completed', async ({ client }) => {
+  test('returns an empty array when checkout never completed', async ({ client, assert }) => {
     const { project, grant } = await createAcceptedQuote()
 
     const response = await client
       .get(`/v1/projects/${project.uuid}/order`)
       .header('x-project-grant', grant)
 
-    response.assertStatus(404)
+    response.assertStatus(200)
+    assert.lengthOf(response.body().data as any[], 0)
   })
 })

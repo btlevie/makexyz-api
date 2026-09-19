@@ -356,7 +356,7 @@ export class OrderSchema extends BaseModel {
   @column.dateTime()
   declare routingExpiresAt: DateTime | null
   @column()
-  declare routingStage: 'preferred' | 'open' | null
+  declare routingStage: 'preferred' | 'open' | 'unfulfillable' | null
   @column()
   declare shippingFeeAmount: string | null
   @column()
@@ -703,7 +703,7 @@ export class QuoteItemSchema extends BaseModel {
 }
 
 export class QuoteSchema extends BaseModel {
-  static $columns = ['addressId', 'createdAt', 'createdById', 'destinationCountry', 'generatedBy', 'id', 'notes', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'rejectedAt', 'rejectionReason', 'revision', 'shippingFeeAmount', 'shippingMethod', 'status', 'stripeTaxCalculationId', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
+  static $columns = ['addressId', 'createdAt', 'createdById', 'destinationCountry', 'generatedBy', 'id', 'notes', 'originQuoteId', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'rejectedAt', 'rejectionReason', 'reviewReason', 'revision', 'shippingFeeAmount', 'shippingMethod', 'status', 'stripeTaxCalculationId', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
   $columns = QuoteSchema.$columns
   @column()
   declare addressId: number | null
@@ -720,6 +720,8 @@ export class QuoteSchema extends BaseModel {
   @column()
   declare notes: string | null
   @column()
+  declare originQuoteId: number | null
+  @column()
   declare productionTimeBusinessDays: number | null
   @column()
   declare productionTimeFeeAmount: string | null
@@ -730,13 +732,15 @@ export class QuoteSchema extends BaseModel {
   @column()
   declare rejectionReason: 'abandoned' | 'declined' | null
   @column()
+  declare reviewReason: string | null
+  @column()
   declare revision: number
   @column()
   declare shippingFeeAmount: string | null
   @column()
   declare shippingMethod: 'free' | 'ups_2day' | 'ups_overnight' | 'international_expedited' | null
   @column()
-  declare status: 'draft' | 'sent' | 'accepted' | 'rejected'
+  declare status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'needs_review'
   @column()
   declare stripeTaxCalculationId: string | null
   @column()

@@ -6,11 +6,12 @@ import { isStaff, resolveProject } from '#services/project_grant_service'
 
 export default class OrdersController {
   /**
-   * The customer's own order for a project - a receipt/status check after
-   * checkout. Public, same grant/customer/staff authorization as the quote
-   * and checkout endpoints. Ordered by newest first and returning a single
-   * order: one project drives one checkout flow at a time in practice,
-   * though it isn't a DB-enforced constraint.
+   * Every order for a project - a receipt/status check after checkout.
+   * Public, same grant/customer/staff authorization as the quote and
+   * checkout endpoints. A project used to drive at most one checkout flow,
+   * but an admin-split quote now produces independent quote lineages that
+   * each check out into their own order, so this returns all of them
+   * (oldest first) rather than assuming just one.
    */
   async show(ctx: HttpContext) {
     const { params, response, serialize } = ctx
@@ -22,16 +23,12 @@ export default class OrdersController {
       return response.notFound({ error: 'Project not found' })
     }
 
-    const order = await Order.query()
+    const orders = await Order.query()
       .where('projectId', project.id)
-      .orderBy('createdAt', 'desc')
+      .orderBy('createdAt', 'asc')
       .preload('items')
       .preload('address')
-      .first()
-    if (!order) {
-      return response.notFound({ error: 'Order not found' })
-    }
 
-    return await serialize(OrderTransformer.transform(order))
+    return await serialize(OrderTransformer.transform(orders))
   }
 }

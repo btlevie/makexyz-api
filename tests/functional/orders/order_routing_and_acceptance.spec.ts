@@ -167,11 +167,32 @@ test.group('Order routing', (group) => {
 
   test('skips straight to open when no vendor is preferred', async ({ assert }) => {
     await seedOrderRoutingConfig(24)
+    const vendorUser = await User.create({
+      uuid: string.uuid(),
+      email: `v-${string.uuid()}@test.com`,
+      password: 'password123',
+      role: 'vendor',
+    })
+    const vendor = await Vendor.create({ uuid: string.uuid(), userId: vendorUser.id })
+    // Capable, but not preferred - fulfillable, just not via the preferred queue.
+    await grantCapability(vendor, 'fdm', false)
     const { order } = await createOpenOrder(['fdm'])
 
     await routeNewOrder(order)
 
     assert.equal(order.routingStage, 'open')
+    assert.isNull(order.routingExpiresAt)
+  })
+
+  test('routes to unfulfillable when no vendor covers the required technologies at all', async ({
+    assert,
+  }) => {
+    await seedOrderRoutingConfig(24)
+    const { order } = await createOpenOrder(['fdm'])
+
+    await routeNewOrder(order)
+
+    assert.equal(order.routingStage, 'unfulfillable')
     assert.isNull(order.routingExpiresAt)
   })
 
@@ -188,6 +209,20 @@ test.group('Order routing', (group) => {
     const vendor = await Vendor.create({ uuid: string.uuid(), userId: vendorUser.id })
     // Preferred for fdm only, but the order needs fdm AND sla.
     await grantCapability(vendor, 'fdm', true)
+    // A second vendor covers the full required set, just not as a preferred
+    // vendor - this is what makes the order fulfillable at all (so it
+    // correctly routes to 'open' rather than 'unfulfillable'), the specific
+    // guard against hasAnyCapableVendor accidentally filtering on
+    // is_preferred the way hasFullyPreferredVendor does.
+    const otherUser = await User.create({
+      uuid: string.uuid(),
+      email: `v-${string.uuid()}@test.com`,
+      password: 'password123',
+      role: 'vendor',
+    })
+    const otherVendor = await Vendor.create({ uuid: string.uuid(), userId: otherUser.id })
+    await grantCapability(otherVendor, 'fdm', false)
+    await grantCapability(otherVendor, 'sla', false)
     const { order } = await createOpenOrder(['fdm', 'sla'])
 
     await routeNewOrder(order)

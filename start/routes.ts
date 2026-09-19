@@ -94,6 +94,12 @@ router
         // or Lambda invocation.
         router.get('files/:uuid', [controllers.ProjectFiles, 'show'])
         router.post(':projectUuid/quotes', [controllers.Quotes, 'store']).use(middleware.auth())
+        // Public, same grant/customer/staff authorization as the other quote
+        // endpoints - lets a customer/frontend discover every quote lineage
+        // on a project (e.g. two resulting quotes after an admin split, or a
+        // single 'needs_review' quote awaiting one). Not throttled: a read
+        // costs no S3 write or Lambda invocation.
+        router.get(':projectUuid/quotes', [controllers.Quotes, 'index'])
         // Public: instant-quote customers are anonymous and authorize with
         // their project grant, same as the file-mutation endpoints above.
         // Throttled since it calls out to the tax calculator.
@@ -154,6 +160,18 @@ router
       })
       .prefix('vendor')
       .as('vendor')
+      .use(middleware.auth())
+
+    // Admin-only - middleware.auth() resolves the user, isAdmin() (stricter
+    // than the vendor group's isStaff()) does the role check in the
+    // controller, since a vendor account must not reach these.
+    router
+      .group(() => {
+        router.get('quotes/needs-review', [controllers.AdminQuotes, 'needsReview'])
+        router.post('quotes/:uuid/split', [controllers.AdminQuotes, 'split'])
+      })
+      .prefix('admin')
+      .as('admin')
       .use(middleware.auth())
 
     // Payment-provider webhooks - verified entirely by provider signature

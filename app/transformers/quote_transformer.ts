@@ -7,6 +7,10 @@ export default class QuoteTransformer extends BaseTransformer<Quote> {
     return {
       uuid: this.resource.uuid,
       status: this.resource.status,
+      // Only meaningful when status is 'needs_review' - lets the frontend
+      // tailor its "further review needed" message per reason without a
+      // backend change next time a second trigger reason exists.
+      reviewReason: this.resource.reviewReason,
       revision: this.resource.revision,
       generatedBy: this.resource.generatedBy,
       subtotal: this.resource.subtotal,

@@ -9,6 +9,7 @@ import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import QuoteItem from '#models/quote_item'
 import User from '#models/user'
+import Vendor from '#models/vendor'
 
 const DEFAULT_VALUES = {
   modelMaterialRatePerGram: '0.15',
@@ -34,6 +35,18 @@ async function seedPricingConfig(overrides: Partial<typeof DEFAULT_VALUES> = {})
   })
   await config.related('fdmValues').create({ ...DEFAULT_VALUES, ...overrides })
   return config
+}
+
+async function seedCapableVendor(technology: 'fdm' | 'sla' | 'sls' = 'fdm') {
+  const user = await User.create({
+    uuid: string.uuid(),
+    email: `v-${string.uuid()}@test.com`,
+    password: 'password123',
+    role: 'vendor',
+  })
+  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  await vendor.related('technologyCapabilities').create({ technology, isPreferred: false })
+  return vendor
 }
 
 async function signup(client: any) {
@@ -122,6 +135,7 @@ test.group('Quotes | create', (group) => {
 
   test('prices a single part at the specification worked example', async ({ client, assert }) => {
     await seedPricingConfig()
+    await seedCapableVendor('fdm')
     const { session, customer } = await signup(client)
     const { project, projectFile } = await createSlicedProjectFile(customer)
 

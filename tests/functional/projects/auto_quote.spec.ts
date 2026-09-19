@@ -8,6 +8,8 @@ import Project from '#models/project'
 import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import QuoteItem from '#models/quote_item'
+import User from '#models/user'
+import Vendor from '#models/vendor'
 import env from '#start/env'
 
 function sign(payload: Record<string, unknown>) {
@@ -72,6 +74,18 @@ async function pendingProject(count = 1) {
   return { project, files }
 }
 
+async function seedCapableVendor(technology: 'fdm' | 'sla' | 'sls' = 'fdm') {
+  const user = await User.create({
+    uuid: string.uuid(),
+    email: `v-${string.uuid()}@test.com`,
+    password: 'password123',
+    role: 'vendor',
+  })
+  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  await vendor.related('technologyCapabilities').create({ technology, isPreferred: false })
+  return vendor
+}
+
 async function reportCompleted(client: any, projectFile: ProjectFile) {
   const payload = {
     status: 'completed' as const,
@@ -130,6 +144,7 @@ test.group('Projects | automatic instant quoting', (group) => {
 
   test('quotes automatically once every file has finished', async ({ client, assert }) => {
     await seedPricingConfig()
+    await seedCapableVendor('fdm')
     const { project, files } = await pendingProject(2)
 
     await reportCompleted(client, files[0])

@@ -89,11 +89,50 @@ async function hasFullyPreferredVendor(requiredTechnologies: string[]): Promise<
 }
 
 /**
+ * Whether ANY single vendor (preferred or not) covers every one of the given
+ * technologies - "is this fulfillable at all," used both to flag a quote for
+ * review before checkout and as a routing-time safety net (see
+ * routeNewOrder below). Deliberately NOT filtered by is_preferred - this is
+ * the one line that matters most to get right, since it's otherwise a
+ * near-copy of hasFullyPreferredVendor. A quote/order fulfillable only by a
+ * non-preferred vendor is completely normal and must not be flagged.
+ */
+export async function hasAnyCapableVendor(requiredTechnologies: string[]): Promise<boolean> {
+  if (requiredTechnologies.length === 0) {
+    return false
+  }
+
+  const rows = await db
+    .from('vendor_technology_capabilities')
+    .whereIn('technology', requiredTechnologies)
+    .groupBy('vendor_id')
+    .havingRaw('count(distinct technology) = ?', [requiredTechnologies.length])
+    .select('vendor_id')
+
+  return rows.length > 0
+}
+
+/**
  * Sets routing_stage/routing_expires_at on a freshly-created order. Call this
  * once, right after order creation.
+ *
+ * The unfulfillable check here is a defensive safety net, not the primary
+ * mechanism - that's the quote-review workflow in quote_generation_service.ts,
+ * which normally catches this well before checkout. This just guards against
+ * a vendor's capabilities changing in the window between quote-accept and
+ * order-routing, so a truly stuck order is at least visible/queryable
+ * instead of sitting in 'open' invisibly forever.
  */
 export async function routeNewOrder(order: Order): Promise<void> {
   const requiredTechnologies = await getRequiredTechnologies(order)
+
+  if (!(await hasAnyCapableVendor(requiredTechnologies))) {
+    order.routingStage = 'unfulfillable'
+    order.routingExpiresAt = null
+    await order.save()
+    return
+  }
+
   const isPreferredEligible = await hasFullyPreferredVendor(requiredTechnologies)
 
   if (isPreferredEligible) {

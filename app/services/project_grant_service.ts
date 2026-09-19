@@ -59,6 +59,15 @@ export function isStaff(ctx: HttpContext): boolean {
 }
 
 /**
+ * Stricter than isStaff - admin only. Used for actions like splitting a
+ * quote or force-assigning a vendor, which a vendor account (bundled into
+ * isStaff's broader "may reach any project" check) shouldn't be able to do.
+ */
+export function isAdmin(ctx: HttpContext): boolean {
+  return ctx.auth.user?.role === 'admin'
+}
+
+/**
  * Resolves a project file the caller may act on, by the same three routes as
  * resolveProject plus staff access - staff need to reach anyone's file, since
  * correcting someone else's part is the entire point of the override.

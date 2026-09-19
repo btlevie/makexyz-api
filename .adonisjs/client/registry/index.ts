@@ -54,6 +54,36 @@ const routes = {
     tokens: [{"old":"/v1/account/logout","type":0,"val":"v1","end":""},{"old":"/v1/account/logout","type":0,"val":"account","end":""},{"old":"/v1/account/logout","type":0,"val":"logout","end":""}],
     types: placeholder as Registry['profile.access_tokens.destroy']['types'],
   },
+  'profile.addresses.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/account/addresses',
+    tokens: [{"old":"/v1/account/addresses","type":0,"val":"v1","end":""},{"old":"/v1/account/addresses","type":0,"val":"account","end":""},{"old":"/v1/account/addresses","type":0,"val":"addresses","end":""}],
+    types: placeholder as Registry['profile.addresses.index']['types'],
+  },
+  'profile.addresses.store': {
+    methods: ["POST"],
+    pattern: '/v1/account/addresses',
+    tokens: [{"old":"/v1/account/addresses","type":0,"val":"v1","end":""},{"old":"/v1/account/addresses","type":0,"val":"account","end":""},{"old":"/v1/account/addresses","type":0,"val":"addresses","end":""}],
+    types: placeholder as Registry['profile.addresses.store']['types'],
+  },
+  'profile.addresses.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/account/addresses/:uuid',
+    tokens: [{"old":"/v1/account/addresses/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"account","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"addresses","end":""},{"old":"/v1/account/addresses/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['profile.addresses.show']['types'],
+  },
+  'profile.addresses.update': {
+    methods: ["PATCH"],
+    pattern: '/v1/account/addresses/:uuid',
+    tokens: [{"old":"/v1/account/addresses/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"account","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"addresses","end":""},{"old":"/v1/account/addresses/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['profile.addresses.update']['types'],
+  },
+  'profile.addresses.destroy': {
+    methods: ["DELETE"],
+    pattern: '/v1/account/addresses/:uuid',
+    tokens: [{"old":"/v1/account/addresses/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"account","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"addresses","end":""},{"old":"/v1/account/addresses/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['profile.addresses.destroy']['types'],
+  },
   'projects.project_files.store_instant_quote_files': {
     methods: ["POST"],
     pattern: '/v1/projects/files',
@@ -102,6 +132,12 @@ const routes = {
     tokens: [{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"quotes","end":""}],
     types: placeholder as Registry['projects.quotes.store']['types'],
   },
+  'projects.quotes.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/projects/:projectUuid/quotes',
+    tokens: [{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"quotes","end":""}],
+    types: placeholder as Registry['projects.quotes.index']['types'],
+  },
   'projects.quotes.configure': {
     methods: ["PATCH"],
     pattern: '/v1/projects/:projectUuid/quotes/:uuid/configure',
@@ -126,6 +162,12 @@ const routes = {
     tokens: [{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"checkout-sessions","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"authorize","end":""}],
     types: placeholder as Registry['projects.checkout_sessions.authorize']['types'],
   },
+  'projects.orders.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/projects/:projectUuid/order',
+    tokens: [{"old":"/v1/projects/:projectUuid/order","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/order","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/order","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/order","type":0,"val":"order","end":""}],
+    types: placeholder as Registry['projects.orders.show']['types'],
+  },
   'projects.projects.capture_email': {
     methods: ["POST"],
     pattern: '/v1/projects/:projectUuid/email',
@@ -144,11 +186,83 @@ const routes = {
     tokens: [{"old":"/v1/vendor/orders","type":0,"val":"v1","end":""},{"old":"/v1/vendor/orders","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/orders","type":0,"val":"orders","end":""}],
     types: placeholder as Registry['vendor.vendor_orders.index']['types'],
   },
+  'vendor.vendor_orders.active': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/vendor/orders/active',
+    tokens: [{"old":"/v1/vendor/orders/active","type":0,"val":"v1","end":""},{"old":"/v1/vendor/orders/active","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/orders/active","type":0,"val":"orders","end":""},{"old":"/v1/vendor/orders/active","type":0,"val":"active","end":""}],
+    types: placeholder as Registry['vendor.vendor_orders.active']['types'],
+  },
   'vendor.vendor_orders.accept': {
     methods: ["PATCH"],
     pattern: '/v1/vendor/orders/:uuid/accept',
     tokens: [{"old":"/v1/vendor/orders/:uuid/accept","type":0,"val":"v1","end":""},{"old":"/v1/vendor/orders/:uuid/accept","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/orders/:uuid/accept","type":0,"val":"orders","end":""},{"old":"/v1/vendor/orders/:uuid/accept","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/orders/:uuid/accept","type":0,"val":"accept","end":""}],
     types: placeholder as Registry['vendor.vendor_orders.accept']['types'],
+  },
+  'vendor.vendor_orders.start_production': {
+    methods: ["PATCH"],
+    pattern: '/v1/vendor/orders/:uuid/start-production',
+    tokens: [{"old":"/v1/vendor/orders/:uuid/start-production","type":0,"val":"v1","end":""},{"old":"/v1/vendor/orders/:uuid/start-production","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/orders/:uuid/start-production","type":0,"val":"orders","end":""},{"old":"/v1/vendor/orders/:uuid/start-production","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/orders/:uuid/start-production","type":0,"val":"start-production","end":""}],
+    types: placeholder as Registry['vendor.vendor_orders.start_production']['types'],
+  },
+  'vendor.vendor_orders.ready_to_ship': {
+    methods: ["PATCH"],
+    pattern: '/v1/vendor/orders/:uuid/ready-to-ship',
+    tokens: [{"old":"/v1/vendor/orders/:uuid/ready-to-ship","type":0,"val":"v1","end":""},{"old":"/v1/vendor/orders/:uuid/ready-to-ship","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/orders/:uuid/ready-to-ship","type":0,"val":"orders","end":""},{"old":"/v1/vendor/orders/:uuid/ready-to-ship","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/orders/:uuid/ready-to-ship","type":0,"val":"ready-to-ship","end":""}],
+    types: placeholder as Registry['vendor.vendor_orders.ready_to_ship']['types'],
+  },
+  'vendor.vendor_addresses.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/vendor/addresses',
+    tokens: [{"old":"/v1/vendor/addresses","type":0,"val":"v1","end":""},{"old":"/v1/vendor/addresses","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/addresses","type":0,"val":"addresses","end":""}],
+    types: placeholder as Registry['vendor.vendor_addresses.index']['types'],
+  },
+  'vendor.vendor_addresses.store': {
+    methods: ["POST"],
+    pattern: '/v1/vendor/addresses',
+    tokens: [{"old":"/v1/vendor/addresses","type":0,"val":"v1","end":""},{"old":"/v1/vendor/addresses","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/addresses","type":0,"val":"addresses","end":""}],
+    types: placeholder as Registry['vendor.vendor_addresses.store']['types'],
+  },
+  'vendor.vendor_addresses.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/vendor/addresses/:uuid',
+    tokens: [{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"addresses","end":""},{"old":"/v1/vendor/addresses/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['vendor.vendor_addresses.show']['types'],
+  },
+  'vendor.vendor_addresses.update': {
+    methods: ["PATCH"],
+    pattern: '/v1/vendor/addresses/:uuid',
+    tokens: [{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"addresses","end":""},{"old":"/v1/vendor/addresses/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['vendor.vendor_addresses.update']['types'],
+  },
+  'vendor.vendor_addresses.destroy': {
+    methods: ["DELETE"],
+    pattern: '/v1/vendor/addresses/:uuid',
+    tokens: [{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/addresses/:uuid","type":0,"val":"addresses","end":""},{"old":"/v1/vendor/addresses/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['vendor.vendor_addresses.destroy']['types'],
+  },
+  'admin.admin_quotes.needs_review': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/quotes/needs-review',
+    tokens: [{"old":"/v1/admin/quotes/needs-review","type":0,"val":"v1","end":""},{"old":"/v1/admin/quotes/needs-review","type":0,"val":"admin","end":""},{"old":"/v1/admin/quotes/needs-review","type":0,"val":"quotes","end":""},{"old":"/v1/admin/quotes/needs-review","type":0,"val":"needs-review","end":""}],
+    types: placeholder as Registry['admin.admin_quotes.needs_review']['types'],
+  },
+  'admin.admin_quotes.split': {
+    methods: ["POST"],
+    pattern: '/v1/admin/quotes/:uuid/split',
+    tokens: [{"old":"/v1/admin/quotes/:uuid/split","type":0,"val":"v1","end":""},{"old":"/v1/admin/quotes/:uuid/split","type":0,"val":"admin","end":""},{"old":"/v1/admin/quotes/:uuid/split","type":0,"val":"quotes","end":""},{"old":"/v1/admin/quotes/:uuid/split","type":1,"val":"uuid","end":""},{"old":"/v1/admin/quotes/:uuid/split","type":0,"val":"split","end":""}],
+    types: placeholder as Registry['admin.admin_quotes.split']['types'],
+  },
+  'webhooks.stripe_webhooks': {
+    methods: ["POST"],
+    pattern: '/v1/webhooks/stripe',
+    tokens: [{"old":"/v1/webhooks/stripe","type":0,"val":"v1","end":""},{"old":"/v1/webhooks/stripe","type":0,"val":"webhooks","end":""},{"old":"/v1/webhooks/stripe","type":0,"val":"stripe","end":""}],
+    types: placeholder as Registry['webhooks.stripe_webhooks']['types'],
+  },
+  'webhooks.paypal_webhooks': {
+    methods: ["POST"],
+    pattern: '/v1/webhooks/paypal',
+    tokens: [{"old":"/v1/webhooks/paypal","type":0,"val":"v1","end":""},{"old":"/v1/webhooks/paypal","type":0,"val":"webhooks","end":""},{"old":"/v1/webhooks/paypal","type":0,"val":"paypal","end":""}],
+    types: placeholder as Registry['webhooks.paypal_webhooks']['types'],
   },
 } as const satisfies Record<string, AdonisEndpoint>
 

@@ -26,6 +26,46 @@ import { isStaff, resolveProject } from '#services/project_grant_service'
 
 export default class QuotesController {
   /**
+   * Every quote for a project a customer/staff should see - one per lineage
+   * (its latest revision only), excluding lineages that ended `rejected` (a
+   * dead end). A `needs_review` lineage IS included, so the frontend can
+   * render its own "further review needed" message instead of a price. This
+   * is how a customer discovers there's more than one quote to review after
+   * an admin split, or that their one quote isn't ready yet. Public, same
+   * grant/customer/staff authorization as configure/accept.
+   */
+  async index(ctx: HttpContext) {
+    const { params, response, serialize } = ctx
+
+    const project = isStaff(ctx)
+      ? await Project.findBy('uuid', params.projectUuid)
+      : await resolveProject(ctx, params.projectUuid)
+    if (!project) {
+      return response.notFound({ error: 'Project not found' })
+    }
+
+    const quotes = await Quote.query()
+      .where('projectId', project.id)
+      .preload('items')
+      .preload('address')
+
+    // A project only ever had one quote lineage before quote splitting
+    // existed - group by lineage root (originQuoteId, or the quote's own id
+    // if it IS a root) and keep only the latest revision per lineage.
+    const latestByLineage = new Map<number, Quote>()
+    for (const quote of quotes) {
+      const lineageRoot = quote.originQuoteId ?? quote.id
+      const current = latestByLineage.get(lineageRoot)
+      if (!current || quote.revision > current.revision) {
+        latestByLineage.set(lineageRoot, quote)
+      }
+    }
+    const active = [...latestByLineage.values()].filter((quote) => quote.status !== 'rejected')
+
+    return await serialize(QuoteTransformer.transform(active))
+  }
+
+  /**
    * Prices every requested project file and persists the result as a new quote
    * revision.
    *
@@ -260,6 +300,11 @@ export default class QuotesController {
     if (quote.status === 'rejected') {
       return response.conflict({ error: `Quote ${quote.uuid} was rejected and cannot be accepted` })
     }
+    if (quote.status === 'needs_review') {
+      return response.conflict({
+        error: `Quote ${quote.uuid} needs a quick review before it can be accepted - please check back shortly`,
+      })
+    }
     if (
       !quote.destinationCountry ||
       !quote.shippingMethod ||
@@ -272,8 +317,10 @@ export default class QuotesController {
       })
     }
 
+    const lineageRoot = quote.originQuoteId ?? quote.id
     const latest = await Quote.query()
       .where('projectId', project.id)
+      .where((q) => q.where('id', lineageRoot).orWhere('originQuoteId', lineageRoot))
       .orderBy('revision', 'desc')
       .firstOrFail()
     if (latest.id !== quote.id) {

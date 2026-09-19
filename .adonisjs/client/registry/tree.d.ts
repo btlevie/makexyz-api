@@ -23,6 +23,13 @@ export interface ApiDefinition {
     accessTokens: {
       destroy: typeof routes['profile.access_tokens.destroy']
     }
+    addresses: {
+      index: typeof routes['profile.addresses.index']
+      store: typeof routes['profile.addresses.store']
+      show: typeof routes['profile.addresses.show']
+      update: typeof routes['profile.addresses.update']
+      destroy: typeof routes['profile.addresses.destroy']
+    }
   }
   projects: {
     projectFiles: {
@@ -36,12 +43,16 @@ export interface ApiDefinition {
     }
     quotes: {
       store: typeof routes['projects.quotes.store']
+      index: typeof routes['projects.quotes.index']
       configure: typeof routes['projects.quotes.configure']
       accept: typeof routes['projects.quotes.accept']
     }
     checkoutSessions: {
       store: typeof routes['projects.checkout_sessions.store']
       authorize: typeof routes['projects.checkout_sessions.authorize']
+    }
+    orders: {
+      show: typeof routes['projects.orders.show']
     }
     projects: {
       captureEmail: typeof routes['projects.projects.capture_email']
@@ -53,7 +64,27 @@ export interface ApiDefinition {
   vendor: {
     vendorOrders: {
       index: typeof routes['vendor.vendor_orders.index']
+      active: typeof routes['vendor.vendor_orders.active']
       accept: typeof routes['vendor.vendor_orders.accept']
+      startProduction: typeof routes['vendor.vendor_orders.start_production']
+      readyToShip: typeof routes['vendor.vendor_orders.ready_to_ship']
     }
+    vendorAddresses: {
+      index: typeof routes['vendor.vendor_addresses.index']
+      store: typeof routes['vendor.vendor_addresses.store']
+      show: typeof routes['vendor.vendor_addresses.show']
+      update: typeof routes['vendor.vendor_addresses.update']
+      destroy: typeof routes['vendor.vendor_addresses.destroy']
+    }
+  }
+  admin: {
+    adminQuotes: {
+      needsReview: typeof routes['admin.admin_quotes.needs_review']
+      split: typeof routes['admin.admin_quotes.split']
+    }
+  }
+  webhooks: {
+    stripeWebhooks: typeof routes['webhooks.stripe_webhooks']
+    paypalWebhooks: typeof routes['webhooks.paypal_webhooks']
   }
 }

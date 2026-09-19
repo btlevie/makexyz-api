@@ -62,10 +62,12 @@ export default class ExpireAbandonedProjects extends Job<ExpireAbandonedProjects
         await project.save()
 
         // Only quotes still in play - an accepted or already-rejected quote has
-        // its own outcome and must not be relabelled.
+        // its own outcome and must not be relabelled. 'needs_review' is
+        // included so a quote stuck awaiting admin review that nobody came
+        // back to still gets cleaned up.
         rejectedQuotes += await Quote.query({ client: trx })
           .where('projectId', project.id)
-          .whereIn('status', ['draft', 'sent'])
+          .whereIn('status', ['draft', 'sent', 'needs_review'])
           .update({
             status: 'rejected',
             rejection_reason: 'abandoned',

@@ -9,6 +9,7 @@
 import logger from '@adonisjs/core/services/logger'
 import Project from '#models/project'
 import ProjectFile from '#models/project_file'
+import Quote from '#models/quote'
 import { getActiveFdmConfig, PricingConfigurationError } from '#services/pricing_config_service'
 import {
   persistQuote,
@@ -82,6 +83,26 @@ export async function autoQuoteProjectIfReady(projectId: number | null): Promise
     }
 
     if (pricedLines.length === 0) {
+      return
+    }
+
+    // A project only ever had one quote lineage before quote splitting
+    // existed. If it already has more than one (an admin split it), there's
+    // no established rule for which lineage a newly-completed file should
+    // join - reconciling that is a real design question, not something to
+    // guess at here. Skip auto-quoting entirely rather than silently
+    // creating a new, overlapping quote; the manual/staff
+    // POST :projectUuid/quotes endpoint remains available if someone needs
+    // to quote these files explicitly.
+    const existingQuotes = await Quote.query()
+      .where('projectId', project.id)
+      .whereNot('status', 'rejected')
+    const lineageRoots = new Set(existingQuotes.map((q) => q.originQuoteId ?? q.id))
+    if (lineageRoots.size > 1) {
+      logger.warn(
+        { projectUuid: project.uuid, lineageCount: lineageRoots.size },
+        'Skipped auto-quoting: project already has multiple quote lineages (likely split)'
+      )
       return
     }
 

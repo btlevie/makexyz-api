@@ -579,6 +579,10 @@ test.group('Quotes | accept', (group) => {
     await Quote.create({
       uuid: string.uuid(),
       projectId: project.id,
+      // Same lineage as `quote` - a real revision 2 always points back to
+      // its root via originQuoteId; without it this row would look like an
+      // unrelated, independent lineage and not supersede anything.
+      originQuoteId: quote.id,
       revision: 2,
       subtotal: '100.00',
       tax: '0.00',

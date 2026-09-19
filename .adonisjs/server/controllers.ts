@@ -6,6 +6,7 @@
 export const controllers = {
   AccessTokens: () => import('#controllers/access_tokens_controller'),
   Addresses: () => import('#controllers/addresses_controller'),
+  AdminQuotes: () => import('#controllers/admin_quotes_controller'),
   CheckoutSessions: () => import('#controllers/checkout_sessions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   NewCustomer: () => import('#controllers/new_customer_controller'),

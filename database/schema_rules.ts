@@ -61,7 +61,7 @@ export default {
     ['quotes']: {
       columns: {
         ['status']: {
-          tsType: "'draft' | 'sent' | 'accepted' | 'rejected'",
+          tsType: "'draft' | 'sent' | 'accepted' | 'rejected' | 'needs_review'",
         },
         ['generated_by']: {
           tsType: "'system' | 'user'",
@@ -84,7 +84,7 @@ export default {
           tsType: "'free' | 'ups_2day' | 'ups_overnight' | 'international_expedited'",
         },
         ['routing_stage']: {
-          tsType: "'preferred' | 'open'",
+          tsType: "'preferred' | 'open' | 'unfulfillable'",
         },
       },
     },

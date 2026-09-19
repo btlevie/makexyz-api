@@ -6,6 +6,7 @@
 /// <reference path="./manifest.d.ts" />
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
 import type AddressTransformer from '#transformers/address_transformer'
+import type AdminQuoteReviewTransformer from '#transformers/admin_quote_review_transformer'
 import type CheckoutSessionTransformer from '#transformers/checkout_session_transformer'
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
@@ -19,6 +20,10 @@ export namespace Data {
   export type Address = InferData<AddressTransformer>
   export namespace Address {
     export type Variants = InferVariants<AddressTransformer>
+  }
+  export type AdminQuoteReview = InferData<AdminQuoteReviewTransformer>
+  export namespace AdminQuoteReview {
+    export type Variants = InferVariants<AdminQuoteReviewTransformer>
   }
   export type CheckoutSession = InferData<CheckoutSessionTransformer>
   export namespace CheckoutSession {
