@@ -110,4 +110,17 @@ export default await Env.create(new URL('../', import.meta.url), {
   PAYPAL_CLIENT_ID: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
   PAYPAL_CLIENT_SECRET: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
   PAYPAL_API_BASE_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+
+  /*
+  |----------------------------------------------------------
+  | Payment-provider webhook verification
+  |----------------------------------------------------------
+  | Unlike the gateway/tax-calculator credentials above, STRIPE_WEBHOOK_SECRET
+  | is genuinely exercised in test env (see stripe_webhook_service.ts) - Stripe
+  | signature verification is a local HMAC check, so tests use a real secret
+  | rather than a Fake. PAYPAL_WEBHOOK_ID is only read by the real PayPal
+  | verifier, which test env never uses (see paypal_webhook_service.ts).
+  */
+  STRIPE_WEBHOOK_SECRET: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  PAYPAL_WEBHOOK_ID: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
 })

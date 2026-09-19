@@ -763,7 +763,7 @@ export class RateLimitSchema extends BaseModel {
 }
 
 export class RefundSchema extends BaseModel {
-  static $columns = ['amount', 'createdAt', 'id', 'paymentId', 'reason', 'updatedAt'] as const
+  static $columns = ['amount', 'createdAt', 'id', 'paymentId', 'provider', 'providerRefundId', 'reason', 'status', 'updatedAt'] as const
   $columns = RefundSchema.$columns
   @column()
   declare amount: string
@@ -774,7 +774,13 @@ export class RefundSchema extends BaseModel {
   @column()
   declare paymentId: number | null
   @column()
+  declare provider: 'stripe' | 'paypal'
+  @column()
+  declare providerRefundId: string
+  @column()
   declare reason: string | null
+  @column()
+  declare status: 'pending' | 'succeeded' | 'failed'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
@@ -985,4 +991,19 @@ export class VendorSchema extends BaseModel {
   declare userId: number | null
   @column()
   declare uuid: string
+}
+
+export class WebhookEventSchema extends BaseModel {
+  static $columns = ['eventId', 'eventType', 'id', 'processedAt', 'provider'] as const
+  $columns = WebhookEventSchema.$columns
+  @column()
+  declare eventId: string
+  @column()
+  declare eventType: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column.dateTime()
+  declare processedAt: DateTime
+  @column()
+  declare provider: 'stripe' | 'paypal'
 }

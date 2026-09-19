@@ -124,5 +124,22 @@ export default {
         },
       },
     },
+    ['refunds']: {
+      columns: {
+        ['provider']: {
+          tsType: "'stripe' | 'paypal'",
+        },
+        ['status']: {
+          tsType: "'pending' | 'succeeded' | 'failed'",
+        },
+      },
+    },
+    ['webhook_events']: {
+      columns: {
+        ['provider']: {
+          tsType: "'stripe' | 'paypal'",
+        },
+      },
+    },
   },
 } satisfies SchemaRules

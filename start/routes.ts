@@ -150,5 +150,18 @@ router
       .prefix('vendor')
       .as('vendor')
       .use(middleware.auth())
+
+    // Payment-provider webhooks - verified entirely by provider signature
+    // (see stripe_webhook_service.ts / paypal_webhook_service.ts), not the
+    // grant/customer/staff authorization used everywhere else in this file.
+    // Not throttled: invalid-signature requests are cheap to reject, and
+    // delivery volume is provider-controlled.
+    router
+      .group(() => {
+        router.post('stripe', [controllers.StripeWebhooks, 'handle'])
+        router.post('paypal', [controllers.PaypalWebhooks, 'handle'])
+      })
+      .prefix('webhooks')
+      .as('webhooks')
   })
   .prefix('/v1')

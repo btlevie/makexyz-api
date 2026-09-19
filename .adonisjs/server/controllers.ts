@@ -10,11 +10,13 @@ export const controllers = {
   NewAccount: () => import('#controllers/new_account_controller'),
   NewCustomer: () => import('#controllers/new_customer_controller'),
   Orders: () => import('#controllers/orders_controller'),
+  PaypalWebhooks: () => import('#controllers/paypal_webhooks_controller'),
   Profile: () => import('#controllers/profile_controller'),
   ProjectFiles: () => import('#controllers/project_files_controller'),
   Projects: () => import('#controllers/projects_controller'),
   Quotes: () => import('#controllers/quotes_controller'),
   ServiceableCountries: () => import('#controllers/serviceable_countries_controller'),
+  StripeWebhooks: () => import('#controllers/stripe_webhooks_controller'),
   VendorAddresses: () => import('#controllers/vendor_addresses_controller'),
   VendorOrders: () => import('#controllers/vendor_orders_controller'),
 }

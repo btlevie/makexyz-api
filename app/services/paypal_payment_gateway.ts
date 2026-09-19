@@ -19,14 +19,7 @@ import {
   type CaptureResult,
   type PaymentGateway,
 } from '#services/payment_gateway_service'
-
-function requireEnv(name: 'PAYPAL_CLIENT_ID' | 'PAYPAL_CLIENT_SECRET'): string {
-  const value = env.get(name)
-  if (!value) {
-    throw new PaymentGatewayError(`${name} is not configured`)
-  }
-  return value
-}
+import { getPayPalAccessToken } from '#services/paypal_auth_service'
 
 export class PayPalPaymentGateway implements PaymentGateway {
   private baseUrl: string
@@ -36,28 +29,6 @@ export class PayPalPaymentGateway implements PaymentGateway {
     // an explicit PAYPAL_API_BASE_URL rather than this ever silently pointing
     // at the wrong environment.
     this.baseUrl = env.get('PAYPAL_API_BASE_URL', 'https://api-m.sandbox.paypal.com')
-  }
-
-  private async getAccessToken(): Promise<string> {
-    const clientId = requireEnv('PAYPAL_CLIENT_ID')
-    const clientSecret = requireEnv('PAYPAL_CLIENT_SECRET')
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
-
-    const response = await fetch(`${this.baseUrl}/v1/oauth2/token`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: 'grant_type=client_credentials',
-    })
-
-    if (!response.ok) {
-      throw new PaymentGatewayError(`PayPal OAuth token request failed: ${response.status}`)
-    }
-
-    const body = (await response.json()) as { access_token: string }
-    return body.access_token
   }
 
   private async request(
@@ -93,7 +64,7 @@ export class PayPalPaymentGateway implements PaymentGateway {
       )
     }
 
-    const accessToken = await this.getAccessToken()
+    const accessToken = await getPayPalAccessToken()
     const result = await this.request(
       accessToken,
       'POST',
@@ -111,7 +82,7 @@ export class PayPalPaymentGateway implements PaymentGateway {
   }
 
   async capture(transactionId: string): Promise<CaptureResult> {
-    const accessToken = await this.getAccessToken()
+    const accessToken = await getPayPalAccessToken()
     const result = await this.request(
       accessToken,
       'POST',
@@ -135,7 +106,7 @@ export class PayPalPaymentGateway implements PaymentGateway {
   }
 
   async cancel(transactionId: string): Promise<void> {
-    const accessToken = await this.getAccessToken()
+    const accessToken = await getPayPalAccessToken()
     await this.request(accessToken, 'POST', `/v2/payments/authorizations/${transactionId}/void`)
   }
 }
