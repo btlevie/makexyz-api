@@ -9,6 +9,7 @@ export const controllers = {
   CheckoutSessions: () => import('#controllers/checkout_sessions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   NewCustomer: () => import('#controllers/new_customer_controller'),
+  Orders: () => import('#controllers/orders_controller'),
   Profile: () => import('#controllers/profile_controller'),
   ProjectFiles: () => import('#controllers/project_files_controller'),
   Projects: () => import('#controllers/projects_controller'),

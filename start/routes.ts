@@ -115,6 +115,10 @@ router
             'authorize',
           ])
           .use(instantQuoteThrottle)
+        // Public, same grant/customer/staff authorization as the other
+        // project endpoints - a receipt/status check after checkout. Not
+        // throttled: a read costs no S3 write or Lambda invocation.
+        router.get(':projectUuid/order', [controllers.Orders, 'show'])
         // Optional lead capture, offered after the price is shown. Public and
         // authorized by the project grant, so it is throttled too.
         router
