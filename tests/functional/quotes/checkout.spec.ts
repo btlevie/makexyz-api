@@ -2,6 +2,7 @@ import string from '@adonisjs/core/helpers/string'
 import { test } from '@japa/runner'
 import testUtils from '@adonisjs/core/services/test_utils'
 import limiter from '@adonisjs/limiter/services/main'
+import Address from '#models/address'
 import CheckoutSession from '#models/checkout_session'
 import Customer from '#models/customer'
 import Order from '#models/order'
@@ -28,6 +29,19 @@ async function createAcceptedQuote(options: { withCustomer?: boolean } = {}) {
     fileSize: 1024,
     status: 'completed',
   })
+  // Built directly (bypassing the real configure HTTP call) - see
+  // quote_configuration.spec.ts for the endpoint's own coverage of address
+  // creation/selection.
+  const address = await Address.create({
+    uuid: string.uuid(),
+    ownerType: 'customer',
+    customerId: customer?.id ?? null,
+    recipientName: 'Jane Doe',
+    line1: '123 Main St',
+    city: 'Springfield',
+    postalCode: '62704',
+    country: 'US',
+  })
   const quote = await Quote.create({
     uuid: string.uuid(),
     projectId: project.id,
@@ -42,6 +56,7 @@ async function createAcceptedQuote(options: { withCustomer?: boolean } = {}) {
     shippingFeeAmount: '0.00',
     productionTimeBusinessDays: 5,
     productionTimeFeeAmount: '0.00',
+    addressId: address.id,
   })
   await quote.related('items').create({
     projectFileId: projectFile.id,
@@ -52,7 +67,7 @@ async function createAcceptedQuote(options: { withCustomer?: boolean } = {}) {
     total: '100.00',
   })
 
-  return { project, projectFile, quote, grant: issueGrant(project) }
+  return { project, projectFile, quote, address, grant: issueGrant(project) }
 }
 
 test.group('Checkout | create session', (group) => {
@@ -210,6 +225,31 @@ test.group('Checkout | authorize', (group) => {
     const createdOrder = await Order.findByOrFail('quoteId', quote.id)
     assert.equal(createdOrder.shippingMethod, quote.shippingMethod)
     assert.equal(createdOrder.productionTimeBusinessDays, quote.productionTimeBusinessDays)
+    assert.equal(createdOrder.addressId, quote.addressId)
+  })
+
+  test('backfills an anonymous address to the customer resolved at checkout', async ({
+    client,
+    assert,
+  }) => {
+    const { project, quote, grant, address } = await createAcceptedQuote({ withCustomer: false })
+    assert.isNull(address.customerId)
+
+    const sessionResponse = await client
+      .post(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/checkout`)
+      .header('x-project-grant', grant)
+      .json({ email: 'guest@example.com' })
+    const sessionUuid = (sessionResponse.body().data as { uuid: string }).uuid
+
+    const response = await client
+      .patch(`/v1/projects/${project.uuid}/checkout-sessions/${sessionUuid}/authorize`)
+      .header('x-project-grant', grant)
+      .json({ provider: 'stripe' })
+
+    response.assertStatus(200)
+    await project.refresh()
+    await address.refresh()
+    assert.equal(address.customerId, project.customerId)
   })
 
   test('is idempotent - a second authorize call returns the same order, not a new one', async ({

@@ -8,7 +8,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class AddressSchema extends BaseModel {
-  static $columns = ['city', 'country', 'createdAt', 'customerId', 'id', 'label', 'line1', 'line2', 'ownerType', 'postalCode', 'state', 'updatedAt', 'vendorId'] as const
+  static $columns = ['city', 'country', 'createdAt', 'customerId', 'id', 'isDefault', 'label', 'line1', 'line2', 'ownerType', 'postalCode', 'recipientName', 'state', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = AddressSchema.$columns
   @column()
   declare city: string
@@ -21,6 +21,8 @@ export class AddressSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
+  declare isDefault: boolean
+  @column()
   declare label: string | null
   @column()
   declare line1: string
@@ -31,9 +33,13 @@ export class AddressSchema extends BaseModel {
   @column()
   declare postalCode: string
   @column()
+  declare recipientName: string
+  @column()
   declare state: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
   @column()
   declare vendorId: number | null
 }
@@ -325,8 +331,10 @@ export class OrderStatusHistorySchema extends BaseModel {
 }
 
 export class OrderSchema extends BaseModel {
-  static $columns = ['createdAt', 'customerId', 'externalReference', 'id', 'orderNumber', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'quoteId', 'routingExpiresAt', 'routingStage', 'shippingFeeAmount', 'shippingMethod', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid', 'vendorId'] as const
+  static $columns = ['addressId', 'createdAt', 'customerId', 'externalReference', 'id', 'orderNumber', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'quoteId', 'routingExpiresAt', 'routingStage', 'shippingFeeAmount', 'shippingMethod', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = OrderSchema.$columns
+  @column()
+  declare addressId: number | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
@@ -695,8 +703,10 @@ export class QuoteItemSchema extends BaseModel {
 }
 
 export class QuoteSchema extends BaseModel {
-  static $columns = ['createdAt', 'createdById', 'destinationCountry', 'generatedBy', 'id', 'notes', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'rejectedAt', 'rejectionReason', 'revision', 'shippingFeeAmount', 'shippingMethod', 'status', 'stripeTaxCalculationId', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
+  static $columns = ['addressId', 'createdAt', 'createdById', 'destinationCountry', 'generatedBy', 'id', 'notes', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'rejectedAt', 'rejectionReason', 'revision', 'shippingFeeAmount', 'shippingMethod', 'status', 'stripeTaxCalculationId', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid'] as const
   $columns = QuoteSchema.$columns
+  @column()
+  declare addressId: number | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()

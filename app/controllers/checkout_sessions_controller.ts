@@ -112,6 +112,7 @@ export default class CheckoutSessionsController {
         providerToken
       )
       await order.load('items')
+      await order.load('address')
       return await serialize(OrderTransformer.transform(order))
     } catch (error) {
       if (error instanceof CheckoutSessionNotActiveError) {

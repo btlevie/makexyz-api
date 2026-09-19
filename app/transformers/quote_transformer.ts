@@ -1,5 +1,6 @@
 import { BaseTransformer } from '@adonisjs/core/transformers'
 import type Quote from '#models/quote'
+import AddressTransformer from '#transformers/address_transformer'
 
 export default class QuoteTransformer extends BaseTransformer<Quote> {
   async toObject() {
@@ -16,6 +17,9 @@ export default class QuoteTransformer extends BaseTransformer<Quote> {
       shippingFeeAmount: this.resource.shippingFeeAmount,
       productionTimeBusinessDays: this.resource.productionTimeBusinessDays,
       productionTimeFeeAmount: this.resource.productionTimeFeeAmount,
+      shippingAddress: this.resource.address
+        ? await AddressTransformer.transform(this.resource.address)
+        : null,
       items: this.resource.items.map((item) => ({
         itemType: item.itemType,
         description: item.description,

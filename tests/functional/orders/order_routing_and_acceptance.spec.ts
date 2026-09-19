@@ -250,6 +250,7 @@ test.group('Vendor order acceptance', (group) => {
     const { calculationId } = await fakeTaxCalculator.calculate({
       lineItems: [{ description: 'x', amount: 100 }],
       destinationCountry: 'US',
+      destinationAddress: { line1: '123 Main St', city: 'Springfield', postalCode: '62704' },
     })
     quote.stripeTaxCalculationId = calculationId
     await quote.save()

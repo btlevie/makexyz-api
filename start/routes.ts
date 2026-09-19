@@ -38,6 +38,14 @@ router
       .group(() => {
         router.get('profile', [controllers.Profile, 'show'])
         router.post('logout', [controllers.AccessTokens, 'destroy'])
+
+        // The customer's own saved-address book (personal/business/etc,
+        // selectable during quote configuration - see QuotesController#configure).
+        router.get('addresses', [controllers.Addresses, 'index'])
+        router.post('addresses', [controllers.Addresses, 'store'])
+        router.get('addresses/:uuid', [controllers.Addresses, 'show'])
+        router.patch('addresses/:uuid', [controllers.Addresses, 'update'])
+        router.delete('addresses/:uuid', [controllers.Addresses, 'destroy'])
       })
       .prefix('account')
       .as('profile')
@@ -127,6 +135,13 @@ router
       .group(() => {
         router.get('orders', [controllers.VendorOrders, 'index'])
         router.patch('orders/:uuid/accept', [controllers.VendorOrders, 'accept'])
+
+        // The vendor's own saved-address book (e.g. return/pickup addresses).
+        router.get('addresses', [controllers.VendorAddresses, 'index'])
+        router.post('addresses', [controllers.VendorAddresses, 'store'])
+        router.get('addresses/:uuid', [controllers.VendorAddresses, 'show'])
+        router.patch('addresses/:uuid', [controllers.VendorAddresses, 'update'])
+        router.delete('addresses/:uuid', [controllers.VendorAddresses, 'destroy'])
       })
       .prefix('vendor')
       .as('vendor')

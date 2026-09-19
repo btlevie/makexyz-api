@@ -23,6 +23,18 @@ export type TaxLineItem = {
 export type TaxCalculationParams = {
   lineItems: TaxLineItem[]
   destinationCountry: string
+  /**
+   * Sales tax depends on the full address, not just country (US tax varies
+   * by state/county/city) - the Fake ignores this, but StripeTaxCalculator
+   * needs it for an accurate jurisdiction-level rate.
+   */
+  destinationAddress: {
+    line1: string
+    line2?: string | null
+    city: string
+    state?: string | null
+    postalCode: string
+  }
 }
 
 export type TaxCalculationResult = {

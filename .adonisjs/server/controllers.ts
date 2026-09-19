@@ -5,6 +5,7 @@
 
 export const controllers = {
   AccessTokens: () => import('#controllers/access_tokens_controller'),
+  Addresses: () => import('#controllers/addresses_controller'),
   CheckoutSessions: () => import('#controllers/checkout_sessions_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
   NewCustomer: () => import('#controllers/new_customer_controller'),
@@ -13,5 +14,6 @@ export const controllers = {
   Projects: () => import('#controllers/projects_controller'),
   Quotes: () => import('#controllers/quotes_controller'),
   ServiceableCountries: () => import('#controllers/serviceable_countries_controller'),
+  VendorAddresses: () => import('#controllers/vendor_addresses_controller'),
   VendorOrders: () => import('#controllers/vendor_orders_controller'),
 }

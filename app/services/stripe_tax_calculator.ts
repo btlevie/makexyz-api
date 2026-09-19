@@ -32,7 +32,14 @@ export class StripeTaxCalculator implements TaxCalculator {
         tax_code: line.taxCode,
       })),
       customer_details: {
-        address: { country: params.destinationCountry },
+        address: {
+          country: params.destinationCountry,
+          line1: params.destinationAddress.line1,
+          line2: params.destinationAddress.line2 ?? undefined,
+          city: params.destinationAddress.city,
+          state: params.destinationAddress.state ?? undefined,
+          postal_code: params.destinationAddress.postalCode,
+        },
         address_source: 'shipping',
       },
     })

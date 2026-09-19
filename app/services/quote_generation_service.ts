@@ -26,6 +26,7 @@ import {
   isProductionTimeFeasible,
 } from '#services/production_time_service'
 import { getTaxCalculator } from '#services/tax_calculator_service'
+import { createAddress } from '#services/address_service'
 
 export type QuoteLineRequest = { projectFile: ProjectFile; quantity: number }
 
@@ -181,6 +182,11 @@ export async function persistQuote(
         status: 'draft',
         generatedBy: 'system',
         productionTimeBusinessDays: standardBusinessDays,
+        // Explicit null, not omitted - an omitted FK leaves the in-memory
+        // instance's addressId as `undefined`, which Lucid's belongsTo
+        // preload (quote.load('address') in quotes_controller.ts) refuses to
+        // treat as "no related row" and throws on instead of a real null.
+        addressId: null,
       },
       { client: trx }
     )
@@ -224,10 +230,39 @@ export class ProductionTimeInfeasibleError extends Error {
   }
 }
 
+/**
+ * Either an existing saved address (looked up and ownership-checked by the
+ * controller against the resolved project's customer) or the inline fields
+ * to create a new one. Both branches carry the street-address fields
+ * (not just `addressId` for 'existing') so the tax calculator always has
+ * what it needs without a second lookup here.
+ */
+export type QuoteAddressInput =
+  | {
+      mode: 'existing'
+      addressId: number
+      line1: string
+      line2: string | null
+      city: string
+      state: string | null
+      postalCode: string
+    }
+  | {
+      mode: 'new'
+      recipientName: string
+      line1: string
+      line2?: string | null
+      city: string
+      state?: string | null
+      postalCode: string
+      label?: string | null
+    }
+
 export type QuoteConfigurationInput = {
   destinationCountry: string
   shippingMethod: ShippingMethod
   productionTimeBusinessDays: number
+  address: QuoteAddressInput
 }
 
 /**
@@ -296,6 +331,13 @@ export async function configureQuote(
   const taxCalculator = getTaxCalculator()
   const { calculationId, taxAmount } = await taxCalculator.calculate({
     destinationCountry: input.destinationCountry,
+    destinationAddress: {
+      line1: input.address.line1,
+      line2: input.address.line2 ?? null,
+      city: input.address.city,
+      state: input.address.state ?? null,
+      postalCode: input.address.postalCode,
+    },
     lineItems: [
       { description: 'Manufacturing', amount: subtotal },
       { description: 'Shipping', amount: shippingFeeAmount },
@@ -307,6 +349,28 @@ export async function configureQuote(
 
   return db.transaction(async (trx) => {
     await Project.query({ client: trx }).where('id', project.id).forUpdate().first()
+
+    let addressId: number
+    if (input.address.mode === 'existing') {
+      addressId = input.address.addressId
+    } else {
+      const address = await createAddress(
+        {
+          ownerType: 'customer',
+          customerId: project.customerId ?? null,
+          label: input.address.label ?? null,
+          recipientName: input.address.recipientName,
+          line1: input.address.line1,
+          line2: input.address.line2 ?? null,
+          city: input.address.city,
+          state: input.address.state ?? null,
+          postalCode: input.address.postalCode,
+          country: input.destinationCountry,
+        },
+        trx
+      )
+      addressId = address.id
+    }
 
     const configured = await Quote.create(
       {
@@ -325,6 +389,7 @@ export async function configureQuote(
         productionTimeBusinessDays: input.productionTimeBusinessDays,
         productionTimeFeeAmount: productionTimeFeeAmount.toFixed(2),
         stripeTaxCalculationId: calculationId,
+        addressId,
       },
       { client: trx }
     )

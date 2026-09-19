@@ -9,6 +9,7 @@ import string from '@adonisjs/core/helpers/string'
 import logger from '@adonisjs/core/services/logger'
 import db from '@adonisjs/lucid/services/db'
 import { DateTime } from 'luxon'
+import Address from '#models/address'
 import CheckoutSession from '#models/checkout_session'
 import Order from '#models/order'
 import Payment from '#models/payment'
@@ -157,6 +158,14 @@ export async function authorizeCheckoutSession(
         { client: trx }
       )
 
+      // Backfill the quote's address to the now-guaranteed-resolved customer -
+      // it may have been created unowned (customerId: null) at configure
+      // time, for a project that had no Customer yet. Safe/idempotent for an
+      // existing saved address too (already owned by this same customer).
+      await Address.query({ client: trx })
+        .where('id', quote.addressId!)
+        .update({ customer_id: checkoutSession.customerId })
+
       const order = await Order.create(
         {
           uuid: string.uuid(),
@@ -172,6 +181,7 @@ export async function authorizeCheckoutSession(
           shippingFeeAmount: quote.shippingFeeAmount,
           productionTimeBusinessDays: quote.productionTimeBusinessDays,
           productionTimeFeeAmount: quote.productionTimeFeeAmount,
+          addressId: quote.addressId!,
         },
         { client: trx }
       )

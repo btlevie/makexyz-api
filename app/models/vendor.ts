@@ -1,6 +1,7 @@
 import { VendorSchema } from '#database/schema'
 import { belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import Address from '#models/address'
 import User from '#models/user'
 import VendorTechnologyCapability from '#models/vendor_technology_capability'
 
@@ -10,4 +11,7 @@ export default class Vendor extends VendorSchema {
 
   @hasMany(() => VendorTechnologyCapability)
   declare technologyCapabilities: HasMany<typeof VendorTechnologyCapability>
+
+  @hasMany(() => Address)
+  declare addresses: HasMany<typeof Address>
 }

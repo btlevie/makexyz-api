@@ -63,7 +63,7 @@ Addresses may be used for:
 * Vendor business addresses
 * Vendor shipping origin addresses
 
-The `owner_type` field identifies whether the address belongs to a customer or vendor.
+The `owner_type` field identifies whether the address belongs to a customer or vendor. An owner may have many addresses (e.g. a "Personal" and a "Business" one, distinguished by `label`), with at most one marked `is_default` at a time. A quote's shipping address is either selected from the customer's existing addresses or created new during quote configuration (see Quotes below) — a newly-created one starts unowned (`customer_id: null`) if the project has no resolved customer yet, and is backfilled once checkout resolves one.
 
 ---
 
@@ -142,6 +142,9 @@ Quotes contain:
 * Notes
 * Revision number
 * Generator information
+* A shipping address (`address_id`, referencing the `addresses` book — see
+  Addresses above) — required before a quote can be accepted, since sales
+  tax depends on the full address, not just destination country
 
 Quotes may be:
 
@@ -313,6 +316,7 @@ Orders are created from quotes.
 An order contains:
 
 * Customer information
+* Shipping address (`address_id`, copied forward from the quote at checkout)
 * Pricing snapshot
 * Vendor assignment
 * Status information

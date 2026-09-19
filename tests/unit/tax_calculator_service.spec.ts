@@ -1,6 +1,13 @@
 import { test } from '@japa/runner'
 import { FakeTaxCalculator, TaxCalculatorError } from '#services/tax_calculator_service'
 
+const destinationAddress = {
+  line1: '123 Main St',
+  city: 'Springfield',
+  state: 'IL',
+  postalCode: '62704',
+}
+
 test.group('FakeTaxCalculator', (group) => {
   let calculator: FakeTaxCalculator
 
@@ -15,6 +22,7 @@ test.group('FakeTaxCalculator', (group) => {
         { description: 'Shipping', amount: 20 },
       ],
       destinationCountry: 'US',
+      destinationAddress,
     })
 
     assert.equal(result.taxAmount, Math.round(120 * 0.08 * 100) / 100)
@@ -24,6 +32,7 @@ test.group('FakeTaxCalculator', (group) => {
     const { calculationId } = await calculator.calculate({
       lineItems: [{ description: 'Manufacturing', amount: 100 }],
       destinationCountry: 'US',
+      destinationAddress,
     })
 
     assert.isFalse(calculator.isFinalized(calculationId))
@@ -41,6 +50,7 @@ test.group('FakeTaxCalculator', (group) => {
     const { calculationId } = await calculator.calculate({
       lineItems: [{ description: 'Manufacturing', amount: 100 }],
       destinationCountry: 'US',
+      destinationAddress,
     })
 
     calculator.reset()

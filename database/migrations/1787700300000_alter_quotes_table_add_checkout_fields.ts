@@ -28,6 +28,15 @@ export default class extends BaseSchema {
       // estimate until finalized (stripe.tax.transactions.createFromCalculation)
       // at capture time, once a vendor accepts the order.
       table.string('stripe_tax_calculation_id').nullable()
+      // The shipping destination - needed here (not just at checkout) because
+      // tax itself depends on the full address, not just country. Created
+      // once per quote revision by quote_generation_service#configureQuote
+      // (either a fresh Address or an existing saved one - see
+      // app/services/address_service.ts) and carried forward to
+      // orders.address_id at checkout. No onDelete('SET NULL') - deleting an
+      // address a quote/order still points to is refused at the app layer
+      // (see address_service#deleteAddress), not silently nulled.
+      table.integer('address_id').unsigned().references('id').inTable('addresses').nullable()
     })
   }
 
@@ -39,6 +48,7 @@ export default class extends BaseSchema {
       table.dropColumn('production_time_business_days')
       table.dropColumn('production_time_fee_amount')
       table.dropColumn('stripe_tax_calculation_id')
+      table.dropColumn('address_id')
     })
   }
 }

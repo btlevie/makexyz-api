@@ -1,5 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import logger from '@adonisjs/core/services/logger'
+import Address from '#models/address'
 import Customer from '#models/customer'
 import Project from '#models/project'
 import ProjectFile from '#models/project_file'
@@ -15,6 +16,7 @@ import {
   ProductionTimeInfeasibleError,
   QuoteNotConfigurableError,
   UnpriceableLineError,
+  type QuoteAddressInput,
   type ResolvedPricingConfigs,
 } from '#services/quote_generation_service'
 import { InvalidShippingSelectionError } from '#services/shipping_service'
@@ -103,19 +105,32 @@ export default class QuotesController {
 
     const quote = await persistQuote(project, pricedLines, { createdById: user.id })
     await quote.load('items')
+    await quote.load('address')
 
     return await serialize(QuoteTransformer.transform(quote))
   }
 
   /**
-   * Sets/updates shipping, production time, and tax on a quote before the
-   * customer accepts it. Public: instant-quote customers are anonymous and
-   * authorize with their project grant, same as the rest of this flow.
+   * Sets/updates shipping, production time, tax, and shipping address on a
+   * quote before the customer accepts it. Public: instant-quote customers
+   * are anonymous and authorize with their project grant, same as the rest
+   * of this flow.
    */
   async configure(ctx: HttpContext) {
     const { params, request, response, serialize } = ctx
-    const { destinationCountry, shippingMethod, productionTimeBusinessDays } =
-      await request.validateUsing(configureQuoteValidator)
+    const {
+      destinationCountry,
+      shippingMethod,
+      productionTimeBusinessDays,
+      addressUuid,
+      shippingAddressLabel,
+      shippingRecipientName,
+      shippingLine1,
+      shippingLine2,
+      shippingCity,
+      shippingState,
+      shippingPostalCode,
+    } = await request.validateUsing(configureQuoteValidator)
 
     const project = isStaff(ctx)
       ? await Project.findBy('uuid', params.projectUuid)
@@ -128,6 +143,47 @@ export default class QuotesController {
       return response.unprocessableEntity({
         error: `We don't currently ship to "${destinationCountry}"`,
       })
+    }
+
+    // Either an existing saved address (scoped to this project's own
+    // customer - never another customer's, and never matched at all for an
+    // anonymous project with no customer yet) or inline fields to create a
+    // new one.
+    let address: QuoteAddressInput
+    if (addressUuid) {
+      const existing = await Address.query()
+        .where('uuid', addressUuid)
+        .where('ownerType', 'customer')
+        .where('customerId', project.customerId ?? -1)
+        .first()
+      if (!existing) {
+        return response.unprocessableEntity({ error: `Address ${addressUuid} not found` })
+      }
+      address = {
+        mode: 'existing',
+        addressId: existing.id,
+        line1: existing.line1,
+        line2: existing.line2,
+        city: existing.city,
+        state: existing.state,
+        postalCode: existing.postalCode,
+      }
+    } else {
+      if (!shippingRecipientName || !shippingLine1 || !shippingCity || !shippingPostalCode) {
+        return response.unprocessableEntity({
+          error: 'A shipping address (or a saved addressUuid) is required',
+        })
+      }
+      address = {
+        mode: 'new',
+        recipientName: shippingRecipientName,
+        line1: shippingLine1,
+        line2: shippingLine2,
+        city: shippingCity,
+        state: shippingState,
+        postalCode: shippingPostalCode,
+        label: shippingAddressLabel,
+      }
     }
 
     const latestQuote = await Quote.query()
@@ -143,8 +199,10 @@ export default class QuotesController {
         destinationCountry,
         shippingMethod,
         productionTimeBusinessDays,
+        address,
       })
       await configured.load('items')
+      await configured.load('address')
       return await serialize(QuoteTransformer.transform(configured))
     } catch (error) {
       if (error instanceof QuoteNotConfigurableError) {
@@ -196,15 +254,21 @@ export default class QuotesController {
       // Idempotent - re-accepting an already-accepted quote is a no-op, not
       // an error.
       await quote.load('items')
+      await quote.load('address')
       return await serialize(QuoteTransformer.transform(quote))
     }
     if (quote.status === 'rejected') {
       return response.conflict({ error: `Quote ${quote.uuid} was rejected and cannot be accepted` })
     }
-    if (!quote.destinationCountry || !quote.shippingMethod || quote.productionTimeBusinessDays === null) {
+    if (
+      !quote.destinationCountry ||
+      !quote.shippingMethod ||
+      quote.productionTimeBusinessDays === null ||
+      !quote.addressId
+    ) {
       return response.unprocessableEntity({
         error:
-          'Quote must be configured (destination, shipping, and production time) before it can be accepted',
+          'Quote must be configured (destination, shipping, production time, and shipping address) before it can be accepted',
       })
     }
 
@@ -221,6 +285,7 @@ export default class QuotesController {
     quote.status = 'accepted'
     await quote.save()
     await quote.load('items')
+    await quote.load('address')
 
     return await serialize(QuoteTransformer.transform(quote))
   }
