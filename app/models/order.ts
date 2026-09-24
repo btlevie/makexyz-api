@@ -1,6 +1,6 @@
 import { OrderSchema } from '#database/schema'
-import { belongsTo, hasMany } from '@adonisjs/lucid/orm'
-import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
+import { belongsTo, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany, HasOne } from '@adonisjs/lucid/types/relations'
 import Address from '#models/address'
 import Customer from '#models/customer'
 import OrderItem from '#models/order_item'
@@ -8,6 +8,7 @@ import Project from '#models/project'
 import Quote from '#models/quote'
 import Shipment from '#models/shipment'
 import Vendor from '#models/vendor'
+import VendorPayout from '#models/vendor_payout'
 
 export default class Order extends OrderSchema {
   @belongsTo(() => Quote)
@@ -30,4 +31,7 @@ export default class Order extends OrderSchema {
 
   @hasMany(() => Shipment)
   declare shipments: HasMany<typeof Shipment>
+
+  @hasOne(() => VendorPayout)
+  declare payout: HasOne<typeof VendorPayout>
 }

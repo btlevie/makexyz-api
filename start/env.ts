@@ -171,4 +171,29 @@ export default await Env.create(new URL('../', import.meta.url), {
     () => process.env.NODE_ENV !== 'production'
   ),
   MAKEXYZ_SHIP_FROM_EMAIL: Env.schema.string.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Vendor payouts
+  |----------------------------------------------------------
+  | Payouts go out on Stripe Connect (reusing STRIPE_SECRET_KEY) or PayPal
+  | Payouts (reusing the PAYPAL_* credentials). The URLs are where each
+  | provider sends the vendor back after onboarding - frontend pages, which
+  | then call the matching /v1/vendor/payout-method endpoint. Test env fakes
+  | both providers, so none of these are needed there.
+  */
+  PAYOUT_DEFAULT_HOLD_DAYS: Env.schema.number.optional(),
+  VENDOR_PAYOUT_ONBOARDING_RETURN_URL: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  VENDOR_PAYOUT_ONBOARDING_REFRESH_URL: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  PAYPAL_OAUTH_REDIRECT_URL: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  // https://www.sandbox.paypal.com or https://www.paypal.com
+  PAYPAL_AUTHORIZE_BASE_URL: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
 })

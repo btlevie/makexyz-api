@@ -7,6 +7,7 @@ export const controllers = {
   AccessTokens: () => import('#controllers/access_tokens_controller'),
   Addresses: () => import('#controllers/addresses_controller'),
   AdminQuotes: () => import('#controllers/admin_quotes_controller'),
+  AdminVendorPayouts: () => import('#controllers/admin_vendor_payouts_controller'),
   CheckoutSessions: () => import('#controllers/checkout_sessions_controller'),
   EasypostWebhooks: () => import('#controllers/easypost_webhooks_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),
@@ -21,5 +22,7 @@ export const controllers = {
   StripeWebhooks: () => import('#controllers/stripe_webhooks_controller'),
   VendorAddresses: () => import('#controllers/vendor_addresses_controller'),
   VendorOrders: () => import('#controllers/vendor_orders_controller'),
+  VendorPayoutMethods: () => import('#controllers/vendor_payout_methods_controller'),
+  VendorPayouts: () => import('#controllers/vendor_payouts_controller'),
   VendorShipments: () => import('#controllers/vendor_shipments_controller'),
 }

@@ -31,6 +31,15 @@ export default class OrderTransformer extends BaseTransformer<Order> {
             )
           )
         : undefined,
+      // Vendor order listing only (see VendorOrdersController#index).
+      ...('estimatedPayout' in this.resource.$extras
+        ? {
+            estimatedPayout: this.resource.$extras.estimatedPayout as string | null,
+            payoutBlockedReason: (this.resource.$extras.payoutBlockedReason ?? null) as
+              | string
+              | null,
+          }
+        : {}),
       items: this.resource.items.map((item) => ({
         itemType: item.itemType,
         description: item.description,

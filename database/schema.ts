@@ -951,36 +951,58 @@ export class VendorPayoutRateSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
-  declare materialId: number | null
+  declare materialId: number
   @column()
   declare percentage: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
-  declare vendorId: number | null
+  declare vendorId: number
 }
 
 export class VendorPayoutSchema extends BaseModel {
-  static $columns = ['amount', 'createdAt', 'id', 'orderId', 'paidAt', 'provider', 'providerTransactionId', 'status', 'updatedAt', 'vendorId'] as const
+  static $columns = ['amount', 'breakdown', 'cancelledAt', 'createdAt', 'eligibleAt', 'failedAt', 'failureKind', 'failureReason', 'holdReason', 'id', 'orderId', 'paidAt', 'processingAt', 'provider', 'providerTransactionId', 'releasedAt', 'sendAttempt', 'status', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = VendorPayoutSchema.$columns
   @column()
   declare amount: string
+  @column()
+  declare breakdown: any
+  @column.dateTime()
+  declare cancelledAt: DateTime | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
+  @column.dateTime()
+  declare eligibleAt: DateTime | null
+  @column.dateTime()
+  declare failedAt: DateTime | null
+  @column()
+  declare failureKind: 'recipient' | 'platform' | null
+  @column()
+  declare failureReason: string | null
+  @column()
+  declare holdReason: 'partial_refund' | 'open_dispute' | 'payout_method_invalid' | 'manual' | null
   @column({ isPrimary: true })
   declare id: number
   @column()
   declare orderId: number | null
   @column.dateTime()
   declare paidAt: DateTime | null
+  @column.dateTime()
+  declare processingAt: DateTime | null
   @column()
-  declare provider: string
+  declare provider: 'stripe' | 'paypal'
   @column()
   declare providerTransactionId: string | null
+  @column.dateTime()
+  declare releasedAt: DateTime | null
   @column()
-  declare status: 'pending' | 'paid' | 'failed' | 'processing'
+  declare sendAttempt: number
+  @column()
+  declare status: 'pending' | 'held' | 'processing' | 'paid' | 'failed' | 'cancelled'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
   @column()
   declare vendorId: number | null
 }
@@ -1003,7 +1025,7 @@ export class VendorTechnologyCapabilitySchema extends BaseModel {
 }
 
 export class VendorSchema extends BaseModel {
-  static $columns = ['createdAt', 'displayName', 'id', 'paypalAccountId', 'quickbooksVendorId', 'stripeAccountId', 'taxStatus', 'updatedAt', 'userId', 'uuid'] as const
+  static $columns = ['createdAt', 'displayName', 'id', 'payoutHoldDays', 'payoutMethodError', 'payoutMethodErrorAt', 'payoutProvider', 'paypalEmail', 'paypalPayerId', 'quickbooksVendorId', 'stripeAccountId', 'stripePayoutsEnabled', 'taxStatus', 'updatedAt', 'userId', 'uuid'] as const
   $columns = VendorSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
@@ -1012,11 +1034,23 @@ export class VendorSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
-  declare paypalAccountId: string | null
+  declare payoutHoldDays: number | null
+  @column()
+  declare payoutMethodError: string | null
+  @column.dateTime()
+  declare payoutMethodErrorAt: DateTime | null
+  @column()
+  declare payoutProvider: 'stripe' | 'paypal' | null
+  @column()
+  declare paypalEmail: string | null
+  @column()
+  declare paypalPayerId: string | null
   @column()
   declare quickbooksVendorId: string | null
   @column()
   declare stripeAccountId: string | null
+  @column()
+  declare stripePayoutsEnabled: boolean
   @column()
   declare taxStatus: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })

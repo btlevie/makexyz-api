@@ -7,7 +7,8 @@
  *   delivered            -> order 'shipped' -> 'delivered'     (sets delivered_at)
  *
  * orders.delivered_at (plus the 'shipped' -> 'delivered' status history row)
- * is what the vendor payout timeline starts from. A 'delivered' event that
+ * is what the vendor payout timeline starts from - delivery sets the
+ * payout's eligible_at (see vendor_payout_service#scheduleEligibility). A 'delivered' event that
  * skips the in-transit scans still moves the order through 'shipped' first,
  * so both history rows always exist.
  *
@@ -22,6 +23,7 @@ import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import Order from '#models/order'
 import OrderStatusHistory from '#models/order_status_history'
 import Shipment from '#models/shipment'
+import { scheduleEligibility } from '#services/vendor_payout_service'
 
 type ShipmentStatus = Shipment['status']
 
@@ -132,6 +134,11 @@ async function transitionOrder(
     order.deliveredAt = at
   }
   await order.save()
+
+  if (to === 'delivered') {
+    // Starts the vendor payout's hold period.
+    await scheduleEligibility(orderId, at, trx)
+  }
 
   await OrderStatusHistory.create(
     { orderId, oldStatus: from, newStatus: to, changedById: null },

@@ -8,6 +8,7 @@ import {
 } from '#services/paypal_webhook_service'
 import { hasProcessed, markProcessed } from '#services/webhook_event_service'
 import { recordRefund, recordDispute } from '#services/refund_service'
+import { applyPaypalPayoutItemEvent } from '#services/vendor_payout_service'
 
 export default class PaypalWebhooksController {
   /**
@@ -103,6 +104,17 @@ export default class PaypalWebhooksController {
               trx
             )
           }
+          break
+        }
+        // Vendor payout results - PayPal payouts are asynchronous, so this is
+        // where they become paid or failed (see vendor_payout_service.ts).
+        case 'PAYMENT.PAYOUTS-ITEM.SUCCEEDED':
+        case 'PAYMENT.PAYOUTS-ITEM.FAILED':
+        case 'PAYMENT.PAYOUTS-ITEM.RETURNED':
+        case 'PAYMENT.PAYOUTS-ITEM.BLOCKED':
+        case 'PAYMENT.PAYOUTS-ITEM.DENIED':
+        case 'PAYMENT.PAYOUTS-ITEM.UNCLAIMED': {
+          await applyPaypalPayoutItemEvent(eventType, event.resource ?? {}, trx)
           break
         }
         default:

@@ -10,6 +10,9 @@ import OrderStatusHistory from '#models/order_status_history'
 import Vendor from '#models/vendor'
 import { captureCheckoutSession } from '#services/checkout_service'
 import { vendorCanAcceptOrder } from '#services/order_routing_service'
+import { computePayoutBreakdown } from '#services/payout_calculation_service'
+import { assertPayoutMethodReady } from '#services/vendor_payout_method_service'
+import { createPayoutForAcceptedOrder } from '#services/vendor_payout_service'
 
 export class VendorNotEligibleError extends Error {
   constructor(message: string) {
@@ -59,6 +62,11 @@ export async function listAcceptableOrders(vendor: Vendor): Promise<Order[]> {
  * and the checkout-expiration job (checkout_service#expireCheckoutSession).
  * Capture itself is guarded separately, by the payment's own status, not the
  * order's - see checkout_service#captureCheckoutSession.
+ *
+ * Acceptance also fixes what the vendor will be paid: the vendor must have a
+ * ready payout method (PayoutMethodNotReadyError) and a payout rate for every
+ * item's material (PayoutRateMissingError), and the payout snapshot is
+ * created in the same transaction as the status flip.
  */
 export async function acceptOrder(order: Order, vendor: Vendor, userId: number): Promise<Order> {
   const eligible = await vendorCanAcceptOrder(vendor.id, order)
@@ -68,9 +76,15 @@ export async function acceptOrder(order: Order, vendor: Vendor, userId: number):
     )
   }
 
+  assertPayoutMethodReady(vendor)
+
   const previousStatus = order.status
 
   await db.transaction(async (trx) => {
+    // Before the status flip, so a missing rate leaves the order open for
+    // another vendor.
+    const breakdown = await computePayoutBreakdown(order, vendor, trx)
+
     const updatedCount = await Order.query({ client: trx })
       .where('id', order.id)
       .where('status', 'open')
@@ -81,6 +95,8 @@ export async function acceptOrder(order: Order, vendor: Vendor, userId: number):
     if (updatedCount === 0) {
       throw new OrderNotAvailableError(`Order ${order.uuid} is no longer available to accept`)
     }
+
+    await createPayoutForAcceptedOrder(order, vendor, breakdown, trx)
 
     await OrderStatusHistory.create(
       {

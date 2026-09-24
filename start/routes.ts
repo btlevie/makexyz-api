@@ -160,6 +160,20 @@ router
           'void',
         ])
 
+        // Vendor payouts and payout setup (Stripe Connect or Log in with
+        // PayPal) - see vendor_payout_method_service.ts.
+        router.get('payouts', [controllers.VendorPayouts, 'index'])
+        router.get('payout-method', [controllers.VendorPayoutMethods, 'show'])
+        router.post('payout-method/stripe/onboarding', [
+          controllers.VendorPayoutMethods,
+          'startStripe',
+        ])
+        router.post('payout-method/paypal/connect', [controllers.VendorPayoutMethods, 'startPaypal'])
+        router.post('payout-method/paypal/callback', [
+          controllers.VendorPayoutMethods,
+          'completePaypal',
+        ])
+
         // The vendor's own saved-address book (e.g. return/pickup addresses).
         router.get('addresses', [controllers.VendorAddresses, 'index'])
         router.post('addresses', [controllers.VendorAddresses, 'store'])
@@ -178,6 +192,14 @@ router
       .group(() => {
         router.get('quotes/needs-review', [controllers.AdminQuotes, 'needsReview'])
         router.post('quotes/:uuid/split', [controllers.AdminQuotes, 'split'])
+
+        router.get('payouts', [controllers.AdminVendorPayouts, 'index'])
+        router.post('payouts/:uuid/release', [controllers.AdminVendorPayouts, 'release'])
+        router.post('payouts/:uuid/cancel', [controllers.AdminVendorPayouts, 'cancel'])
+        router.post('payouts/:uuid/retry', [controllers.AdminVendorPayouts, 'retry'])
+        router.get('vendors/:uuid/payout-rates', [controllers.AdminVendorPayouts, 'rates'])
+        router.put('vendors/:uuid/payout-rates', [controllers.AdminVendorPayouts, 'updateRates'])
+        router.patch('vendors/:uuid', [controllers.AdminVendorPayouts, 'updateVendor'])
       })
       .prefix('admin')
       .as('admin')

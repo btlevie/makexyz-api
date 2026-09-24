@@ -9,6 +9,14 @@ import {
   VendorNotEligibleError,
 } from '#services/order_acceptance_service'
 import { startProduction, markReadyToShip } from '#services/order_production_service'
+import {
+  computePayoutBreakdown,
+  PayoutRateMissingError,
+} from '#services/payout_calculation_service'
+import {
+  isPayoutMethodReady,
+  PayoutMethodNotReadyError,
+} from '#services/vendor_payout_method_service'
 
 export default class VendorOrdersController {
   /**
@@ -38,6 +46,24 @@ export default class VendorOrdersController {
     }
 
     const orders = await listAcceptableOrders(vendor)
+
+    // What the vendor would earn for each order - or why they can't accept it
+    // yet (no payout method, or no rate for one of its materials).
+    const methodReady = isPayoutMethodReady(vendor)
+    for (const order of orders) {
+      try {
+        const breakdown = await computePayoutBreakdown(order, vendor)
+        order.$extras.estimatedPayout = breakdown.total
+        if (!methodReady) {
+          order.$extras.payoutBlockedReason = 'Set up how you get paid before accepting orders'
+        }
+      } catch (error) {
+        if (!(error instanceof PayoutRateMissingError)) throw error
+        order.$extras.estimatedPayout = null
+        order.$extras.payoutBlockedReason = error.message
+      }
+    }
+
     return await serialize(OrderTransformer.transform(orders))
   }
 
@@ -87,6 +113,9 @@ export default class VendorOrdersController {
     } catch (error) {
       if (error instanceof VendorNotEligibleError) {
         return response.forbidden({ error: error.message })
+      }
+      if (error instanceof PayoutMethodNotReadyError || error instanceof PayoutRateMissingError) {
+        return response.unprocessableEntity({ error: error.message })
       }
       if (error instanceof OrderNotAvailableError) {
         return response.conflict({ error: error.message })

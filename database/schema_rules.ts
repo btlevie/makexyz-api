@@ -111,8 +111,24 @@ export default {
     },
     ['vendor_payouts']: {
       columns: {
+        ['provider']: {
+          tsType: "'stripe' | 'paypal'",
+        },
         ['status']: {
-          tsType: "'pending' | 'paid' | 'failed' | 'processing'",
+          tsType: "'pending' | 'held' | 'processing' | 'paid' | 'failed' | 'cancelled'",
+        },
+        ['hold_reason']: {
+          tsType: "'partial_refund' | 'open_dispute' | 'payout_method_invalid' | 'manual'",
+        },
+        ['failure_kind']: {
+          tsType: "'recipient' | 'platform'",
+        },
+      },
+    },
+    ['vendors']: {
+      columns: {
+        ['payout_provider']: {
+          tsType: "'stripe' | 'paypal'",
         },
       },
     },

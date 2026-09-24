@@ -22,6 +22,7 @@ import ExpireAbandonedProjects from '#jobs/expire_abandoned_projects'
 import PurgeExpiredProjects from '#jobs/purge_expired_projects'
 import EscalateOrderRouting from '#jobs/escalate_order_routing'
 import ExpireCheckoutSessions from '#jobs/expire_checkout_sessions'
+import ProcessVendorPayouts from '#jobs/process_vendor_payouts'
 
 /**
  * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
@@ -53,3 +54,10 @@ EscalateOrderRouting.schedule({}).id('escalate-order-routing').cron('0 * * * *')
 // Offset five minutes from the routing escalation above so the two hourly
 // jobs don't contend for the same rows at the same moment.
 ExpireCheckoutSessions.schedule({}).id('expire-checkout-sessions').cron('5 * * * *').run()
+
+/**
+ * Hourly vendor payouts, offset from the other hourly jobs. Overlap-safe: each
+ * payout is claimed under a row lock and re-checked, and every send carries
+ * the payout's idempotency key (see vendor_payout_service.ts).
+ */
+ProcessVendorPayouts.schedule({}).id('process-vendor-payouts').cron('20 * * * *').run()

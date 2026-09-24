@@ -390,36 +390,56 @@ This prevents historical order information from changing if quote data is modifi
 
 Vendor payout rates define how revenue is split for manufacturing work.
 
-Rates are configured per:
+Rates are configured per vendor and material (unique per pair), as the percentage of an order item's total paid to the vendor. They are managed by admins (`PUT /v1/admin/vendors/:uuid/payout-rates`).
 
-* Vendor
-* Material
+**A vendor cannot accept an order unless they have a rate for every item's material** — acceptance is refused and the order stays open for another vendor. The vendor's open-order listing shows the estimated payout for each order, or why they can't accept it.
 
-The percentage determines how much of an order item should be paid to the vendor.
+Rate changes only affect orders accepted afterwards; accepted orders keep their snapshot (below).
 
 ---
 
 ## Vendor Payouts
 
-Vendor payouts represent money owed to vendors after work is completed.
+Vendor payouts represent money owed to vendors after work is completed. There is at most one payout per order (`order_id` is unique).
 
-Payouts store:
+**Amount.** Snapshotted into `breakdown` (JSON) when the vendor accepts the order, in the same transaction as the `open → accepted` transition — the terms the vendor accepted under:
 
-* Vendor
-* Order
-* Provider
-* Provider transaction identifiers
-* Amount
-* Status
+* Each order item's total × the vendor's rate for that item's material, rounded per line in integer cents
+* Plus 100% of the order's production-time fee
+* Never shipping (MakeXYZ pays for labels) or tax
+
+If staff change a part's material on an accepted order (via the lock override), the pending payout is recalculated; a material with no rate refuses the change.
+
+**Rails.** Vendors choose how they're paid, and must have a ready payout method before they can accept orders:
+
+* **Stripe Connect (Express)** — the server creates the connected account and stores its id in `vendors.stripe_account_id`; readiness is Stripe's `payouts_enabled`. Paid by transfer from the platform balance.
+* **PayPal** — the vendor connects through Log in with PayPal, and the verified PayPal account id (`vendors.paypal_payer_id`) is stored. Payouts go to that id, never to a typed email, because PayPal cannot verify an email belongs to a live account.
+
+Account ids are only ever obtained from the provider, never entered by the vendor.
+
+**Timing.** Delivery sets `eligible_at` = `orders.delivered_at` + the vendor's hold period (`vendors.payout_hold_days`, default 10 days). An hourly job sends due payouts.
 
 Statuses:
 
-* `pending`
-* `processing`
+* `pending` — waiting for delivery and the hold period
+* `held` — needs review, never sent automatically (`hold_reason`: `partial_refund`, `open_dispute`, `payout_method_invalid`, `manual`)
+* `processing` — sent; PayPal payouts stay here until PayPal's webhook reports the result
 * `paid`
-* `failed`
+* `failed` — `failure_kind` is `recipient` (the vendor's account) or `platform` (ours)
+* `cancelled`
+
+Rules applied when a payout comes due:
+
+* The order was fully refunded or cancelled → `cancelled` (also applied to pending/held payouts before delivery).
+* Any refund on the order's payment, or an open dispute → `held` for admin review. An admin releases it (optionally at a reduced amount, recorded as an adjustment in `breakdown`) or cancels it. Refunds and disputes reviewed at release don't hold it again.
+* A **recipient** failure (closed/limited account, unclaimed PayPal payout) flags the vendor (`vendors.payout_method_error`): new acceptances are blocked and their other due payouts are held. Unclaimed PayPal payouts are cancelled immediately so the funds return. Once the vendor reconnects, everything failed or held for that reason is re-queued automatically.
+* A **platform** failure waits for an admin retry.
+
+Every send uses a per-attempt idempotency key (the payout uuid, suffixed by `send_attempt` after a failed attempt is re-queued), so an interrupted send is recovered without paying twice. Every payout state change is recorded as an audit event.
 
 Vendor payouts are separate from payments because customer payments and vendor disbursements are independent financial events.
+
+**Not yet handled:** a refund or dispute that arrives *after* a payout was paid is not clawed back automatically — it is only visible through the refund/dispute records.
 
 ---
 
@@ -470,13 +490,11 @@ Tracker events are applied forward-only (EasyPost doesn't guarantee ordering), a
 
 ## Delivery → Payout Trigger
 
-Order delivery starts the vendor payout clock. `orders.delivered_at`, together with the `shipped → delivered` order status history row, is the anchor for the payout timeline; the only source of it is an EasyPost `delivered` tracker event.
+Order delivery starts the vendor payout clock: the delivery transition sets the order's payout `eligible_at` (delivered_at + the vendor's hold period) in the same transaction as `orders.delivered_at` and the `shipped → delivered` status history row. The only source of delivery is an EasyPost `delivered` tracker event.
 
-Notes for payouts:
-
-* A later full refund moves an order to `refunded` from any status, including `delivered` — payout logic must check the order's *current* status, not just `delivered_at`.
-* A tracker that never reports `delivered` (lost package, carrier gap) leaves the order `shipped`; `shipments.tracker_status` records the last carrier status so such cases can be found.
-* Label cost (`shipping_labels.cost`) is MakeXYZ's cost, recorded but not netted against anything yet.
+* A later full refund moves an order to `refunded` from any status, including `delivered`; the payout job checks the order's current status and cancels the payout if it hasn't been sent.
+* A tracker that never reports `delivered` (lost package, carrier gap) leaves the order `shipped` and its payout `pending` without an `eligible_at`; `shipments.tracker_status` records the last carrier status so such cases can be found.
+* Label cost (`shipping_labels.cost`) is MakeXYZ's cost and is not deducted from vendor payouts.
 
 ---
 

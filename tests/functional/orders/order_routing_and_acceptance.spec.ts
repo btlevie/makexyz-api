@@ -18,6 +18,7 @@ import { fakePaymentGateway } from '#services/payment_gateway_service'
 import { fakeTaxCalculator } from '#services/tax_calculator_service'
 import { routeNewOrder, escalateExpiredPreferredOrders } from '#services/order_routing_service'
 import { expireCheckoutSession } from '#services/checkout_service'
+import { readyVendorForOrder } from '#tests/helpers/payouts'
 
 async function seedOrderRoutingConfig(preferredWindowHours = 24) {
   return OrderRoutingConfig.create({
@@ -292,6 +293,7 @@ test.group('Vendor order acceptance', (group) => {
 
     const { session, vendor } = await signupVendor(client)
     await grantCapability(vendor, 'fdm', true)
+    await readyVendorForOrder(order, vendor)
     await routeNewOrder(order)
     assert.equal(order.routingStage, 'preferred')
 
@@ -351,6 +353,7 @@ test.group('Vendor order acceptance', (group) => {
 
     const { session, vendor } = await signupVendor(client)
     await grantCapability(vendor, 'fdm', false)
+    await readyVendorForOrder(order, vendor)
 
     const response = await client
       .patch(`/v1/vendor/orders/${order.uuid}/accept`)
@@ -387,6 +390,7 @@ test.group('Vendor order acceptance', (group) => {
 
     const first = await signupVendor(client)
     await grantCapability(first.vendor, 'fdm', false)
+    await readyVendorForOrder(order, first.vendor)
     const firstResponse = await client
       .patch(`/v1/vendor/orders/${order.uuid}/accept`)
       .withSession(first.session)
@@ -394,6 +398,7 @@ test.group('Vendor order acceptance', (group) => {
 
     const second = await signupVendor(client)
     await grantCapability(second.vendor, 'fdm', false)
+    await readyVendorForOrder(order, second.vendor)
     const secondResponse = await client
       .patch(`/v1/vendor/orders/${order.uuid}/accept`)
       .withSession(second.session)

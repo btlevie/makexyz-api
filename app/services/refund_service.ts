@@ -114,3 +114,39 @@ export async function recordDispute(
     { client: trx }
   )
 }
+
+/**
+ * Whether a payment has a dispute that hasn't closed yet. Disputes exist only
+ * as audit events (see recordDispute above), so this replays them: a dispute
+ * is open when its latest event is 'dispute_created'. Used to hold vendor
+ * payouts (see vendor_payout_service.ts) - `openedAfter` skips disputes an
+ * admin already reviewed when releasing an earlier hold.
+ */
+export async function hasOpenDispute(
+  paymentId: number,
+  trx?: TransactionClientContract,
+  openedAfter?: DateTime | null
+): Promise<boolean> {
+  const events = await AuditEvent.query(trx ? { client: trx } : {})
+    .where('entityType', 'payment')
+    .where('entityId', paymentId)
+    .orderBy('id', 'asc')
+
+  const latestByDispute = new Map<string, string>()
+  const openedAtByDispute = new Map<string, DateTime | null>()
+  for (const event of events) {
+    const reason = event.payload?.reason
+    if (reason === 'dispute_created' || reason === 'dispute_closed') {
+      const disputeKey = String(event.payload.providerDisputeId ?? event.id)
+      latestByDispute.set(disputeKey, reason)
+      if (reason === 'dispute_created' && !openedAtByDispute.has(disputeKey)) {
+        openedAtByDispute.set(disputeKey, event.createdAt)
+      }
+    }
+  }
+  return [...latestByDispute.entries()].some(([disputeKey, reason]) => {
+    if (reason !== 'dispute_created') return false
+    const openedAt = openedAtByDispute.get(disputeKey)
+    return !openedAfter || !openedAt || openedAt > openedAfter
+  })
+}

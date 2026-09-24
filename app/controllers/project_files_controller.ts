@@ -29,6 +29,10 @@ import {
 import { autoQuoteProjectIfReady } from '#services/auto_quote_service'
 import { findTechnologyLock } from '#services/technology_lock_service'
 import {
+  PayoutRateMissingError,
+  recalculatePendingPayoutsForProjectFile,
+} from '#services/payout_calculation_service'
+import {
   findColorByUuid,
   findMaterialByUuid,
   resolveColorForMaterialChange,
@@ -182,54 +186,64 @@ export default class ProjectFilesController {
     const color = resolveColorForMaterialChange(projectFile.color, material)
     const previousTechnology = projectFile.technology
 
-    await db.transaction(async (trx) => {
-      projectFile.useTransaction(trx)
+    try {
+      await db.transaction(async (trx) => {
+        projectFile.useTransaction(trx)
 
-      await projectFile.related('sliceVariants').query().delete()
+        await projectFile.related('sliceVariants').query().delete()
 
-      projectFile.gcodeStorageKey = null
-      projectFile.volume = null
-      projectFile.x = null
-      projectFile.y = null
-      projectFile.z = null
-      projectFile.infill = null
-      projectFile.layerHeight = null
-      projectFile.supportMaterialGrams = null
-      projectFile.modelMaterialGrams = null
-      projectFile.printTimeEstimatedSeconds = null
-      projectFile.surfaceAreaMm2 = null
+        projectFile.gcodeStorageKey = null
+        projectFile.volume = null
+        projectFile.x = null
+        projectFile.y = null
+        projectFile.z = null
+        projectFile.infill = null
+        projectFile.layerHeight = null
+        projectFile.supportMaterialGrams = null
+        projectFile.modelMaterialGrams = null
+        projectFile.printTimeEstimatedSeconds = null
+        projectFile.surfaceAreaMm2 = null
 
-      projectFile.technology = technology
-      projectFile.materialId = material.id
-      projectFile.colorId = color.id
-      projectFile.status = 'pending'
+        projectFile.technology = technology
+        projectFile.materialId = material.id
+        projectFile.colorId = color.id
+        projectFile.status = 'pending'
 
-      await projectFile.save()
+        await projectFile.save()
 
-      // Only when a lock was actually overridden - an ordinary pre-checkout
-      // change is not an exception worth recording. Overriding requires staff,
-      // so auth.user is always present here.
-      if (lock) {
-        await AuditEvent.create(
-          {
-            entityType: 'project_file',
-            entityId: projectFile.id,
-            eventType: 'updated',
-            userId: auth.user!.id,
-            payload: {
-              reason: 'technology_changed_after_lock',
-              projectFileUuid: projectFile.uuid,
-              from: previousTechnology,
-              to: technology,
-              overriddenByRole: auth.user!.role,
-              lockReason: lock.reason,
-              lockDescription: lock.description,
+        // An accepted order's vendor payout follows the part's material.
+        await recalculatePendingPayoutsForProjectFile(projectFile.id, trx)
+
+        // Only when a lock was actually overridden - an ordinary pre-checkout
+        // change is not an exception worth recording. Overriding requires staff,
+        // so auth.user is always present here.
+        if (lock) {
+          await AuditEvent.create(
+            {
+              entityType: 'project_file',
+              entityId: projectFile.id,
+              eventType: 'updated',
+              userId: auth.user!.id,
+              payload: {
+                reason: 'technology_changed_after_lock',
+                projectFileUuid: projectFile.uuid,
+                from: previousTechnology,
+                to: technology,
+                overriddenByRole: auth.user!.role,
+                lockReason: lock.reason,
+                lockDescription: lock.description,
+              },
             },
-          },
-          { client: trx }
-        )
+            { client: trx }
+          )
+        }
+      })
+    } catch (error) {
+      if (error instanceof PayoutRateMissingError) {
+        return response.unprocessableEntity({ error: error.message })
       }
-    })
+      throw error
+    }
 
     // Best effort, after the commit: orphaned S3 objects are a cleanup chore,
     // whereas failing here would leave the switch half-applied.
@@ -323,52 +337,62 @@ export default class ProjectFilesController {
         : null
     const color = resolveColorForMaterialChange(projectFile.color, newMaterial)
 
-    await db.transaction(async (trx) => {
-      projectFile.useTransaction(trx)
+    try {
+      await db.transaction(async (trx) => {
+        projectFile.useTransaction(trx)
 
-      if (ratio !== null && ratio !== 1) {
-        if (projectFile.modelMaterialGrams !== null) {
-          projectFile.modelMaterialGrams *= ratio
+        if (ratio !== null && ratio !== 1) {
+          if (projectFile.modelMaterialGrams !== null) {
+            projectFile.modelMaterialGrams *= ratio
+          }
+          if (projectFile.supportMaterialGrams !== null) {
+            projectFile.supportMaterialGrams *= ratio
+          }
+          await projectFile
+            .related('sliceVariants')
+            .query()
+            .update({
+              filament_used_grams: db.raw('filament_used_grams * ?', [ratio]),
+            })
         }
-        if (projectFile.supportMaterialGrams !== null) {
-          projectFile.supportMaterialGrams *= ratio
-        }
-        await projectFile
-          .related('sliceVariants')
-          .query()
-          .update({
-            filament_used_grams: db.raw('filament_used_grams * ?', [ratio]),
-          })
-      }
 
-      projectFile.materialId = newMaterial.id
-      projectFile.colorId = color.id
-      await projectFile.save()
+        projectFile.materialId = newMaterial.id
+        projectFile.colorId = color.id
+        await projectFile.save()
 
-      // Only when a lock was actually overridden - an ordinary pre-checkout
-      // change is not an exception worth recording. Overriding requires staff,
-      // so auth.user is always present here.
-      if (lock) {
-        await AuditEvent.create(
-          {
-            entityType: 'project_file',
-            entityId: projectFile.id,
-            eventType: 'updated',
-            userId: auth.user!.id,
-            payload: {
-              reason: 'material_changed_after_lock',
-              projectFileUuid: projectFile.uuid,
-              from: oldMaterial?.uuid ?? null,
-              to: newMaterial.uuid,
-              overriddenByRole: auth.user!.role,
-              lockReason: lock.reason,
-              lockDescription: lock.description,
+        // An accepted order's vendor payout follows the part's material.
+        await recalculatePendingPayoutsForProjectFile(projectFile.id, trx)
+
+        // Only when a lock was actually overridden - an ordinary pre-checkout
+        // change is not an exception worth recording. Overriding requires staff,
+        // so auth.user is always present here.
+        if (lock) {
+          await AuditEvent.create(
+            {
+              entityType: 'project_file',
+              entityId: projectFile.id,
+              eventType: 'updated',
+              userId: auth.user!.id,
+              payload: {
+                reason: 'material_changed_after_lock',
+                projectFileUuid: projectFile.uuid,
+                from: oldMaterial?.uuid ?? null,
+                to: newMaterial.uuid,
+                overriddenByRole: auth.user!.role,
+                lockReason: lock.reason,
+                lockDescription: lock.description,
+              },
             },
-          },
-          { client: trx }
-        )
+            { client: trx }
+          )
+        }
+      })
+    } catch (error) {
+      if (error instanceof PayoutRateMissingError) {
+        return response.unprocessableEntity({ error: error.message })
       }
-    })
+      throw error
+    }
 
     projectFile.$setRelated('material', newMaterial)
     projectFile.$setRelated('color', color)

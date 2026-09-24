@@ -3,6 +3,8 @@ import { belongsTo, hasMany } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Address from '#models/address'
 import User from '#models/user'
+import VendorPayout from '#models/vendor_payout'
+import VendorPayoutRate from '#models/vendor_payout_rate'
 import VendorTechnologyCapability from '#models/vendor_technology_capability'
 
 export default class Vendor extends VendorSchema {
@@ -14,4 +16,10 @@ export default class Vendor extends VendorSchema {
 
   @hasMany(() => Address)
   declare addresses: HasMany<typeof Address>
+
+  @hasMany(() => VendorPayoutRate)
+  declare payoutRates: HasMany<typeof VendorPayoutRate>
+
+  @hasMany(() => VendorPayout)
+  declare payouts: HasMany<typeof VendorPayout>
 }

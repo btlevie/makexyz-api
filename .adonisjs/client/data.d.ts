@@ -16,6 +16,9 @@ import type QuoteTransformer from '#transformers/quote_transformer'
 import type ServiceableCountryTransformer from '#transformers/serviceable_country_transformer'
 import type ShipmentTransformer from '#transformers/shipment_transformer'
 import type UserTransformer from '#transformers/user_transformer'
+import type VendorPayoutMethodTransformer from '#transformers/vendor_payout_method_transformer'
+import type VendorPayoutRateTransformer from '#transformers/vendor_payout_rate_transformer'
+import type VendorPayoutTransformer from '#transformers/vendor_payout_transformer'
 import type VendorShipmentTransformer from '#transformers/vendor_shipment_transformer'
 
 export namespace Data {
@@ -62,6 +65,18 @@ export namespace Data {
   export type User = InferData<UserTransformer>
   export namespace User {
     export type Variants = InferVariants<UserTransformer>
+  }
+  export type VendorPayoutMethod = InferData<VendorPayoutMethodTransformer>
+  export namespace VendorPayoutMethod {
+    export type Variants = InferVariants<VendorPayoutMethodTransformer>
+  }
+  export type VendorPayoutRate = InferData<VendorPayoutRateTransformer>
+  export namespace VendorPayoutRate {
+    export type Variants = InferVariants<VendorPayoutRateTransformer>
+  }
+  export type VendorPayout = InferData<VendorPayoutTransformer>
+  export namespace VendorPayout {
+    export type Variants = InferVariants<VendorPayoutTransformer>
   }
   export type VendorShipment = InferData<VendorShipmentTransformer>
   export namespace VendorShipment {
