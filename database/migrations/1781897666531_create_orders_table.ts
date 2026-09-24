@@ -17,6 +17,10 @@ export default class extends BaseSchema {
       table.decimal('tax', 12, 2).notNullable()
       table.decimal('total', 12, 2).notNullable()
       table.enum('status', ['pending', 'paid', 'open', 'accepted', 'rejected', 'in_progress', 'ready_to_ship', 'shipped', 'delivered', 'refunded', 'cancelled']).notNullable().defaultTo('pending')
+      // Set alongside the status transition (see shipment_tracking_service.ts).
+      // delivered_at anchors the vendor payout timeline.
+      table.timestamp('shipped_at').nullable()
+      table.timestamp('delivered_at').nullable()
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

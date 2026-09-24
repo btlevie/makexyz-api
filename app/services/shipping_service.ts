@@ -21,8 +21,8 @@ export class InvalidShippingSelectionError extends Error {
 }
 
 const DOMESTIC_OPTIONS: ShippingOption[] = [
-  // Fulfilled later via EasyPost/USPS once a vendor marks the order ready to
-  // ship - that fulfillment step is separate future work. This is just the
+  // Fulfilled with the cheapest USPS label once the vendor buys one (see
+  // LABEL_RATE_RULES below and shipment_service.ts). This is just the
   // checkout-time price (free) and selection.
   { method: 'free', feeAmount: 0 },
   { method: 'ups_2day', feeAmount: 29 },
@@ -54,4 +54,63 @@ export function resolveShippingFee(destinationCountry: string, method: ShippingM
     )
   }
   return match.feeAmount
+}
+
+/**
+ * Which carrier rates can fulfil each checkout shipping method when a vendor
+ * buys an instant-quote label. The vendor never picks the service - the
+ * customer already paid for one - so the cheapest rate matching the rule is
+ * bought automatically.
+ *
+ * Carrier/service strings are EasyPost's (Rate.carrier / Rate.service). They
+ * only produce rates if the matching carrier account is enabled on MakeXYZ's
+ * EasyPost account - verify these against the live account's carriers, since
+ * a missing carrier surfaces as NoMatchingRateError, not a silent fallback.
+ */
+type LabelRateRule = {
+  carrier: string
+  /** null = any service from this carrier. */
+  services: string[] | null
+}
+
+const LABEL_RATE_RULES: Record<ShippingMethod, LabelRateRule[]> = {
+  free: [{ carrier: 'USPS', services: null }],
+  ups_2day: [{ carrier: 'UPS', services: ['2ndDayAir'] }],
+  ups_overnight: [{ carrier: 'UPS', services: ['NextDayAir'] }],
+  international_expedited: [
+    { carrier: 'UPS', services: ['Expedited', 'UPSSaver'] },
+    { carrier: 'USPS', services: ['PriorityMailInternational'] },
+  ],
+}
+
+export type CarrierRate = {
+  id: string
+  carrier: string
+  service: string
+  /** Decimal string, as the carrier returns it. */
+  rate: string
+}
+
+/**
+ * The cheapest rate satisfying `method`, or null if none do. Comparison only
+ * orders the carrier's own decimal strings - no arithmetic is done on them.
+ */
+export function selectLabelRate<T extends CarrierRate>(
+  rates: T[],
+  method: ShippingMethod
+): T | null {
+  const rules = LABEL_RATE_RULES[method]
+  const eligible = rates.filter((rate) =>
+    rules.some(
+      (rule) =>
+        rule.carrier === rate.carrier &&
+        (rule.services === null || rule.services.includes(rate.service))
+    )
+  )
+  if (eligible.length === 0) {
+    return null
+  }
+  return eligible.reduce((cheapest, rate) =>
+    Number(rate.rate) < Number(cheapest.rate) ? rate : cheapest
+  )
 }

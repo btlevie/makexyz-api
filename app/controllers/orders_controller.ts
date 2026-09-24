@@ -28,6 +28,7 @@ export default class OrdersController {
       .orderBy('createdAt', 'asc')
       .preload('items')
       .preload('address')
+      .preload('shipments')
 
     return await serialize(OrderTransformer.transform(orders))
   }

@@ -1,6 +1,6 @@
 /**
- * Idempotency guard shared by both provider webhook controllers. Stripe and
- * PayPal both retry delivery on anything but a prompt 2xx, and can
+ * Idempotency guard shared by every provider webhook controller. Stripe,
+ * PayPal and EasyPost all retry delivery on anything but a prompt 2xx, and can
  * occasionally redeliver the same event regardless - callers check/mark
  * inside the same transaction as the state change the event triggers, so a
  * crash mid-handler is correctly retried rather than silently skipped, but a
@@ -10,7 +10,7 @@ import { DateTime } from 'luxon'
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import WebhookEvent from '#models/webhook_event'
 
-export type WebhookProvider = 'stripe' | 'paypal'
+export type WebhookProvider = 'stripe' | 'paypal' | 'easypost'
 
 export async function hasProcessed(
   provider: WebhookProvider,

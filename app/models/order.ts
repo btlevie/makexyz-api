@@ -6,6 +6,7 @@ import Customer from '#models/customer'
 import OrderItem from '#models/order_item'
 import Project from '#models/project'
 import Quote from '#models/quote'
+import Shipment from '#models/shipment'
 import Vendor from '#models/vendor'
 
 export default class Order extends OrderSchema {
@@ -26,4 +27,7 @@ export default class Order extends OrderSchema {
 
   @belongsTo(() => Address)
   declare address: BelongsTo<typeof Address>
+
+  @hasMany(() => Shipment)
+  declare shipments: HasMany<typeof Shipment>
 }

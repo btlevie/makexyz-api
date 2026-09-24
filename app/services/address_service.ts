@@ -86,10 +86,42 @@ export async function createAddress(
   return trx ? run(trx) : db.transaction(run)
 }
 
+/** Fields that change where something ships - locked once an order references the address. */
+const LOCATION_FIELDS = [
+  'recipientName',
+  'line1',
+  'line2',
+  'city',
+  'state',
+  'postalCode',
+  'country',
+] as const
+
+/**
+ * Once an order points at an address, its location fields are frozen: the
+ * order's tax was calculated on it and its shipping label is bought against
+ * it, so editing the row in place would silently re-route a paid order. The
+ * customer adds a new address instead. `label`/`isDefault` stay editable,
+ * since they don't change where anything ships.
+ */
 export async function updateAddress(
   address: Address,
   input: Partial<Omit<AddressInput, 'ownerType' | 'customerId' | 'vendorId'>>
 ): Promise<Address> {
+  const changesLocation = LOCATION_FIELDS.some(
+    (field) => input[field] !== undefined && (input[field] ?? null) !== address[field]
+  )
+  if (changesLocation) {
+    const [orderCount] = await Order.query()
+      .where('addressId', address.id)
+      .count('* as address_ref_count')
+    if (Number(orderCount.$extras.address_ref_count) > 0) {
+      throw new AddressInUseError(
+        `Address ${address.uuid} is used by an existing order and can't be changed - add a new address instead`
+      )
+    }
+  }
+
   return db.transaction(async (trx) => {
     if (input.isDefault) {
       await unsetExistingDefault(
@@ -125,9 +157,6 @@ export class AddressInUseError extends Error {
  * Refuses to delete an address a quote, order, or shipment still points to -
  * onDelete intentionally isn't SET NULL on any of those FKs (see the
  * migrations), so this check is the actual enforcement, not a backstop.
- * Shipments can't exist yet (no service creates them), but the column
- * already exists on the schema, so checking it now costs nothing and needs
- * no revisiting once that feature lands.
  */
 export async function deleteAddress(address: Address): Promise<void> {
   // Alias deliberately isn't "total" - both Quote and Order already have a

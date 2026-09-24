@@ -1,8 +1,9 @@
 /**
  * Vendor-driven advance through production, once an order has already been
  * accepted (see order_acceptance_service.ts) - 'accepted' -> 'in_progress' ->
- * 'ready_to_ship'. 'ready_to_ship' -> 'shipped' is a separate, later phase
- * (shipment/label creation), not handled here.
+ * 'ready_to_ship'. Past that, the order is moved by the carrier, not the
+ * vendor: the vendor buys a label (shipment_service.ts) and EasyPost tracker
+ * events move it to 'shipped' and 'delivered' (shipment_tracking_service.ts).
  *
  * Eligibility here is simpler than acceptOrder's: the order is already
  * claimed, so it's just "is this vendor's own order," not a

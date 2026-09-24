@@ -15,12 +15,15 @@ import Payment from '#models/payment'
 import Refund from '#models/refund'
 import type { WebhookProvider } from '#services/webhook_event_service'
 
+/** Refunds and disputes only ever come from a payment provider, not EasyPost. */
+type PaymentWebhookProvider = Exclude<WebhookProvider, 'easypost'>
+
 export type RecordRefundInput = {
   payment: Payment
   /** Dollars, not cents - matches this codebase's decimal-string money columns. */
   amount: number
   reason: string | null
-  provider: WebhookProvider
+  provider: PaymentWebhookProvider
   providerRefundId: string
 }
 
@@ -68,7 +71,7 @@ export async function recordRefund(
 
 export type RecordDisputeInput = {
   payment: Payment
-  provider: WebhookProvider
+  provider: PaymentWebhookProvider
   providerDisputeId: string
   amount: number
   reason: string | null

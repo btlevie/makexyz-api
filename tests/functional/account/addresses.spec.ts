@@ -3,6 +3,7 @@ import { test } from '@japa/runner'
 import testUtils from '@adonisjs/core/services/test_utils'
 import Address from '#models/address'
 import Customer from '#models/customer'
+import Order from '#models/order'
 import Project from '#models/project'
 import Quote from '#models/quote'
 import User from '#models/user'
@@ -155,6 +156,47 @@ test.group('Account | addresses', (group) => {
     deleteResponse.assertStatus(409)
 
     assert.isNotNull(await Address.find(address.id))
+  })
+
+  test("refuses to change the location of an address a paid order ships to, but allows relabeling", async ({
+    client,
+    assert,
+  }) => {
+    const { session, customer } = await signup(client)
+    const created = await client.post('/v1/account/addresses').withSession(session).json(validAddress)
+    const uuid = (created.body().data as { uuid: string }).uuid
+    const address = await Address.findByOrFail('uuid', uuid)
+
+    const project = await Project.create({ uuid: string.uuid(), customerId: customer.id, status: 'draft' })
+    await Order.create({
+      uuid: string.uuid(),
+      customerId: customer.id,
+      projectId: project.id,
+      addressId: address.id,
+      orderNumber: 'ORD-ADDR01',
+      subtotal: '100.00',
+      tax: '0.00',
+      total: '100.00',
+      status: 'open',
+    })
+
+    const moveResponse = await client
+      .patch(`/v1/account/addresses/${uuid}`)
+      .withSession(session)
+      .json({ line1: '742 Evergreen Terrace' })
+    moveResponse.assertStatus(409)
+    await address.refresh()
+    assert.equal(address.line1, '123 Main St')
+
+    // Resubmitting the unchanged value isn't a change.
+    const sameResponse = await client
+      .patch(`/v1/account/addresses/${uuid}`)
+      .withSession(session)
+      .json({ line1: '123 Main St', label: 'Office', isDefault: true })
+    sameResponse.assertStatus(200)
+    const updated = (sameResponse.body() as any).data as { label: string; isDefault: boolean }
+    assert.equal(updated.label, 'Office')
+    assert.isTrue(updated.isDefault)
   })
 
   test('unauthenticated requests are refused', async ({ client }) => {

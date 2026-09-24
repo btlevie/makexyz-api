@@ -331,7 +331,7 @@ export class OrderStatusHistorySchema extends BaseModel {
 }
 
 export class OrderSchema extends BaseModel {
-  static $columns = ['addressId', 'createdAt', 'customerId', 'externalReference', 'id', 'orderNumber', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'quoteId', 'routingExpiresAt', 'routingStage', 'shippingFeeAmount', 'shippingMethod', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid', 'vendorId'] as const
+  static $columns = ['addressId', 'createdAt', 'customerId', 'deliveredAt', 'externalReference', 'id', 'orderNumber', 'productionTimeBusinessDays', 'productionTimeFeeAmount', 'projectId', 'quoteId', 'routingExpiresAt', 'routingStage', 'shippedAt', 'shippingFeeAmount', 'shippingMethod', 'status', 'subtotal', 'tax', 'total', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = OrderSchema.$columns
   @column()
   declare addressId: number | null
@@ -339,6 +339,8 @@ export class OrderSchema extends BaseModel {
   declare createdAt: DateTime | null
   @column()
   declare customerId: number | null
+  @column.dateTime()
+  declare deliveredAt: DateTime | null
   @column()
   declare externalReference: string | null
   @column({ isPrimary: true })
@@ -357,6 +359,8 @@ export class OrderSchema extends BaseModel {
   declare routingExpiresAt: DateTime | null
   @column()
   declare routingStage: 'preferred' | 'open' | 'unfulfillable' | null
+  @column.dateTime()
+  declare shippedAt: DateTime | null
   @column()
   declare shippingFeeAmount: string | null
   @column()
@@ -835,24 +839,32 @@ export class SessionSchema extends BaseModel {
 }
 
 export class ShipmentSchema extends BaseModel {
-  static $columns = ['addressId', 'cancelledAt', 'carrier', 'createdAt', 'deliveredAt', 'id', 'inTransitAt', 'labelCreatedAt', 'orderId', 'serviceLevel', 'shippedAt', 'status', 'trackingNumber', 'updatedAt', 'vendorId'] as const
+  static $columns = ['addressId', 'cancelledAt', 'carrier', 'createdAt', 'deliveredAt', 'easypostShipmentId', 'heightIn', 'id', 'inTransitAt', 'labelCreatedAt', 'labelPurchaseStartedAt', 'lengthIn', 'orderId', 'serviceLevel', 'shippedAt', 'status', 'trackerStatus', 'trackingNumber', 'trackingUrl', 'updatedAt', 'uuid', 'vendorId', 'weightOz', 'widthIn'] as const
   $columns = ShipmentSchema.$columns
   @column()
   declare addressId: number | null
   @column.dateTime()
   declare cancelledAt: DateTime | null
   @column()
-  declare carrier: string
+  declare carrier: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column.dateTime()
   declare deliveredAt: DateTime | null
+  @column()
+  declare easypostShipmentId: string | null
+  @column()
+  declare heightIn: string
   @column({ isPrimary: true })
   declare id: number
   @column.dateTime()
   declare inTransitAt: DateTime | null
   @column.dateTime()
   declare labelCreatedAt: DateTime | null
+  @column.dateTime()
+  declare labelPurchaseStartedAt: DateTime | null
+  @column()
+  declare lengthIn: string
   @column()
   declare orderId: number | null
   @column()
@@ -862,15 +874,25 @@ export class ShipmentSchema extends BaseModel {
   @column()
   declare status: 'pending' | 'label_created' | 'shipped' | 'in_transit' | 'delivered' | 'cancelled'
   @column()
+  declare trackerStatus: string | null
+  @column()
   declare trackingNumber: string | null
+  @column()
+  declare trackingUrl: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
+  declare uuid: string
+  @column()
   declare vendorId: number | null
+  @column()
+  declare weightOz: string
+  @column()
+  declare widthIn: string
 }
 
 export class ShippingLabelSchema extends BaseModel {
-  static $columns = ['cost', 'createdAt', 'id', 'labelPdfUrl', 'labelUrl', 'provider', 'shipmentId', 'updatedAt', 'voidedAt'] as const
+  static $columns = ['cost', 'createdAt', 'id', 'labelFormat', 'labelPdfUrl', 'labelUrl', 'provider', 'providerRateId', 'refundStatus', 'shipmentId', 'updatedAt', 'uuid', 'voidedAt'] as const
   $columns = ShippingLabelSchema.$columns
   @column()
   declare cost: string
@@ -879,15 +901,23 @@ export class ShippingLabelSchema extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
   @column()
+  declare labelFormat: string | null
+  @column()
   declare labelPdfUrl: string | null
   @column()
   declare labelUrl: string | null
   @column()
-  declare provider: string
+  declare provider: 'easypost'
+  @column()
+  declare providerRateId: string | null
+  @column()
+  declare refundStatus: 'submitted' | 'refunded' | 'rejected' | null
   @column()
   declare shipmentId: number | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
   @column.dateTime()
   declare voidedAt: DateTime | null
 }
@@ -1009,5 +1039,5 @@ export class WebhookEventSchema extends BaseModel {
   @column.dateTime()
   declare processedAt: DateTime
   @column()
-  declare provider: 'stripe' | 'paypal'
+  declare provider: 'stripe' | 'paypal' | 'easypost'
 }

@@ -124,6 +124,16 @@ export default {
         },
       },
     },
+    ['shipping_labels']: {
+      columns: {
+        ['provider']: {
+          tsType: "'easypost'",
+        },
+        ['refund_status']: {
+          tsType: "'submitted' | 'refunded' | 'rejected'",
+        },
+      },
+    },
     ['refunds']: {
       columns: {
         ['provider']: {
@@ -137,7 +147,7 @@ export default {
     ['webhook_events']: {
       columns: {
         ['provider']: {
-          tsType: "'stripe' | 'paypal'",
+          tsType: "'stripe' | 'paypal' | 'easypost'",
         },
       },
     },

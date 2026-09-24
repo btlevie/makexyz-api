@@ -14,7 +14,9 @@ import type OrderTransformer from '#transformers/order_transformer'
 import type ProjectFileTransformer from '#transformers/project_file_transformer'
 import type QuoteTransformer from '#transformers/quote_transformer'
 import type ServiceableCountryTransformer from '#transformers/serviceable_country_transformer'
+import type ShipmentTransformer from '#transformers/shipment_transformer'
 import type UserTransformer from '#transformers/user_transformer'
+import type VendorShipmentTransformer from '#transformers/vendor_shipment_transformer'
 
 export namespace Data {
   export type Address = InferData<AddressTransformer>
@@ -53,8 +55,16 @@ export namespace Data {
   export namespace ServiceableCountry {
     export type Variants = InferVariants<ServiceableCountryTransformer>
   }
+  export type Shipment = InferData<ShipmentTransformer>
+  export namespace Shipment {
+    export type Variants = InferVariants<ShipmentTransformer>
+  }
   export type User = InferData<UserTransformer>
   export namespace User {
     export type Variants = InferVariants<UserTransformer>
+  }
+  export type VendorShipment = InferData<VendorShipmentTransformer>
+  export namespace VendorShipment {
+    export type Variants = InferVariants<VendorShipmentTransformer>
   }
 }

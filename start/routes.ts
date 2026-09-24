@@ -151,6 +151,15 @@ router
         router.patch('orders/:uuid/start-production', [controllers.VendorOrders, 'startProduction'])
         router.patch('orders/:uuid/ready-to-ship', [controllers.VendorOrders, 'readyToShip'])
 
+        // Instant-quote shipping labels, bought on MakeXYZ's EasyPost account
+        // (see shipment_service.ts).
+        router.get('orders/:uuid/shipments', [controllers.VendorShipments, 'index'])
+        router.post('orders/:uuid/shipments', [controllers.VendorShipments, 'store'])
+        router.post('orders/:uuid/shipments/:shipmentUuid/void', [
+          controllers.VendorShipments,
+          'void',
+        ])
+
         // The vendor's own saved-address book (e.g. return/pickup addresses).
         router.get('addresses', [controllers.VendorAddresses, 'index'])
         router.post('addresses', [controllers.VendorAddresses, 'store'])
@@ -174,8 +183,8 @@ router
       .as('admin')
       .use(middleware.auth())
 
-    // Payment-provider webhooks - verified entirely by provider signature
-    // (see stripe_webhook_service.ts / paypal_webhook_service.ts), not the
+    // Provider webhooks - verified entirely by provider signature (see
+    // stripe_/paypal_/easypost_webhook_service.ts), not the
     // grant/customer/staff authorization used everywhere else in this file.
     // Not throttled: invalid-signature requests are cheap to reject, and
     // delivery volume is provider-controlled.
@@ -183,6 +192,7 @@ router
       .group(() => {
         router.post('stripe', [controllers.StripeWebhooks, 'handle'])
         router.post('paypal', [controllers.PaypalWebhooks, 'handle'])
+        router.post('easypost', [controllers.EasypostWebhooks, 'handle'])
       })
       .prefix('webhooks')
       .as('webhooks')

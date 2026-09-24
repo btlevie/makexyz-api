@@ -73,8 +73,15 @@ export default class VendorAddressesController {
     }
 
     const input = await request.validateUsing(updateAddressValidator)
-    const updated = await updateAddress(address, input)
-    return await serialize(AddressTransformer.transform(updated))
+    try {
+      const updated = await updateAddress(address, input)
+      return await serialize(AddressTransformer.transform(updated))
+    } catch (error) {
+      if (error instanceof AddressInUseError) {
+        return response.conflict({ error: error.message })
+      }
+      throw error
+    }
   }
 
   async destroy(ctx: HttpContext) {

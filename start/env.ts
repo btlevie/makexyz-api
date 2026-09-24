@@ -123,4 +123,52 @@ export default await Env.create(new URL('../', import.meta.url), {
   */
   STRIPE_WEBHOOK_SECRET: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
   PAYPAL_WEBHOOK_ID: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+
+  /*
+  |----------------------------------------------------------
+  | EasyPost (instant-quote shipping labels)
+  |----------------------------------------------------------
+  | Labels are bought on MakeXYZ's own EasyPost account. getShippingLabelGateway
+  | always resolves to its in-memory Fake in test env, so EASYPOST_API_KEY is
+  | never needed there. EASYPOST_WEBHOOK_SECRET *is* exercised in tests -
+  | like Stripe's, EasyPost's signature check is a local HMAC (see
+  | easypost_webhook_service.ts).
+  */
+  EASYPOST_API_KEY: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  EASYPOST_WEBHOOK_SECRET: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+
+  /*
+  |----------------------------------------------------------
+  | MakeXYZ ship-from / return address
+  |----------------------------------------------------------
+  | Every instant-quote label ships from (and returns to) MakeXYZ, never the
+  | vendor's own address - see config/shipping.ts. UPS requires an origin
+  | phone number.
+  */
+  MAKEXYZ_SHIP_FROM_NAME: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  MAKEXYZ_SHIP_FROM_COMPANY: Env.schema.string.optional(),
+  MAKEXYZ_SHIP_FROM_LINE1: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  MAKEXYZ_SHIP_FROM_LINE2: Env.schema.string.optional(),
+  MAKEXYZ_SHIP_FROM_CITY: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  MAKEXYZ_SHIP_FROM_STATE: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  MAKEXYZ_SHIP_FROM_POSTAL_CODE: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  MAKEXYZ_SHIP_FROM_COUNTRY: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  MAKEXYZ_SHIP_FROM_PHONE: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+  MAKEXYZ_SHIP_FROM_EMAIL: Env.schema.string.optional(),
 })

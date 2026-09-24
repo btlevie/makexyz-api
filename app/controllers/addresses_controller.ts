@@ -3,7 +3,12 @@ import Address from '#models/address'
 import Customer from '#models/customer'
 import AddressTransformer from '#transformers/address_transformer'
 import { createAddressValidator, updateAddressValidator } from '#validators/address'
-import { createAddress, updateAddress, deleteAddress, AddressInUseError } from '#services/address_service'
+import {
+  createAddress,
+  updateAddress,
+  deleteAddress,
+  AddressInUseError,
+} from '#services/address_service'
 
 export default class AddressesController {
   /** Resolves the calling user's Customer record, or null if they have none. */
@@ -34,7 +39,11 @@ export default class AddressesController {
     }
 
     const input = await request.validateUsing(createAddressValidator)
-    const address = await createAddress({ ownerType: 'customer', customerId: customer.id, ...input })
+    const address = await createAddress({
+      ownerType: 'customer',
+      customerId: customer.id,
+      ...input,
+    })
     return await serialize(AddressTransformer.transform(address))
   }
 
@@ -65,8 +74,15 @@ export default class AddressesController {
     }
 
     const input = await request.validateUsing(updateAddressValidator)
-    const updated = await updateAddress(address, input)
-    return await serialize(AddressTransformer.transform(updated))
+    try {
+      const updated = await updateAddress(address, input)
+      return await serialize(AddressTransformer.transform(updated))
+    } catch (error) {
+      if (error instanceof AddressInUseError) {
+        return response.conflict({ error: error.message })
+      }
+      throw error
+    }
   }
 
   async destroy(ctx: HttpContext) {
