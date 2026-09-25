@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'Upload Instant Quote Files'
+method: POST
+url: '{{base_url}}/projects/files'
+order: 1000
+body:
+  type: formdata
+  content:
+    - key: files
+      type: file
+      src: ''
+      description: '3D model file (stl, obj, dxf, off, ply, 3ds, wrl, step, stp, igs, iges, zip). Max 100MB.'
+    - key: projectUuid
+      type: text
+      value: ''
+      description: 'Optional: existing project UUID to add files to'
+    - key: technology
+      type: text
+      value: fdm
+      description: 'fdm, sla, or sls (defaults to fdm)'

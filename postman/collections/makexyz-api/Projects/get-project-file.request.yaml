@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Project File'
+method: GET
+url: '{{base_url}}/projects/files/{{file_uuid}}'
+order: 2000

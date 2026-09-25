@@ -15,6 +15,7 @@ import Refund from '#models/refund'
 import Shipment from '#models/shipment'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import type VendorPayout from '#models/vendor_payout'
 import { computePayoutBreakdown } from '#services/payout_calculation_service'
 import { fakePayoutGateway, PayoutGatewayError } from '#services/payout_gateway_service'
@@ -50,6 +51,7 @@ async function createVendor(provider: 'stripe' | 'paypal' = 'stripe', payoutHold
     uuid: string.uuid(),
     userId: user.id,
     payoutHoldDays: payoutHoldDays ?? null,
+    ...activeVendorAttributes(),
   })
   await makePayoutReady(vendor, provider)
   return vendor
@@ -527,7 +529,11 @@ test.group('Payouts | processing', (group) => {
     const user = await User.findByOrFail('email', email)
     user.role = 'vendor'
     await user.save()
-    const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+    const vendor = await Vendor.create({
+      uuid: string.uuid(),
+      userId: user.id,
+      ...activeVendorAttributes(),
+    })
     await makePayoutReady(vendor)
     const { order, payout } = await createAcceptedOrder(vendor)
     const other = await createVendor()

@@ -1,0 +1,3 @@
+$kind: collection
+name: 'Serviceable Countries'
+description: 'Public endpoint returning the list of countries available for shipping. Used to populate the country dropdown in the checkout/quote-configuration address form.'

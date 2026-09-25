@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Connect PayPal'
+method: POST
+url: '{{base_url}}/vendor/payout-method/paypal/connect'
+order: 4000

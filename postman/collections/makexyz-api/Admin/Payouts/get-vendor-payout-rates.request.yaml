@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Vendor Payout Rates'
+method: GET
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/payout-rates'
+order: 5000

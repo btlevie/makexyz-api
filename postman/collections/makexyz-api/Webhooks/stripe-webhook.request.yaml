@@ -1,0 +1,17 @@
+$kind: http-request
+name: 'Stripe Webhook'
+method: POST
+url: '{{base_url}}/webhooks/stripe'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+  - key: stripe-signature
+    value: '{{stripe_webhook_signature}}'
+body:
+  type: json
+  content: |-
+    {
+      "type": "payment_intent.succeeded",
+      "data": {}
+    }

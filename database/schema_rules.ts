@@ -93,6 +93,9 @@ export default {
         ['technology']: {
           tsType: "'fdm' | 'sla' | 'sls'",
         },
+        ['status']: {
+          tsType: "'requested' | 'approved' | 'rejected'",
+        },
       },
     },
     ['checkout_sessions']: {
@@ -129,6 +132,27 @@ export default {
       columns: {
         ['payout_provider']: {
           tsType: "'stripe' | 'paypal'",
+        },
+        ['status']: {
+          tsType: "'onboarding' | 'pending_review' | 'active' | 'suspended'",
+        },
+        ['tax_classification']: {
+          tsType:
+            "'individual' | 'sole_prop' | 'c_corp' | 's_corp' | 'partnership' | 'llc' | 'foreign_individual' | 'foreign_entity'",
+        },
+      },
+    },
+    ['invitations']: {
+      columns: {
+        ['role']: {
+          tsType: "'admin' | 'vendor'",
+        },
+      },
+    },
+    ['vendor_tax_documents']: {
+      columns: {
+        ['form_type']: {
+          tsType: "'w9' | 'w8ben' | 'w8bene'",
         },
       },
     },

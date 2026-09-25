@@ -161,7 +161,7 @@ export default class ProjectFilesController {
     // Staff may override a checkout/quote lock to correct a mistake, but
     // never an order already in production (lock.overridable === false) -
     // past that point a technology change is a new order, not a correction.
-    const canOverrideLock = isStaff(ctx) && lock?.overridable !== false
+    const canOverrideLock = (await isStaff(ctx)) && lock?.overridable !== false
 
     if (lock && !canOverrideLock) {
       return response.conflict({
@@ -322,7 +322,7 @@ export default class ProjectFilesController {
     }
 
     const lock = await findTechnologyLock(projectFile)
-    const canOverrideLock = isStaff(ctx)
+    const canOverrideLock = await isStaff(ctx)
 
     if (lock && !canOverrideLock) {
       return response.conflict({

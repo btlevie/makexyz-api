@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Update Vendor Address'
+method: PATCH
+url: '{{base_url}}/vendor/addresses/{{address_uuid}}'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "label": "Main Warehouse",
+      "line1": "789 Industrial Blvd Suite 100"
+    }

@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Start Stripe Onboarding'
+method: POST
+url: '{{base_url}}/vendor/payout-method/stripe/onboarding'
+order: 3000

@@ -1,0 +1,3 @@
+$kind: collection
+name: Webhooks
+description: 'Provider webhook endpoints. Verified by provider signature (Stripe, PayPal, EasyPost). Not throttled.'

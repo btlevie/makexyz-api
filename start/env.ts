@@ -196,4 +196,18 @@ export default await Env.create(new URL('../', import.meta.url), {
   PAYPAL_AUTHORIZE_BASE_URL: Env.schema.string.optionalWhen(
     () => process.env.NODE_ENV !== 'production'
   ),
+
+  /*
+  |----------------------------------------------------------
+  | Vendor onboarding (see docs/VENDOR_ONBOARDING.md)
+  |----------------------------------------------------------
+  | ACCOUNT_INVITE_URL is the frontend page that handles invitation links
+  | (admins get `${ACCOUNT_INVITE_URL}?link=<signed API path>`).
+  | VENDOR_AGREEMENT_VERSION is the vendor agreement currently in force -
+  | bumping it requires every vendor to re-accept before accepting orders.
+  */
+  ACCOUNT_INVITE_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  VENDOR_AGREEMENT_VERSION: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
 })

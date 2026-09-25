@@ -68,6 +68,21 @@ export async function getRequiredTechnologies(order: Order): Promise<string[]> {
 }
 
 /**
+ * The capability rows that count for routing: approved capabilities of active
+ * vendors only. A vendor still onboarding, awaiting review or suspended - or
+ * a capability still requested/rejected - never makes an order routable or a
+ * quote fulfillable (see docs/VENDOR_ONBOARDING.md). Columns are qualified
+ * because vendors has its own `status`.
+ */
+function liveCapabilities() {
+  return db
+    .from('vendor_technology_capabilities')
+    .join('vendors', 'vendors.id', 'vendor_technology_capabilities.vendor_id')
+    .where('vendors.status', 'active')
+    .where('vendor_technology_capabilities.status', 'approved')
+}
+
+/**
  * Whether any single vendor is preferred across every one of the given
  * technologies - it has to be one vendor able to fulfill the whole order, not
  * different preferred vendors for different lines.
@@ -77,13 +92,14 @@ async function hasFullyPreferredVendor(requiredTechnologies: string[]): Promise<
     return false
   }
 
-  const rows = await db
-    .from('vendor_technology_capabilities')
-    .whereIn('technology', requiredTechnologies)
-    .where('is_preferred', true)
-    .groupBy('vendor_id')
-    .havingRaw('count(distinct technology) = ?', [requiredTechnologies.length])
-    .select('vendor_id')
+  const rows = await liveCapabilities()
+    .whereIn('vendor_technology_capabilities.technology', requiredTechnologies)
+    .where('vendor_technology_capabilities.is_preferred', true)
+    .groupBy('vendor_technology_capabilities.vendor_id')
+    .havingRaw('count(distinct vendor_technology_capabilities.technology) = ?', [
+      requiredTechnologies.length,
+    ])
+    .select('vendor_technology_capabilities.vendor_id')
 
   return rows.length > 0
 }
@@ -96,18 +112,22 @@ async function hasFullyPreferredVendor(requiredTechnologies: string[]): Promise<
  * the one line that matters most to get right, since it's otherwise a
  * near-copy of hasFullyPreferredVendor. A quote/order fulfillable only by a
  * non-preferred vendor is completely normal and must not be flagged.
+ *
+ * Only active vendors' approved capabilities count (liveCapabilities) - a
+ * vendor mid-onboarding can't make a quote look fulfillable.
  */
 export async function hasAnyCapableVendor(requiredTechnologies: string[]): Promise<boolean> {
   if (requiredTechnologies.length === 0) {
     return false
   }
 
-  const rows = await db
-    .from('vendor_technology_capabilities')
-    .whereIn('technology', requiredTechnologies)
-    .groupBy('vendor_id')
-    .havingRaw('count(distinct technology) = ?', [requiredTechnologies.length])
-    .select('vendor_id')
+  const rows = await liveCapabilities()
+    .whereIn('vendor_technology_capabilities.technology', requiredTechnologies)
+    .groupBy('vendor_technology_capabilities.vendor_id')
+    .havingRaw('count(distinct vendor_technology_capabilities.technology) = ?', [
+      requiredTechnologies.length,
+    ])
+    .select('vendor_technology_capabilities.vendor_id')
 
   return rows.length > 0
 }
@@ -151,7 +171,8 @@ export async function routeNewOrder(order: Order): Promise<void> {
  * Whether the given vendor may accept the given order right now - eligibility
  * differs by stage: 'preferred' requires the vendor to be preferred across
  * every required technology; 'open' only requires capability (preferred or
- * not).
+ * not). Either way the vendor must be active and the capabilities approved
+ * (liveCapabilities).
  */
 export async function vendorCanAcceptOrder(vendorId: number, order: Order): Promise<boolean> {
   const requiredTechnologies = await getRequiredTechnologies(order)
@@ -159,16 +180,15 @@ export async function vendorCanAcceptOrder(vendorId: number, order: Order): Prom
     return false
   }
 
-  const query = db
-    .from('vendor_technology_capabilities')
-    .where('vendor_id', vendorId)
-    .whereIn('technology', requiredTechnologies)
+  const query = liveCapabilities()
+    .where('vendor_technology_capabilities.vendor_id', vendorId)
+    .whereIn('vendor_technology_capabilities.technology', requiredTechnologies)
 
   if (order.routingStage === 'preferred') {
-    query.where('is_preferred', true)
+    query.where('vendor_technology_capabilities.is_preferred', true)
   }
 
-  const rows = await query.select('technology')
+  const rows = await query.select('vendor_technology_capabilities.technology')
   return rows.length === requiredTechnologies.length
 }
 

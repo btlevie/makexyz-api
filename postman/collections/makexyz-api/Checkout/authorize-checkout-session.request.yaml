@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Authorize Checkout Session'
+method: PATCH
+url: '{{base_url}}/projects/{{project_uuid}}/checkout-sessions/{{checkout_session_uuid}}/authorize'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "provider": "stripe",
+      "providerToken": "pm_card_visa"
+    }

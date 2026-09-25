@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'PayPal Webhook'
+method: POST
+url: '{{base_url}}/webhooks/paypal'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "event_type": "PAYMENT.CAPTURE.COMPLETED",
+      "resource": {}
+    }

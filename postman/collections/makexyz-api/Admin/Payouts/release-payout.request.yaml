@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Release Payout'
+method: POST
+url: '{{base_url}}/admin/payouts/{{payout_uuid}}/release'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "amount": null
+    }

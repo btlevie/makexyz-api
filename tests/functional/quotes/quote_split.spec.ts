@@ -13,6 +13,7 @@ import Quote from '#models/quote'
 import ServiceableCountry from '#models/serviceable_country'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import type { FdmPricingResult } from '#services/fdm_pricing_calculator'
 import { issueGrant } from '#services/project_grant_service'
 import { persistQuote } from '#services/quote_generation_service'
@@ -210,7 +211,9 @@ async function createNeedsReviewQuote(
 }
 
 async function grantCapability(vendor: Vendor, technology: 'fdm' | 'sla' | 'sls', isPreferred: boolean) {
-  await vendor.related('technologyCapabilities').create({ technology, isPreferred })
+  await vendor
+    .related('technologyCapabilities')
+    .create({ technology, isPreferred, status: 'approved' })
 }
 
 async function createVendorWithCapability(technology: 'fdm' | 'sla' | 'sls', isPreferred = false) {
@@ -220,7 +223,11 @@ async function createVendorWithCapability(technology: 'fdm' | 'sla' | 'sls', isP
     password: 'password123',
     role: 'vendor',
   })
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
   await grantCapability(vendor, technology, isPreferred)
   return vendor
 }

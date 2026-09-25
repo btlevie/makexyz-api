@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Serviceable Countries'
+method: GET
+url: '{{base_url}}/serviceable-countries'
+order: 1000

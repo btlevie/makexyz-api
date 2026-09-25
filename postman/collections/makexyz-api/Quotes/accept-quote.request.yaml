@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Accept Quote'
+method: PATCH
+url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/accept'
+order: 4000

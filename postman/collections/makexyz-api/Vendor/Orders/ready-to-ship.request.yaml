@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Ready to Ship'
+method: PATCH
+url: '{{base_url}}/vendor/orders/{{order_uuid}}/ready-to-ship'
+order: 5000

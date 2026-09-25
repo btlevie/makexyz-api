@@ -18,6 +18,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import Customer from '#models/customer'
 import Project from '#models/project'
 import ProjectFile from '#models/project_file'
+import Vendor from '#models/vendor'
 import env from '#start/env'
 
 /** Namespaces the signature so a grant can't be replayed as another token. */
@@ -50,12 +51,33 @@ export function readGrant(ctx: HttpContext): string | null {
  * not distinguishing "no such project" from "not yours", which would confirm
  * the existence of other people's projects.
  */
-/** Roles that may reach any project, not just their own. */
-const STAFF_ROLES = ['admin', 'vendor']
+/**
+ * Vendor statuses with staff project access. Suspended is included: a
+ * suspended vendor can't accept new orders but still has to finish (and so
+ * see) the ones already accepted. A vendor still onboarding or awaiting review
+ * hasn't been vetted and gets no access - see docs/VENDOR_ONBOARDING.md.
+ */
+const STAFF_VENDOR_STATUSES: Vendor['status'][] = ['active', 'suspended']
 
-export function isStaff(ctx: HttpContext): boolean {
-  const role = ctx.auth.user?.role
-  return role ? STAFF_ROLES.includes(role) : false
+/**
+ * Whether the caller may reach any project, not just their own: admins, and
+ * vendors whose onboarding has been approved. Async because a vendor's access
+ * depends on their Vendor record's status, not just their role - always
+ * `await` it (an un-awaited Promise is truthy).
+ */
+export async function isStaff(ctx: HttpContext): Promise<boolean> {
+  const user = ctx.auth.user
+  if (!user) {
+    return false
+  }
+  if (user.role === 'admin') {
+    return true
+  }
+  if (user.role !== 'vendor') {
+    return false
+  }
+  const vendor = await Vendor.findBy('userId', user.id)
+  return !!vendor && STAFF_VENDOR_STATUSES.includes(vendor.status)
 }
 
 /**
@@ -94,7 +116,7 @@ export async function resolveProjectFile(
     return null
   }
 
-  if (isStaff(ctx)) {
+  if (await isStaff(ctx)) {
     return projectFile
   }
 

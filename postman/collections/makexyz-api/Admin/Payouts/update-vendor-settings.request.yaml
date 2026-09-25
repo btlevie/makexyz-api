@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Update Vendor Settings'
+method: PATCH
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}'
+order: 7000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "payoutHoldDays": 7
+    }

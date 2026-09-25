@@ -1,6 +1,7 @@
 import { VendorTechnologyCapabilitySchema } from '#database/schema'
 import { belongsTo, column } from '@adonisjs/lucid/orm'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import User from '#models/user'
 import Vendor from '#models/vendor'
 
 export default class VendorTechnologyCapability extends VendorTechnologyCapabilitySchema {
@@ -13,4 +14,7 @@ export default class VendorTechnologyCapability extends VendorTechnologyCapabili
 
   @belongsTo(() => Vendor)
   declare vendor: BelongsTo<typeof Vendor>
+
+  @belongsTo(() => User, { foreignKey: 'reviewedById' })
+  declare reviewedBy: BelongsTo<typeof User>
 }

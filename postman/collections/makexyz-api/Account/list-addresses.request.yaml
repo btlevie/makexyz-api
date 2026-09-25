@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Addresses'
+method: GET
+url: '{{base_url}}/account/addresses'
+order: 3000

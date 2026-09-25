@@ -11,6 +11,7 @@ import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import VendorPayout from '#models/vendor_payout'
 import type Material from '#models/material'
 import { fakePaymentGateway } from '#services/payment_gateway_service'
@@ -29,8 +30,14 @@ async function signupVendor(client: any) {
   const user = await User.findByOrFail('email', email)
   user.role = 'vendor'
   await user.save()
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
-  await vendor.related('technologyCapabilities').create({ technology: 'fdm', isPreferred: false })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
+  await vendor
+    .related('technologyCapabilities')
+    .create({ technology: 'fdm', isPreferred: false, status: 'approved' })
 
   return { session: response.session(), user, vendor }
 }

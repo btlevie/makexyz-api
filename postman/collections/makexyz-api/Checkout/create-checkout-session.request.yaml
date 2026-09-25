@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Create Checkout Session'
+method: POST
+url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/checkout'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "customer@example.com"
+    }

@@ -1,0 +1,3 @@
+$kind: collection
+name: Vendor
+description: 'Vendor-authenticated endpoints for order management, shipments, payouts, and address book. Requires a user account with role=vendor.'

@@ -7,15 +7,19 @@
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
 import type AddressTransformer from '#transformers/address_transformer'
 import type AdminQuoteReviewTransformer from '#transformers/admin_quote_review_transformer'
+import type AdminVendorTransformer from '#transformers/admin_vendor_transformer'
 import type CheckoutSessionTransformer from '#transformers/checkout_session_transformer'
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
+import type InvitationTransformer from '#transformers/invitation_transformer'
 import type OrderTransformer from '#transformers/order_transformer'
 import type ProjectFileTransformer from '#transformers/project_file_transformer'
+import type PublicInvitationTransformer from '#transformers/public_invitation_transformer'
 import type QuoteTransformer from '#transformers/quote_transformer'
 import type ServiceableCountryTransformer from '#transformers/serviceable_country_transformer'
 import type ShipmentTransformer from '#transformers/shipment_transformer'
 import type UserTransformer from '#transformers/user_transformer'
+import type VendorOnboardingTransformer from '#transformers/vendor_onboarding_transformer'
 import type VendorPayoutMethodTransformer from '#transformers/vendor_payout_method_transformer'
 import type VendorPayoutRateTransformer from '#transformers/vendor_payout_rate_transformer'
 import type VendorPayoutTransformer from '#transformers/vendor_payout_transformer'
@@ -30,6 +34,10 @@ export namespace Data {
   export namespace AdminQuoteReview {
     export type Variants = InferVariants<AdminQuoteReviewTransformer>
   }
+  export type AdminVendor = InferData<AdminVendorTransformer>
+  export namespace AdminVendor {
+    export type Variants = InferVariants<AdminVendorTransformer>
+  }
   export type CheckoutSession = InferData<CheckoutSessionTransformer>
   export namespace CheckoutSession {
     export type Variants = InferVariants<CheckoutSessionTransformer>
@@ -42,6 +50,10 @@ export namespace Data {
   export namespace InstantQuoteFile {
     export type Variants = InferVariants<InstantQuoteFileTransformer>
   }
+  export type Invitation = InferData<InvitationTransformer>
+  export namespace Invitation {
+    export type Variants = InferVariants<InvitationTransformer>
+  }
   export type Order = InferData<OrderTransformer>
   export namespace Order {
     export type Variants = InferVariants<OrderTransformer>
@@ -49,6 +61,10 @@ export namespace Data {
   export type ProjectFile = InferData<ProjectFileTransformer>
   export namespace ProjectFile {
     export type Variants = InferVariants<ProjectFileTransformer>
+  }
+  export type PublicInvitation = InferData<PublicInvitationTransformer>
+  export namespace PublicInvitation {
+    export type Variants = InferVariants<PublicInvitationTransformer>
   }
   export type Quote = InferData<QuoteTransformer>
   export namespace Quote {
@@ -65,6 +81,10 @@ export namespace Data {
   export type User = InferData<UserTransformer>
   export namespace User {
     export type Variants = InferVariants<UserTransformer>
+  }
+  export type VendorOnboarding = InferData<VendorOnboardingTransformer>
+  export namespace VendorOnboarding {
+    export type Variants = InferVariants<VendorOnboardingTransformer>
   }
   export type VendorPayoutMethod = InferData<VendorPayoutMethodTransformer>
   export namespace VendorPayoutMethod {

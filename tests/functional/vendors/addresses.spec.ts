@@ -4,6 +4,7 @@ import testUtils from '@adonisjs/core/services/test_utils'
 import Address from '#models/address'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 
 async function signupVendor(client: any) {
   const email = `vendor-address-${string.uuid()}@test.com`
@@ -18,7 +19,11 @@ async function signupVendor(client: any) {
   const user = await User.findByOrFail('email', email)
   user.role = 'vendor'
   await user.save()
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
 
   return { session: response.session(), user, vendor }
 }

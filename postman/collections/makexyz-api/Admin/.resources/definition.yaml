@@ -1,0 +1,3 @@
+$kind: collection
+name: Admin
+description: 'Admin-only endpoints. Requires a user account with role=admin. Covers quote review/splitting and vendor payout management.'

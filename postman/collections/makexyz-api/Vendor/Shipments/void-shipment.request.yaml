@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Void Shipment'
+method: POST
+url: '{{base_url}}/vendor/orders/{{order_uuid}}/shipments/{{shipment_uuid}}/void'
+order: 3000

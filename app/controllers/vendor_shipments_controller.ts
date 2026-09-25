@@ -1,4 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { resolveVendor } from '#services/vendor_onboarding_service'
 import Order from '#models/order'
 import Shipment from '#models/shipment'
 import Vendor from '#models/vendor'
@@ -24,15 +25,6 @@ import {
  * account - see shipment_service.ts.
  */
 export default class VendorShipmentsController {
-  /** Same manual role check as vendor_orders_controller.ts. */
-  private async resolveVendor(ctx: HttpContext): Promise<Vendor | null> {
-    const user = ctx.auth.getUserOrFail()
-    if (user.role !== 'vendor') {
-      return null
-    }
-    return Vendor.findBy('userId', user.id)
-  }
-
   /** This vendor's own order, or an HTTP error response already sent. */
   private async resolveOrder(ctx: HttpContext, vendor: Vendor): Promise<Order | null> {
     const order = await Order.findBy('uuid', ctx.params.uuid)
@@ -50,7 +42,7 @@ export default class VendorShipmentsController {
   /** Every shipment for the order, voided ones included, newest first. */
   async index(ctx: HttpContext) {
     const { response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -64,7 +56,7 @@ export default class VendorShipmentsController {
   /** Buys the order's shipping label - the service is picked from what the customer paid for. */
   async store(ctx: HttpContext) {
     const { request, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -96,7 +88,7 @@ export default class VendorShipmentsController {
   /** Voids an unscanned label so a new one can be bought. */
   async void(ctx: HttpContext) {
     const { params, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }

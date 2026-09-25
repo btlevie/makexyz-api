@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Update File Color'
+method: PATCH
+url: '{{base_url}}/projects/files/{{file_uuid}}/color'
+order: 5000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "colorUuid": "{{color_uuid}}"
+    }

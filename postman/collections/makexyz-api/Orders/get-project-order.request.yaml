@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Project Order'
+method: GET
+url: '{{base_url}}/projects/{{project_uuid}}/order'
+order: 1000

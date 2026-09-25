@@ -30,6 +30,13 @@ router
         router.post('signup', [controllers.NewAccount, 'store'])
         router.post('login', [controllers.AccessTokens, 'store'])
         router.post('new-customer', [controllers.NewCustomer, 'store'])
+
+        // Admin invitations, public side - authorized by the signed URL the
+        // admin shared, checked in the controller (request.hasValidSignature)
+        // along with the invitation's own state. See
+        // docs/VENDOR_ONBOARDING.md.
+        router.get('invitations/:uuid', [controllers.Invitations, 'show'])
+        router.post('invitations/:uuid/accept', [controllers.Invitations, 'accept'])
       })
       .prefix('auth')
       .as('auth')
@@ -85,7 +92,10 @@ router
         // Best-effort progress pings from the slicer, same auth as the
         // terminal slicing-result callback above.
         router
-          .patch('files/:uuid/slicing-progress', [controllers.ProjectFiles, 'updateSlicingProgress'])
+          .patch('files/:uuid/slicing-progress', [
+            controllers.ProjectFiles,
+            'updateSlicingProgress',
+          ])
           .use(middleware.slicerCallbackAuth())
         // Public, same grant/customer/staff authorization as the other
         // project-file endpoints - lets a client recover current
@@ -168,7 +178,10 @@ router
           controllers.VendorPayoutMethods,
           'startStripe',
         ])
-        router.post('payout-method/paypal/connect', [controllers.VendorPayoutMethods, 'startPaypal'])
+        router.post('payout-method/paypal/connect', [
+          controllers.VendorPayoutMethods,
+          'startPaypal',
+        ])
         router.post('payout-method/paypal/callback', [
           controllers.VendorPayoutMethods,
           'completePaypal',
@@ -180,6 +193,15 @@ router
         router.get('addresses/:uuid', [controllers.VendorAddresses, 'show'])
         router.patch('addresses/:uuid', [controllers.VendorAddresses, 'update'])
         router.delete('addresses/:uuid', [controllers.VendorAddresses, 'destroy'])
+
+        // Onboarding checklist - the address and payout-method steps use the
+        // endpoints above. See docs/VENDOR_ONBOARDING.md.
+        router.get('onboarding', [controllers.VendorOnboarding, 'show'])
+        router.patch('onboarding/profile', [controllers.VendorOnboarding, 'updateProfile'])
+        router.put('onboarding/capabilities', [controllers.VendorOnboarding, 'setCapabilities'])
+        router.post('onboarding/agreement', [controllers.VendorOnboarding, 'acceptAgreement'])
+        router.put('onboarding/tax', [controllers.VendorOnboarding, 'uploadTax'])
+        router.post('onboarding/submit', [controllers.VendorOnboarding, 'submit'])
       })
       .prefix('vendor')
       .as('vendor')
@@ -200,6 +222,25 @@ router
         router.get('vendors/:uuid/payout-rates', [controllers.AdminVendorPayouts, 'rates'])
         router.put('vendors/:uuid/payout-rates', [controllers.AdminVendorPayouts, 'updateRates'])
         router.patch('vendors/:uuid', [controllers.AdminVendorPayouts, 'updateVendor'])
+
+        // Invitations and vendor review - see docs/VENDOR_ONBOARDING.md.
+        router.get('invitations', [controllers.AdminInvitations, 'index'])
+        router.post('invitations', [controllers.AdminInvitations, 'store'])
+        router.post('invitations/:uuid/resend', [controllers.AdminInvitations, 'resend'])
+        router.post('invitations/:uuid/revoke', [controllers.AdminInvitations, 'revoke'])
+
+        router.get('vendors', [controllers.AdminVendors, 'index'])
+        router.get('vendors/:uuid', [controllers.AdminVendors, 'show'])
+        router.patch('vendors/:uuid/capabilities/:technology', [
+          controllers.AdminVendors,
+          'reviewCapability',
+        ])
+        router.get('vendors/:uuid/tax/document', [controllers.AdminVendors, 'taxDocument'])
+        router.post('vendors/:uuid/tax/verify', [controllers.AdminVendors, 'verifyTax'])
+        router.post('vendors/:uuid/tax/reject', [controllers.AdminVendors, 'rejectTax'])
+        router.post('vendors/:uuid/activate', [controllers.AdminVendors, 'activate'])
+        router.post('vendors/:uuid/suspend', [controllers.AdminVendors, 'suspend'])
+        router.post('vendors/:uuid/reinstate', [controllers.AdminVendors, 'reinstate'])
       })
       .prefix('admin')
       .as('admin')

@@ -1,0 +1,21 @@
+$kind: http-request
+name: 'Create Vendor Address'
+method: POST
+url: '{{base_url}}/vendor/addresses'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "label": "Warehouse",
+      "recipientName": "Acme Printing",
+      "line1": "789 Industrial Blvd",
+      "city": "Austin",
+      "state": "TX",
+      "postalCode": "78701",
+      "country": "US",
+      "isDefault": true
+    }

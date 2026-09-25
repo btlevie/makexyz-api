@@ -5,11 +5,18 @@ import Address from '#models/address'
 import User from '#models/user'
 import VendorPayout from '#models/vendor_payout'
 import VendorPayoutRate from '#models/vendor_payout_rate'
+import VendorTaxDocument from '#models/vendor_tax_document'
 import VendorTechnologyCapability from '#models/vendor_technology_capability'
 
 export default class Vendor extends VendorSchema {
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
+
+  @belongsTo(() => User, { foreignKey: 'activatedById' })
+  declare activatedBy: BelongsTo<typeof User>
+
+  @hasMany(() => VendorTaxDocument)
+  declare taxDocuments: HasMany<typeof VendorTaxDocument>
 
   @hasMany(() => VendorTechnologyCapability)
   declare technologyCapabilities: HasMany<typeof VendorTechnologyCapability>

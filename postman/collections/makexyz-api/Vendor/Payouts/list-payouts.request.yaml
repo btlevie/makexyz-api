@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Payouts'
+method: GET
+url: '{{base_url}}/vendor/payouts'
+order: 1000

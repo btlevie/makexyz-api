@@ -23,7 +23,7 @@ import { isStaff, resolveProject } from '#services/project_grant_service'
 transmit.authorize<{ projectUuid: string }>(
   'projects/:projectUuid/progress',
   async (ctx: HttpContext, { projectUuid }) => {
-    if (isStaff(ctx)) {
+    if (await isStaff(ctx)) {
       return true
     }
 

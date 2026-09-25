@@ -1,0 +1,3 @@
+$kind: collection
+name: Account
+description: 'Authenticated account endpoints: profile, logout, and saved address book.'

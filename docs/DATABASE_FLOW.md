@@ -354,11 +354,21 @@ Orders may also become:
 
 ---
 
+## Vendor Onboarding
+
+Vendors join by admin invitation (`invitations`). Accepting creates the vendor's user and `vendors` row together, and the vendor then completes an onboarding checklist before an admin reviews and activates them (`vendors.status`: `onboarding → pending_review → active`, with `suspended` reversible). Capabilities are requested by the vendor and approved by an admin (`vendor_technology_capabilities.status`). Tax forms are kept in `vendor_tax_documents`.
+
+**Only active vendors with approved capabilities count** for quote fulfillability, order routing, order acceptance, and staff project access.
+
+The full process (states, checklists, endpoints, frontend routing, edge cases) is documented in [VENDOR_ONBOARDING.md](./VENDOR_ONBOARDING.md).
+
+---
+
 ## Vendor Acceptance
 
 After an order is created, it enters the open order pool.
 
-Open orders are visible to vendors.
+Open orders are visible to active vendors with approved capabilities for every technology the order needs (see Vendor Onboarding).
 
 A vendor may accept an order.
 

@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Create Shipment'
+method: POST
+url: '{{base_url}}/vendor/orders/{{order_uuid}}/shipments'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "parcel": {
+        "weightOz": 8,
+        "lengthIn": 6,
+        "widthIn": 4,
+        "heightIn": 3
+      }
+    }

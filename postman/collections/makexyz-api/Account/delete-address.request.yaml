@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Delete Address'
+method: DELETE
+url: '{{base_url}}/account/addresses/{{address_uuid}}'
+order: 7000

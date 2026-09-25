@@ -1,28 +1,14 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { resolveVendor } from '#services/vendor_onboarding_service'
 import Address from '#models/address'
-import Vendor from '#models/vendor'
 import AddressTransformer from '#transformers/address_transformer'
 import { createAddressValidator, updateAddressValidator } from '#validators/address'
 import { createAddress, updateAddress, deleteAddress, AddressInUseError } from '#services/address_service'
 
 export default class VendorAddressesController {
-  /**
-   * Resolves the calling user's Vendor record, or null if they aren't a
-   * vendor at all - same manual role check as `resolveVendor` in
-   * vendor_orders_controller.ts (no policy/ability convention exists yet in
-   * this codebase, see CLAUDE.md).
-   */
-  private async resolveVendor(ctx: HttpContext): Promise<Vendor | null> {
-    const user = ctx.auth.getUserOrFail()
-    if (user.role !== 'vendor') {
-      return null
-    }
-    return Vendor.findBy('userId', user.id)
-  }
-
   async index(ctx: HttpContext) {
     const { response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -36,7 +22,7 @@ export default class VendorAddressesController {
 
   async store(ctx: HttpContext) {
     const { request, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -48,7 +34,7 @@ export default class VendorAddressesController {
 
   async show(ctx: HttpContext) {
     const { params, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -62,7 +48,7 @@ export default class VendorAddressesController {
 
   async update(ctx: HttpContext) {
     const { params, request, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -86,7 +72,7 @@ export default class VendorAddressesController {
 
   async destroy(ctx: HttpContext) {
     const { params, response } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }

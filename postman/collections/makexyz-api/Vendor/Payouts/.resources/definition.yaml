@@ -1,0 +1,3 @@
+$kind: collection
+name: Payouts
+description: 'Vendor payout history and payout method setup (Stripe Connect or PayPal).'

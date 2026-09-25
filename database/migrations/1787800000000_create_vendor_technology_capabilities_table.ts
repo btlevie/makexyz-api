@@ -12,6 +12,21 @@ export default class extends BaseSchema {
       // a vendor can be preferred for FDM and merely capable (not preferred)
       // for SLA.
       table.boolean('is_preferred').notNullable().defaultTo(false)
+      // Declared by the vendor ('requested'), reviewed by an admin. Only
+      // 'approved' capabilities count for routing - see
+      // docs/VENDOR_ONBOARDING.md.
+      table
+        .enum('status', ['requested', 'approved', 'rejected'])
+        .notNullable()
+        .defaultTo('requested')
+      table.timestamp('reviewed_at').nullable()
+      table
+        .integer('reviewed_by_id')
+        .unsigned()
+        .nullable()
+        .references('id')
+        .inTable('users')
+        .onDelete('SET NULL')
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

@@ -1,0 +1,8 @@
+$kind: http-request
+name: 'Get Address'
+method: GET
+url: '{{base_url}}/account/addresses/{{address_uuid}}'
+order: 5000
+pathVariables:
+  - key: address_uuid
+    value: '{{address_uuid}}'

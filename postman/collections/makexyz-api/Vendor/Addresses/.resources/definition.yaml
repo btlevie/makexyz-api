@@ -1,0 +1,3 @@
+$kind: collection
+name: Addresses
+description: "Vendor's own saved address book (e.g. return/pickup addresses)."

@@ -1,0 +1,3 @@
+$kind: collection
+name: Projects
+description: 'Project and project file endpoints. The instant-quote entry point: upload 3D model files to get a price without an account. Anonymous callers receive a signed grant authorizing follow-up requests.'

@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { hasCurrentAgreement, resolveVendor } from '#services/vendor_onboarding_service'
 import Order from '#models/order'
-import Vendor from '#models/vendor'
 import OrderTransformer from '#transformers/order_transformer'
 import {
   acceptOrder,
@@ -20,27 +20,13 @@ import {
 
 export default class VendorOrdersController {
   /**
-   * Resolves the calling user's Vendor record, or null if they aren't a
-   * vendor at all. No established policy/ability convention exists yet in
-   * this codebase (see CLAUDE.md) - a manual role check, same as `isStaff` in
-   * project_grant_service.ts.
-   */
-  private async resolveVendor(ctx: HttpContext): Promise<Vendor | null> {
-    const user = ctx.auth.getUserOrFail()
-    if (user.role !== 'vendor') {
-      return null
-    }
-    return Vendor.findBy('userId', user.id)
-  }
-
-  /**
    * Whatever the calling vendor is currently eligible to accept - preferred-
    * stage orders only if they're preferred for every required technology,
    * plus every open-stage order they're capable of.
    */
   async index(ctx: HttpContext) {
     const { response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -50,12 +36,18 @@ export default class VendorOrdersController {
     // What the vendor would earn for each order - or why they can't accept it
     // yet (no payout method, or no rate for one of its materials).
     const methodReady = isPayoutMethodReady(vendor)
+    const agreementCurrent = hasCurrentAgreement(vendor)
     for (const order of orders) {
       try {
         const breakdown = await computePayoutBreakdown(order, vendor)
         order.$extras.estimatedPayout = breakdown.total
         if (!methodReady) {
           order.$extras.payoutBlockedReason = 'Set up how you get paid before accepting orders'
+        } else if (!agreementCurrent) {
+          // Not payout-related, but it's the one "why can't I accept this"
+          // field the listing has - acceptOrder refuses a stale agreement.
+          order.$extras.payoutBlockedReason =
+            'Accept the updated vendor agreement before accepting orders'
         }
       } catch (error) {
         if (!(error instanceof PayoutRateMissingError)) throw error
@@ -75,7 +67,7 @@ export default class VendorOrdersController {
    */
   async active(ctx: HttpContext) {
     const { response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -96,7 +88,7 @@ export default class VendorOrdersController {
    */
   async accept(ctx: HttpContext) {
     const { params, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -127,7 +119,7 @@ export default class VendorOrdersController {
   /** Marks an already-accepted order as being worked on - see order_production_service.ts. */
   async startProduction(ctx: HttpContext) {
     const { params, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }
@@ -155,7 +147,7 @@ export default class VendorOrdersController {
   /** Marks a produced order ready for pickup/shipment - see order_production_service.ts. */
   async readyToShip(ctx: HttpContext) {
     const { params, response, serialize } = ctx
-    const vendor = await this.resolveVendor(ctx)
+    const vendor = await resolveVendor(ctx)
     if (!vendor) {
       return response.forbidden({ error: 'No vendor record for this account' })
     }

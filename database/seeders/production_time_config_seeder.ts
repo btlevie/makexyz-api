@@ -35,11 +35,13 @@ export default class extends BaseSeeder {
       activatedAt: DateTime.now(),
     })
 
-    await config.related('tiers').createMany([
-      { businessDays: 5 },
-      { businessDays: 3 },
-      { businessDays: 2 },
-      { businessDays: 1 },
-    ])
+    await config
+      .related('tiers')
+      .createMany([
+        { businessDays: 5 },
+        { businessDays: 3 },
+        { businessDays: 2 },
+        { businessDays: 1 },
+      ])
   }
 }

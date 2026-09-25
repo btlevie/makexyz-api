@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Capture Project Email'
+method: POST
+url: '{{base_url}}/projects/{{project_uuid}}/email'
+order: 6000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "customer@example.com"
+    }

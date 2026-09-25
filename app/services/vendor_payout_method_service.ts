@@ -218,4 +218,8 @@ export async function flagPayoutMethodError(vendor: Vendor, reason: string): Pro
   vendor.payoutMethodError = reason.slice(0, 255)
   vendor.payoutMethodErrorAt = DateTime.now()
   await vendor.save()
+
+  // TODO(mail): tell the vendor a payout couldn't be sent to their account
+  // (`reason`), that new order acceptance is blocked, and that reconnecting
+  // their payout account re-queues everything held.
 }

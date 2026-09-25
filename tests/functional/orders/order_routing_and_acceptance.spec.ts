@@ -14,6 +14,7 @@ import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import { fakePaymentGateway } from '#services/payment_gateway_service'
 import { fakeTaxCalculator } from '#services/tax_calculator_service'
 import { routeNewOrder, escalateExpiredPreferredOrders } from '#services/order_routing_service'
@@ -42,13 +43,19 @@ async function signupVendor(client: any) {
   const user = await User.findByOrFail('email', email)
   user.role = 'vendor'
   await user.save()
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
 
   return { session: response.session(), user, vendor }
 }
 
 async function grantCapability(vendor: Vendor, technology: 'fdm' | 'sla' | 'sls', isPreferred: boolean) {
-  await vendor.related('technologyCapabilities').create({ technology, isPreferred })
+  await vendor
+    .related('technologyCapabilities')
+    .create({ technology, isPreferred, status: 'approved' })
 }
 
 /** Builds an authorized-and-open order, as authorizeCheckoutSession would. */
@@ -156,7 +163,11 @@ test.group('Order routing', (group) => {
       password: 'password123',
       role: 'vendor',
     })
-    const vendor = await Vendor.create({ uuid: string.uuid(), userId: vendorUser.id })
+    const vendor = await Vendor.create({
+      uuid: string.uuid(),
+      userId: vendorUser.id,
+      ...activeVendorAttributes(),
+    })
     await grantCapability(vendor, 'fdm', true)
     const { order } = await createOpenOrder(['fdm'])
 
@@ -174,7 +185,11 @@ test.group('Order routing', (group) => {
       password: 'password123',
       role: 'vendor',
     })
-    const vendor = await Vendor.create({ uuid: string.uuid(), userId: vendorUser.id })
+    const vendor = await Vendor.create({
+      uuid: string.uuid(),
+      userId: vendorUser.id,
+      ...activeVendorAttributes(),
+    })
     // Capable, but not preferred - fulfillable, just not via the preferred queue.
     await grantCapability(vendor, 'fdm', false)
     const { order } = await createOpenOrder(['fdm'])
@@ -207,7 +222,11 @@ test.group('Order routing', (group) => {
       password: 'password123',
       role: 'vendor',
     })
-    const vendor = await Vendor.create({ uuid: string.uuid(), userId: vendorUser.id })
+    const vendor = await Vendor.create({
+      uuid: string.uuid(),
+      userId: vendorUser.id,
+      ...activeVendorAttributes(),
+    })
     // Preferred for fdm only, but the order needs fdm AND sla.
     await grantCapability(vendor, 'fdm', true)
     // A second vendor covers the full required set, just not as a preferred
@@ -221,7 +240,11 @@ test.group('Order routing', (group) => {
       password: 'password123',
       role: 'vendor',
     })
-    const otherVendor = await Vendor.create({ uuid: string.uuid(), userId: otherUser.id })
+    const otherVendor = await Vendor.create({
+      uuid: string.uuid(),
+      userId: otherUser.id,
+      ...activeVendorAttributes(),
+    })
     await grantCapability(otherVendor, 'fdm', false)
     await grantCapability(otherVendor, 'sla', false)
     const { order } = await createOpenOrder(['fdm', 'sla'])
@@ -330,7 +353,11 @@ test.group('Vendor order acceptance', (group) => {
       password: 'password123',
       role: 'vendor',
     })
-    const preferredVendor = await Vendor.create({ uuid: string.uuid(), userId: preferredUser.id })
+    const preferredVendor = await Vendor.create({
+      uuid: string.uuid(),
+      userId: preferredUser.id,
+      ...activeVendorAttributes(),
+    })
     await grantCapability(preferredVendor, 'fdm', true)
     await routeNewOrder(order)
 
@@ -501,5 +528,170 @@ test.group('Checkout expiration', (group) => {
     assert.equal(order.status, 'accepted')
     await payment.refresh()
     assert.equal(payment.status, 'captured')
+  })
+})
+
+test.group('Vendor gating by onboarding status', (group) => {
+  group.setup(async () => {
+    const rollback = await testUtils.db().migrate()
+    await rollback()
+    await testUtils.db().migrate()
+  })
+
+  group.each.setup(async () => {
+    await limiter.clear()
+    fakePaymentGateway.reset()
+    return async () => {
+      const truncate = await testUtils.db().truncate()
+      await truncate()
+    }
+  })
+
+  test('only an active vendor with an approved capability makes an order routable', async ({
+    assert,
+  }) => {
+    await seedOrderRoutingConfig(24)
+    const user = await User.create({
+      uuid: string.uuid(),
+      email: `v-${string.uuid()}@test.com`,
+      password: 'password123',
+      role: 'vendor',
+    })
+    const vendor = await Vendor.create({
+      uuid: string.uuid(),
+      userId: user.id,
+      status: 'onboarding',
+    })
+    const capability = await vendor
+      .related('technologyCapabilities')
+      .create({ technology: 'fdm', isPreferred: false, status: 'approved' })
+
+    const cases: [Vendor['status'], 'requested' | 'approved' | 'rejected', string][] = [
+      ['onboarding', 'approved', 'unfulfillable'],
+      ['pending_review', 'approved', 'unfulfillable'],
+      ['suspended', 'approved', 'unfulfillable'],
+      ['active', 'requested', 'unfulfillable'],
+      ['active', 'rejected', 'unfulfillable'],
+      ['active', 'approved', 'open'],
+    ]
+    for (const [vendorStatus, capabilityStatus, expected] of cases) {
+      vendor.status = vendorStatus
+      await vendor.save()
+      capability.status = capabilityStatus
+      await capability.save()
+
+      const { order } = await createOpenOrder(['fdm'])
+      await routeNewOrder(order)
+      assert.equal(
+        order.routingStage,
+        expected,
+        `${vendorStatus} vendor, ${capabilityStatus} capability`
+      )
+    }
+  })
+
+  test('a preferred vendor still onboarding does not open a preferred window', async ({
+    assert,
+  }) => {
+    await seedOrderRoutingConfig(24)
+    const onboardingUser = await User.create({
+      uuid: string.uuid(),
+      email: `v-${string.uuid()}@test.com`,
+      password: 'password123',
+      role: 'vendor',
+    })
+    const onboarding = await Vendor.create({
+      uuid: string.uuid(),
+      userId: onboardingUser.id,
+      status: 'onboarding',
+    })
+    await onboarding
+      .related('technologyCapabilities')
+      .create({ technology: 'fdm', isPreferred: true, status: 'approved' })
+    // An active, non-preferred vendor keeps the order fulfillable.
+    const activeUser = await User.create({
+      uuid: string.uuid(),
+      email: `v-${string.uuid()}@test.com`,
+      password: 'password123',
+      role: 'vendor',
+    })
+    const active = await Vendor.create({
+      uuid: string.uuid(),
+      userId: activeUser.id,
+      ...activeVendorAttributes(),
+    })
+    await grantCapability(active, 'fdm', false)
+    const { order } = await createOpenOrder(['fdm'])
+
+    await routeNewOrder(order)
+
+    assert.equal(order.routingStage, 'open')
+  })
+
+  test('a suspended vendor sees no open orders and cannot accept', async ({ client, assert }) => {
+    await seedOrderRoutingConfig(24)
+    const { order } = await createOpenOrder(['fdm'])
+    const { session, vendor } = await signupVendor(client)
+    await grantCapability(vendor, 'fdm', false)
+    await readyVendorForOrder(order, vendor)
+    await routeNewOrder(order)
+    vendor.status = 'suspended'
+    await vendor.save()
+
+    const listing = await client.get('/v1/vendor/orders').withSession(session)
+    listing.assertStatus(200)
+    assert.lengthOf(listing.body().data, 0)
+
+    const accept = await client.patch(`/v1/vendor/orders/${order.uuid}/accept`).withSession(session)
+    accept.assertStatus(403)
+    await order.refresh()
+    assert.isNull(order.vendorId)
+  })
+
+  test('a stale agreement blocks acceptance without deactivating the vendor', async ({
+    client,
+    assert,
+  }) => {
+    await seedOrderRoutingConfig(24)
+    const { order } = await createOpenOrder(['fdm'])
+    const { session, vendor } = await signupVendor(client)
+    await grantCapability(vendor, 'fdm', false)
+    await readyVendorForOrder(order, vendor)
+    await routeNewOrder(order)
+    vendor.agreementVersion = '2020-01-01'
+    await vendor.save()
+
+    // Still listed (the vendor is active), with the reason it can't be accepted.
+    const listing = await client.get('/v1/vendor/orders').withSession(session)
+    const listed = listing.body().data as { uuid: string; payoutBlockedReason: string | null }[]
+    assert.lengthOf(listed, 1)
+    assert.include(listed[0].payoutBlockedReason!, 'agreement')
+
+    const accept = await client.patch(`/v1/vendor/orders/${order.uuid}/accept`).withSession(session)
+    accept.assertStatus(403)
+    assert.include((accept.body() as unknown as { error: string }).error, 'agreement')
+
+    await vendor.refresh()
+    assert.equal(vendor.status, 'active')
+  })
+
+  test('staff project access needs an active (or suspended) vendor', async ({ client, assert }) => {
+    const { project } = await createOpenOrder(['fdm'])
+    const { session, vendor } = await signupVendor(client)
+    const orderStatus = async () => {
+      const response = await client.get(`/v1/projects/${project.uuid}/order`).withSession(session)
+      return response.status()
+    }
+
+    for (const [status, expected] of [
+      ['onboarding', 404],
+      ['pending_review', 404],
+      ['active', 200],
+      ['suspended', 200],
+    ] as const) {
+      vendor.status = status
+      await vendor.save()
+      assert.equal(await orderStatus(), expected, status)
+    }
   })
 })

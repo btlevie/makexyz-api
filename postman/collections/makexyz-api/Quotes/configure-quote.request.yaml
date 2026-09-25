@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Configure Quote'
+method: PATCH
+url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/configure'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "destinationCountry": "US",
+      "shippingMethod": "free",
+      "productionTimeBusinessDays": 5,
+      "shippingAddressLabel": "Home",
+      "shippingRecipientName": "Jane Doe",
+      "shippingLine1": "123 Main St",
+      "shippingCity": "San Francisco",
+      "shippingState": "CA",
+      "shippingPostalCode": "94105"
+    }

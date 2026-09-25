@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Read `docs/DATABASE_FLOW.md` before touching anything related to projects, quotes, checkout, orders, payments, shipping, or vendor payouts — it documents the full domain lifecycle (Project → Quote → Checkout → Payment → Order → Vendor Acceptance → Production → Shipping → Payout) and the reasoning behind the table separations (e.g. why checkout sessions are separate from orders, why order items are immutable snapshots of quote items, why vendor payouts are separate from customer payments).
 
+Read `docs/VENDOR_ONBOARDING.md` before touching invitations, vendor onboarding, or vendor gating (routing/acceptance/`isStaff`) — it documents the invite → onboarding → review → active flow, the checklists, every endpoint, and the frontend routing rules, and must be updated in the same change as any edit to that flow.
+
 ## Commands
 
 - `npm run dev` — start the dev server with HMR (`node ace serve --hmr`)

@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Create Quote'
+method: POST
+url: '{{base_url}}/projects/{{project_uuid}}/quotes'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "items": [
+        {
+          "projectFileUuid": "{{file_uuid}}",
+          "quantity": 1
+        }
+      ]
+    }

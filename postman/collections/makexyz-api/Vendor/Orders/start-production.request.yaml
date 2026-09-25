@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Start Production'
+method: PATCH
+url: '{{base_url}}/vendor/orders/{{order_uuid}}/start-production'
+order: 4000

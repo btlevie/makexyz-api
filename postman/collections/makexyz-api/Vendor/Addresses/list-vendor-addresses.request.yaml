@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Vendor Addresses'
+method: GET
+url: '{{base_url}}/vendor/addresses'
+order: 1000

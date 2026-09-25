@@ -14,7 +14,9 @@ import ProjectFile from '#models/project_file'
 import ProjectFileSliceVariant from '#models/project_file_slice_variant'
 import Quote from '#models/quote'
 import User from '#models/user'
+import Vendor from '#models/vendor'
 import { issueGrant } from '#services/project_grant_service'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 
 const DEFAULT_PRICING_VALUES = {
   modelMaterialRatePerGram: '0.15',
@@ -58,9 +60,16 @@ async function signup(client: any) {
   return { session: response.session(), user, customer }
 }
 
+/**
+ * A vendor only gets staff access once onboarded (isStaff checks the Vendor
+ * record's status), so a promoted vendor gets an active Vendor record too.
+ */
 async function promote(user: User, role: 'admin' | 'vendor') {
   user.role = role
   await user.save()
+  if (role === 'vendor') {
+    await Vendor.create({ uuid: string.uuid(), userId: user.id, ...activeVendorAttributes() })
+  }
 }
 
 async function createFdmMaterial(name: string, densityGPerCm3: string | null) {

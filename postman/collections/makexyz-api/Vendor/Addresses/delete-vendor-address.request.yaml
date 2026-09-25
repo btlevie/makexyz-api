@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Delete Vendor Address'
+method: DELETE
+url: '{{base_url}}/vendor/addresses/{{address_uuid}}'
+order: 5000

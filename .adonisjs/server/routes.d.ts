@@ -10,6 +10,8 @@ export type ScannedRoutes = {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_tokens.store': { paramsTuple?: []; params?: {} }
     'auth.new_customer.store': { paramsTuple?: []; params?: {} }
+    'auth.invitations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'auth.invitations.accept': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
     'profile.access_tokens.destroy': { paramsTuple?: []; params?: {} }
     'profile.addresses.index': { paramsTuple?: []; params?: {} }
@@ -38,18 +40,54 @@ export type ScannedRoutes = {
     'vendor.vendor_orders.accept': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_orders.start_production': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_orders.ready_to_ship': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_shipments.index': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_shipments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_shipments.void': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'shipmentUuid': ParamValue} }
+    'vendor.vendor_payouts.index': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.show': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.start_stripe': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.start_paypal': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.complete_paypal': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.store': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_addresses.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_onboarding.show': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.update_profile': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.set_capabilities': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.accept_agreement': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.upload_tax': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.submit': { paramsTuple?: []; params?: {} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
     'admin.admin_quotes.split': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendor_payouts.release': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.cancel': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.retry': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.update_rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.update_vendor': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_invitations.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_invitations.store': { paramsTuple?: []; params?: {} }
+    'admin.admin_invitations.resend': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_invitations.revoke': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendors.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.review_capability': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'technology': ParamValue} }
+    'admin.admin_vendors.tax_document': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.verify_tax': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.reject_tax': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.activate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.suspend': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.reinstate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.paypal_webhooks': { paramsTuple?: []; params?: {} }
+    'webhooks.easypost_webhooks': { paramsTuple?: []; params?: {} }
   }
   GET: {
     'event_stream': { paramsTuple?: []; params?: {} }
+    'auth.invitations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
     'profile.addresses.index': { paramsTuple?: []; params?: {} }
     'profile.addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -59,12 +97,23 @@ export type ScannedRoutes = {
     'serviceable_countries.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_shipments.index': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_payouts.index': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.show': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_onboarding.show': { paramsTuple?: []; params?: {} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendor_payouts.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendor_payouts.rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_invitations.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendors.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendors.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.tax_document': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }
   HEAD: {
     'event_stream': { paramsTuple?: []; params?: {} }
+    'auth.invitations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'profile.profile.show': { paramsTuple?: []; params?: {} }
     'profile.addresses.index': { paramsTuple?: []; params?: {} }
     'profile.addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -74,9 +123,19 @@ export type ScannedRoutes = {
     'serviceable_countries.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_shipments.index': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_payouts.index': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.show': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_onboarding.show': { paramsTuple?: []; params?: {} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendor_payouts.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendor_payouts.rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_invitations.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendors.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendors.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.tax_document': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }
   POST: {
     'subscribe': { paramsTuple?: []; params?: {} }
@@ -84,16 +143,36 @@ export type ScannedRoutes = {
     'auth.new_account.store': { paramsTuple?: []; params?: {} }
     'auth.access_tokens.store': { paramsTuple?: []; params?: {} }
     'auth.new_customer.store': { paramsTuple?: []; params?: {} }
+    'auth.invitations.accept': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'profile.access_tokens.destroy': { paramsTuple?: []; params?: {} }
     'profile.addresses.store': { paramsTuple?: []; params?: {} }
     'projects.project_files.store_instant_quote_files': { paramsTuple?: []; params?: {} }
     'projects.quotes.store': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'projects.checkout_sessions.store': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.projects.capture_email': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
+    'vendor.vendor_shipments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_shipments.void': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'shipmentUuid': ParamValue} }
+    'vendor.vendor_payout_methods.start_stripe': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.start_paypal': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_payout_methods.complete_paypal': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.store': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.accept_agreement': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.submit': { paramsTuple?: []; params?: {} }
     'admin.admin_quotes.split': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.release': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.cancel': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_payouts.retry': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_invitations.store': { paramsTuple?: []; params?: {} }
+    'admin.admin_invitations.resend': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_invitations.revoke': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.verify_tax': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.reject_tax': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.activate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.suspend': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.reinstate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.paypal_webhooks': { paramsTuple?: []; params?: {} }
+    'webhooks.easypost_webhooks': { paramsTuple?: []; params?: {} }
   }
   PATCH: {
     'profile.addresses.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -109,10 +188,18 @@ export type ScannedRoutes = {
     'vendor.vendor_orders.start_production': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_orders.ready_to_ship': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_addresses.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_onboarding.update_profile': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendor_payouts.update_vendor': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendors.review_capability': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'technology': ParamValue} }
   }
   DELETE: {
     'profile.addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+  }
+  PUT: {
+    'vendor.vendor_onboarding.set_capabilities': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_onboarding.upload_tax': { paramsTuple?: []; params?: {} }
+    'admin.admin_vendor_payouts.update_rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }
 }
 declare module '@adonisjs/core/types/http' {

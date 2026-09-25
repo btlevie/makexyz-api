@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Accept Order'
+method: PATCH
+url: '{{base_url}}/vendor/orders/{{order_uuid}}/accept'
+order: 3000

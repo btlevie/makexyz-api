@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Quotes'
+method: GET
+url: '{{base_url}}/projects/{{project_uuid}}/quotes'
+order: 1000

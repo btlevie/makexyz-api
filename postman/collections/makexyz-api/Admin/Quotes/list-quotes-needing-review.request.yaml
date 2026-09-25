@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Quotes Needing Review'
+method: GET
+url: '{{base_url}}/admin/quotes/needs-review'
+order: 1000

@@ -34,7 +34,7 @@ export default class CheckoutSessionsController {
     const { params, request, response, serialize } = ctx
     const { email } = await request.validateUsing(createCheckoutSessionValidator)
 
-    const project = isStaff(ctx)
+    const project = (await isStaff(ctx))
       ? await Project.findBy('uuid', params.projectUuid)
       : await resolveProject(ctx, params.projectUuid)
     if (!project) {
@@ -87,7 +87,7 @@ export default class CheckoutSessionsController {
       authorizeCheckoutSessionValidator
     )
 
-    const project = isStaff(ctx)
+    const project = (await isStaff(ctx))
       ? await Project.findBy('uuid', params.projectUuid)
       : await resolveProject(ctx, params.projectUuid)
     if (!project) {

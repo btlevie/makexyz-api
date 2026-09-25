@@ -15,6 +15,10 @@ export interface ApiDefinition {
     newCustomer: {
       store: typeof routes['auth.new_customer.store']
     }
+    invitations: {
+      show: typeof routes['auth.invitations.show']
+      accept: typeof routes['auth.invitations.accept']
+    }
   }
   profile: {
     profile: {
@@ -69,6 +73,20 @@ export interface ApiDefinition {
       startProduction: typeof routes['vendor.vendor_orders.start_production']
       readyToShip: typeof routes['vendor.vendor_orders.ready_to_ship']
     }
+    vendorShipments: {
+      index: typeof routes['vendor.vendor_shipments.index']
+      store: typeof routes['vendor.vendor_shipments.store']
+      void: typeof routes['vendor.vendor_shipments.void']
+    }
+    vendorPayouts: {
+      index: typeof routes['vendor.vendor_payouts.index']
+    }
+    vendorPayoutMethods: {
+      show: typeof routes['vendor.vendor_payout_methods.show']
+      startStripe: typeof routes['vendor.vendor_payout_methods.start_stripe']
+      startPaypal: typeof routes['vendor.vendor_payout_methods.start_paypal']
+      completePaypal: typeof routes['vendor.vendor_payout_methods.complete_paypal']
+    }
     vendorAddresses: {
       index: typeof routes['vendor.vendor_addresses.index']
       store: typeof routes['vendor.vendor_addresses.store']
@@ -76,15 +94,50 @@ export interface ApiDefinition {
       update: typeof routes['vendor.vendor_addresses.update']
       destroy: typeof routes['vendor.vendor_addresses.destroy']
     }
+    vendorOnboarding: {
+      show: typeof routes['vendor.vendor_onboarding.show']
+      updateProfile: typeof routes['vendor.vendor_onboarding.update_profile']
+      setCapabilities: typeof routes['vendor.vendor_onboarding.set_capabilities']
+      acceptAgreement: typeof routes['vendor.vendor_onboarding.accept_agreement']
+      uploadTax: typeof routes['vendor.vendor_onboarding.upload_tax']
+      submit: typeof routes['vendor.vendor_onboarding.submit']
+    }
   }
   admin: {
     adminQuotes: {
       needsReview: typeof routes['admin.admin_quotes.needs_review']
       split: typeof routes['admin.admin_quotes.split']
     }
+    adminVendorPayouts: {
+      index: typeof routes['admin.admin_vendor_payouts.index']
+      release: typeof routes['admin.admin_vendor_payouts.release']
+      cancel: typeof routes['admin.admin_vendor_payouts.cancel']
+      retry: typeof routes['admin.admin_vendor_payouts.retry']
+      rates: typeof routes['admin.admin_vendor_payouts.rates']
+      updateRates: typeof routes['admin.admin_vendor_payouts.update_rates']
+      updateVendor: typeof routes['admin.admin_vendor_payouts.update_vendor']
+    }
+    adminInvitations: {
+      index: typeof routes['admin.admin_invitations.index']
+      store: typeof routes['admin.admin_invitations.store']
+      resend: typeof routes['admin.admin_invitations.resend']
+      revoke: typeof routes['admin.admin_invitations.revoke']
+    }
+    adminVendors: {
+      index: typeof routes['admin.admin_vendors.index']
+      show: typeof routes['admin.admin_vendors.show']
+      reviewCapability: typeof routes['admin.admin_vendors.review_capability']
+      taxDocument: typeof routes['admin.admin_vendors.tax_document']
+      verifyTax: typeof routes['admin.admin_vendors.verify_tax']
+      rejectTax: typeof routes['admin.admin_vendors.reject_tax']
+      activate: typeof routes['admin.admin_vendors.activate']
+      suspend: typeof routes['admin.admin_vendors.suspend']
+      reinstate: typeof routes['admin.admin_vendors.reinstate']
+    }
   }
   webhooks: {
     stripeWebhooks: typeof routes['webhooks.stripe_webhooks']
     paypalWebhooks: typeof routes['webhooks.paypal_webhooks']
+    easypostWebhooks: typeof routes['webhooks.easypost_webhooks']
   }
 }

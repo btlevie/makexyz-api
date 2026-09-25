@@ -79,6 +79,30 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/new_customer_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'auth.invitations.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/auth/invitations/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/invitations_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/invitations_controller').default['show']>>>
+    }
+  }
+  'auth.invitations.accept': {
+    methods: ["POST"]
+    pattern: '/v1/auth/invitations/:uuid/accept'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/invitation').acceptInvitationValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/invitation').acceptInvitationValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/invitations_controller').default['accept']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/invitations_controller').default['accept']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'profile.profile.show': {
     methods: ["GET","HEAD"]
     pattern: '/v1/account/profile'
@@ -415,6 +439,102 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_orders_controller').default['readyToShip']>>>
     }
   }
+  'vendor.vendor_shipments.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/orders/:uuid/shipments'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_shipments_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_shipments_controller').default['index']>>>
+    }
+  }
+  'vendor.vendor_shipments.store': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/orders/:uuid/shipments'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/shipment').createShipmentValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/shipment').createShipmentValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_shipments_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_shipments_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_shipments.void': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/orders/:uuid/shipments/:shipmentUuid/void'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; shipmentUuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_shipments_controller').default['void']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_shipments_controller').default['void']>>>
+    }
+  }
+  'vendor.vendor_payouts.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/payouts'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_payouts_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_payouts_controller').default['index']>>>
+    }
+  }
+  'vendor.vendor_payout_methods.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/payout-method'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['show']>>>
+    }
+  }
+  'vendor.vendor_payout_methods.start_stripe': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/payout-method/stripe/onboarding'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['startStripe']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['startStripe']>>>
+    }
+  }
+  'vendor.vendor_payout_methods.start_paypal': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/payout-method/paypal/connect'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['startPaypal']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['startPaypal']>>>
+    }
+  }
+  'vendor.vendor_payout_methods.complete_paypal': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/payout-method/paypal/callback'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_payout').paypalConnectCallbackValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_payout').paypalConnectCallbackValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['completePaypal']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_payout_methods_controller').default['completePaypal']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'vendor.vendor_addresses.index': {
     methods: ["GET","HEAD"]
     pattern: '/v1/vendor/addresses'
@@ -475,6 +595,78 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_addresses_controller').default['destroy']>>>
     }
   }
+  'vendor.vendor_onboarding.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/onboarding'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['show']>>>
+    }
+  }
+  'vendor.vendor_onboarding.update_profile': {
+    methods: ["PATCH"]
+    pattern: '/v1/vendor/onboarding/profile'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_onboarding').updateVendorProfileValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_onboarding').updateVendorProfileValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['updateProfile']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['updateProfile']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_onboarding.set_capabilities': {
+    methods: ["PUT"]
+    pattern: '/v1/vendor/onboarding/capabilities'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_onboarding').setVendorCapabilitiesValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_onboarding').setVendorCapabilitiesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['setCapabilities']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['setCapabilities']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_onboarding.accept_agreement': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/onboarding/agreement'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_onboarding').acceptVendorAgreementValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_onboarding').acceptVendorAgreementValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['acceptAgreement']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['acceptAgreement']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_onboarding.upload_tax': {
+    methods: ["PUT"]
+    pattern: '/v1/vendor/onboarding/tax'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_onboarding').uploadVendorTaxDocumentValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_onboarding').uploadVendorTaxDocumentValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['uploadTax']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['uploadTax']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_onboarding.submit': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/onboarding/submit'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['submit']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['submit']>>>
+    }
+  }
   'admin.admin_quotes.needs_review': {
     methods: ["GET","HEAD"]
     pattern: '/v1/admin/quotes/needs-review'
@@ -499,6 +691,246 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_quotes_controller').default['split']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'admin.admin_vendor_payouts.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/payouts'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['index']>>>
+    }
+  }
+  'admin.admin_vendor_payouts.release': {
+    methods: ["POST"]
+    pattern: '/v1/admin/payouts/:uuid/release'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_payout').releasePayoutValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_payout').releasePayoutValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['release']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['release']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_vendor_payouts.cancel': {
+    methods: ["POST"]
+    pattern: '/v1/admin/payouts/:uuid/cancel'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['cancel']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['cancel']>>>
+    }
+  }
+  'admin.admin_vendor_payouts.retry': {
+    methods: ["POST"]
+    pattern: '/v1/admin/payouts/:uuid/retry'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['retry']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['retry']>>>
+    }
+  }
+  'admin.admin_vendor_payouts.rates': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/vendors/:uuid/payout-rates'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['rates']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['rates']>>>
+    }
+  }
+  'admin.admin_vendor_payouts.update_rates': {
+    methods: ["PUT"]
+    pattern: '/v1/admin/vendors/:uuid/payout-rates'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_payout').payoutRatesValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_payout').payoutRatesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['updateRates']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['updateRates']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_vendor_payouts.update_vendor': {
+    methods: ["PATCH"]
+    pattern: '/v1/admin/vendors/:uuid'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_payout').updateVendorPayoutSettingsValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_payout').updateVendorPayoutSettingsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['updateVendor']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_payouts_controller').default['updateVendor']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_invitations.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/invitations'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['index']>>>
+    }
+  }
+  'admin.admin_invitations.store': {
+    methods: ["POST"]
+    pattern: '/v1/admin/invitations'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/invitation').createInvitationValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/invitation').createInvitationValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_invitations.resend': {
+    methods: ["POST"]
+    pattern: '/v1/admin/invitations/:uuid/resend'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['resend']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['resend']>>>
+    }
+  }
+  'admin.admin_invitations.revoke': {
+    methods: ["POST"]
+    pattern: '/v1/admin/invitations/:uuid/revoke'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['revoke']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_invitations_controller').default['revoke']>>>
+    }
+  }
+  'admin.admin_vendors.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/vendors'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['index']>>>
+    }
+  }
+  'admin.admin_vendors.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/vendors/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['show']>>>
+    }
+  }
+  'admin.admin_vendors.review_capability': {
+    methods: ["PATCH"]
+    pattern: '/v1/admin/vendors/:uuid/capabilities/:technology'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/admin_vendor').reviewCapabilityValidator)>>
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; technology: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/admin_vendor').reviewCapabilityValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reviewCapability']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reviewCapability']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_vendors.tax_document': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/vendors/:uuid/tax/document'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['taxDocument']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['taxDocument']>>>
+    }
+  }
+  'admin.admin_vendors.verify_tax': {
+    methods: ["POST"]
+    pattern: '/v1/admin/vendors/:uuid/tax/verify'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['verifyTax']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['verifyTax']>>>
+    }
+  }
+  'admin.admin_vendors.reject_tax': {
+    methods: ["POST"]
+    pattern: '/v1/admin/vendors/:uuid/tax/reject'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/admin_vendor').rejectTaxDocumentValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/admin_vendor').rejectTaxDocumentValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['rejectTax']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['rejectTax']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_vendors.activate': {
+    methods: ["POST"]
+    pattern: '/v1/admin/vendors/:uuid/activate'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['activate']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['activate']>>>
+    }
+  }
+  'admin.admin_vendors.suspend': {
+    methods: ["POST"]
+    pattern: '/v1/admin/vendors/:uuid/suspend'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/admin_vendor').suspendVendorValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/admin_vendor').suspendVendorValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['suspend']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['suspend']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_vendors.reinstate': {
+    methods: ["POST"]
+    pattern: '/v1/admin/vendors/:uuid/reinstate'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reinstate']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reinstate']>>>
+    }
+  }
   'webhooks.stripe_webhooks': {
     methods: ["POST"]
     pattern: '/v1/webhooks/stripe'
@@ -521,6 +953,18 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/paypal_webhooks_controller').default['handle']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/paypal_webhooks_controller').default['handle']>>>
+    }
+  }
+  'webhooks.easypost_webhooks': {
+    methods: ["POST"]
+    pattern: '/v1/webhooks/easypost'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/easypost_webhooks_controller').default['handle']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/easypost_webhooks_controller').default['handle']>>>
     }
   }
 }

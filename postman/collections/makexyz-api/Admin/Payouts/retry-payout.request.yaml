@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Retry Payout'
+method: POST
+url: '{{base_url}}/admin/payouts/{{payout_uuid}}/retry'
+order: 4000

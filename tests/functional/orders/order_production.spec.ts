@@ -12,6 +12,7 @@ import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import { fakePaymentGateway } from '#services/payment_gateway_service'
 
 async function signupVendor(client: any) {
@@ -27,7 +28,11 @@ async function signupVendor(client: any) {
   const user = await User.findByOrFail('email', email)
   user.role = 'vendor'
   await user.save()
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
 
   return { session: response.session(), user, vendor }
 }
@@ -174,6 +179,23 @@ test.group('Order production tracking', (group) => {
     assert.lengthOf(history, 1)
     assert.equal(history[0].oldStatus, 'in_progress')
     assert.equal(history[0].newStatus, 'ready_to_ship')
+  })
+
+  test('a suspended vendor can still finish orders they already accepted', async ({
+    client,
+    assert,
+  }) => {
+    const { session, vendor } = await signupVendor(client)
+    const { order } = await createAcceptedOrder(vendor, 'in_progress')
+    vendor.merge({ status: 'suspended', suspensionReason: 'Quality review' })
+    await vendor.save()
+
+    const response = await client
+      .patch(`/v1/vendor/orders/${order.uuid}/ready-to-ship`)
+      .withSession(session)
+
+    response.assertStatus(200)
+    assert.equal((response.body().data as { status: string }).status, 'ready_to_ship')
   })
 
   test('refuses ready-to-ship on an order still only accepted', async ({ client }) => {

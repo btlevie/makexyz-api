@@ -202,6 +202,35 @@ export class FeeSchema extends BaseModel {
   declare updatedAt: DateTime | null
 }
 
+export class InvitationSchema extends BaseModel {
+  static $columns = ['acceptedAt', 'acceptedUserId', 'createdAt', 'email', 'expiresAt', 'id', 'invitedById', 'lastSentAt', 'revokedAt', 'role', 'updatedAt', 'uuid'] as const
+  $columns = InvitationSchema.$columns
+  @column.dateTime()
+  declare acceptedAt: DateTime | null
+  @column()
+  declare acceptedUserId: number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare email: string
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare invitedById: number | null
+  @column.dateTime()
+  declare lastSentAt: DateTime | null
+  @column.dateTime()
+  declare revokedAt: DateTime | null
+  @column()
+  declare role: 'admin' | 'vendor'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+}
+
 export class MaterialColorSchema extends BaseModel {
   static $columns = ['createdAt', 'hex', 'id', 'isDefault', 'materialId', 'name', 'updatedAt', 'uuid'] as const
   $columns = MaterialColorSchema.$columns
@@ -1007,8 +1036,37 @@ export class VendorPayoutSchema extends BaseModel {
   declare vendorId: number | null
 }
 
+export class VendorTaxDocumentSchema extends BaseModel {
+  static $columns = ['createdAt', 'formType', 'id', 'originalName', 'rejectedAt', 'rejectedReason', 'storageKey', 'updatedAt', 'uuid', 'vendorId', 'verifiedAt', 'verifiedById'] as const
+  $columns = VendorTaxDocumentSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare formType: 'w9' | 'w8ben' | 'w8bene'
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare originalName: string | null
+  @column.dateTime()
+  declare rejectedAt: DateTime | null
+  @column()
+  declare rejectedReason: string | null
+  @column()
+  declare storageKey: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+  @column()
+  declare vendorId: number
+  @column.dateTime()
+  declare verifiedAt: DateTime | null
+  @column()
+  declare verifiedById: number | null
+}
+
 export class VendorTechnologyCapabilitySchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'isPreferred', 'technology', 'updatedAt', 'vendorId'] as const
+  static $columns = ['createdAt', 'id', 'isPreferred', 'reviewedAt', 'reviewedById', 'status', 'technology', 'updatedAt', 'vendorId'] as const
   $columns = VendorTechnologyCapabilitySchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
@@ -1016,6 +1074,12 @@ export class VendorTechnologyCapabilitySchema extends BaseModel {
   declare id: number
   @column()
   declare isPreferred: boolean
+  @column.dateTime()
+  declare reviewedAt: DateTime | null
+  @column()
+  declare reviewedById: number | null
+  @column()
+  declare status: 'requested' | 'approved' | 'rejected'
   @column()
   declare technology: 'fdm' | 'sla' | 'sls'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -1025,14 +1089,26 @@ export class VendorTechnologyCapabilitySchema extends BaseModel {
 }
 
 export class VendorSchema extends BaseModel {
-  static $columns = ['createdAt', 'displayName', 'id', 'payoutHoldDays', 'payoutMethodError', 'payoutMethodErrorAt', 'payoutProvider', 'paypalEmail', 'paypalPayerId', 'quickbooksVendorId', 'stripeAccountId', 'stripePayoutsEnabled', 'taxStatus', 'updatedAt', 'userId', 'uuid'] as const
+  static $columns = ['activatedAt', 'activatedById', 'agreementAcceptedAt', 'agreementAcceptedIp', 'agreementVersion', 'createdAt', 'displayName', 'id', 'legalName', 'payoutHoldDays', 'payoutMethodError', 'payoutMethodErrorAt', 'payoutProvider', 'paypalEmail', 'paypalPayerId', 'phone', 'quickbooksVendorId', 'status', 'stripeAccountId', 'stripePayoutsEnabled', 'submittedAt', 'suspendedAt', 'suspensionReason', 'taxClassification', 'updatedAt', 'userId', 'uuid'] as const
   $columns = VendorSchema.$columns
+  @column.dateTime()
+  declare activatedAt: DateTime | null
+  @column()
+  declare activatedById: number | null
+  @column.dateTime()
+  declare agreementAcceptedAt: DateTime | null
+  @column()
+  declare agreementAcceptedIp: string | null
+  @column()
+  declare agreementVersion: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare displayName: string | null
   @column({ isPrimary: true })
   declare id: number
+  @column()
+  declare legalName: string | null
   @column()
   declare payoutHoldDays: number | null
   @column()
@@ -1046,13 +1122,23 @@ export class VendorSchema extends BaseModel {
   @column()
   declare paypalPayerId: string | null
   @column()
+  declare phone: string | null
+  @column()
   declare quickbooksVendorId: string | null
+  @column()
+  declare status: 'onboarding' | 'pending_review' | 'active' | 'suspended'
   @column()
   declare stripeAccountId: string | null
   @column()
   declare stripePayoutsEnabled: boolean
+  @column.dateTime()
+  declare submittedAt: DateTime | null
+  @column.dateTime()
+  declare suspendedAt: DateTime | null
   @column()
-  declare taxStatus: string | null
+  declare suspensionReason: string | null
+  @column()
+  declare taxClassification: 'individual' | 'sole_prop' | 'c_corp' | 's_corp' | 'partnership' | 'llc' | 'foreign_individual' | 'foreign_entity' | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()

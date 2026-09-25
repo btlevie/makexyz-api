@@ -10,6 +10,7 @@ import Shipment from '#models/shipment'
 import ShippingLabel from '#models/shipping_label'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import { fakeShippingLabelGateway } from '#services/shipping_label_gateway_service'
 
 async function signupVendor(client: any) {
@@ -25,7 +26,11 @@ async function signupVendor(client: any) {
   const user = await User.findByOrFail('email', email)
   user.role = 'vendor'
   await user.save()
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
 
   return { session: response.session(), user, vendor }
 }
@@ -344,7 +349,7 @@ test.group('Vendor shipping labels', (group) => {
       .post(`/v1/vendor/orders/${order.uuid}/shipments/${firstUuid}/void`)
       .withSession(session)
     voidResponse.assertStatus(200)
-    const voided = voidResponse.body().data as Record<string, any>
+    const voided = voidResponse.body()?.data as Record<string, any>
     assert.equal(voided.status, 'cancelled')
     assert.isNotNull(voided.label.voidedAt)
     assert.equal(voided.label.refundStatus, 'submitted')
@@ -355,7 +360,7 @@ test.group('Vendor shipping labels', (group) => {
 
     const list = await client.get(`/v1/vendor/orders/${order.uuid}/shipments`).withSession(session)
     list.assertStatus(200)
-    const shipments = list.body().data as Record<string, any>[]
+    const shipments = list.body()?.data as Record<string, any>[]
     assert.lengthOf(shipments, 2)
     assert.equal(shipments[0].status, 'label_created')
     assert.equal(shipments[1].status, 'cancelled')

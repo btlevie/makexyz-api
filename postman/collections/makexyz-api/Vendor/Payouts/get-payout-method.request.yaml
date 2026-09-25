@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Payout Method'
+method: GET
+url: '{{base_url}}/vendor/payout-method'
+order: 2000

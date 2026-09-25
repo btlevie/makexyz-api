@@ -1,0 +1,3 @@
+$kind: collection
+name: Payouts
+description: 'Admin vendor payout management: list, release, cancel, retry payouts, and manage per-vendor payout rates.'

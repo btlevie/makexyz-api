@@ -10,6 +10,7 @@ import Quote from '#models/quote'
 import QuoteItem from '#models/quote_item'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import env from '#start/env'
 
 function sign(payload: Record<string, unknown>) {
@@ -81,8 +82,14 @@ async function seedCapableVendor(technology: 'fdm' | 'sla' | 'sls' = 'fdm') {
     password: 'password123',
     role: 'vendor',
   })
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
-  await vendor.related('technologyCapabilities').create({ technology, isPreferred: false })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
+  await vendor
+    .related('technologyCapabilities')
+    .create({ technology, isPreferred: false, status: 'approved' })
   return vendor
 }
 

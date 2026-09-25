@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Shipments'
+method: GET
+url: '{{base_url}}/vendor/orders/{{order_uuid}}/shipments'
+order: 1000

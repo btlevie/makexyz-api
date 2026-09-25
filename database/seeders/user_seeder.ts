@@ -12,6 +12,13 @@ export default class extends BaseSeeder {
         role: 'admin',
         uuid: string.uuid(),
       },
+      {
+        email: 'anson@makexyz.com',
+        password: 'password',
+        fullName: 'Anson Wing',
+        role: 'admin',
+        uuid: string.uuid(),
+      },
     ])
   }
 }

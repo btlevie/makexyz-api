@@ -11,6 +11,7 @@ import OrderStatusHistory from '#models/order_status_history'
 import Project from '#models/project'
 import Shipment from '#models/shipment'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import User from '#models/user'
 import WebhookEvent from '#models/webhook_event'
 
@@ -29,7 +30,11 @@ async function createLabelledOrder(status: Order['status'] = 'ready_to_ship') {
     password: 'password123',
     role: 'vendor',
   })
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
   const customer = await Customer.create({ uuid: string.uuid() })
   const project = await Project.create({
     uuid: string.uuid(),

@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'EasyPost Webhook'
+method: POST
+url: '{{base_url}}/webhooks/easypost'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "description": "tracker.updated",
+      "result": {}
+    }

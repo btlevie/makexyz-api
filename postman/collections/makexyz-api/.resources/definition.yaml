@@ -1,0 +1,24 @@
+$kind: collection
+name: 'makexyz API'
+description: 'Backend API for the makexyz manufacturing marketplace. Connects customers with vendors for 3D printing and manufacturing services. Domain lifecycle: Project → Quote → Checkout → Payment → Order → Vendor Acceptance → Production → Shipping → Payout.'
+variables:
+  - key: base_url
+    value: 'http://localhost:3333/v1'
+  - key: project_uuid
+    value: ''
+  - key: quote_uuid
+    value: ''
+  - key: checkout_session_uuid
+    value: ''
+  - key: file_uuid
+    value: ''
+  - key: order_uuid
+    value: ''
+  - key: address_uuid
+    value: ''
+  - key: shipment_uuid
+    value: ''
+  - key: vendor_uuid
+    value: ''
+  - key: payout_uuid
+    value: ''

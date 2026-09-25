@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Update Vendor Payout Rates'
+method: PUT
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/payout-rates'
+order: 6000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "rates": [
+        {
+          "materialUuid": "{{material_uuid}}",
+          "percentage": 70.00
+        }
+      ]
+    }

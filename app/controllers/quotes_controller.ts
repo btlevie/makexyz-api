@@ -37,7 +37,7 @@ export default class QuotesController {
   async index(ctx: HttpContext) {
     const { params, response, serialize } = ctx
 
-    const project = isStaff(ctx)
+    const project = (await isStaff(ctx))
       ? await Project.findBy('uuid', params.projectUuid)
       : await resolveProject(ctx, params.projectUuid)
     if (!project) {
@@ -172,7 +172,7 @@ export default class QuotesController {
       shippingPostalCode,
     } = await request.validateUsing(configureQuoteValidator)
 
-    const project = isStaff(ctx)
+    const project = (await isStaff(ctx))
       ? await Project.findBy('uuid', params.projectUuid)
       : await resolveProject(ctx, params.projectUuid)
     if (!project) {
@@ -275,7 +275,7 @@ export default class QuotesController {
   async accept(ctx: HttpContext) {
     const { params, response, serialize } = ctx
 
-    const project = isStaff(ctx)
+    const project = (await isStaff(ctx))
       ? await Project.findBy('uuid', params.projectUuid)
       : await resolveProject(ctx, params.projectUuid)
     if (!project) {

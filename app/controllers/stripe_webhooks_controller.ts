@@ -35,7 +35,7 @@ export default class StripeWebhooksController {
 
       switch (event.type) {
         case 'charge.refunded': {
-          const charge = event.data.object as Stripe.Charge
+          const charge = event.data.object
           const paymentIntentId =
             typeof charge.payment_intent === 'string'
               ? charge.payment_intent
@@ -70,7 +70,7 @@ export default class StripeWebhooksController {
         }
         case 'charge.dispute.created':
         case 'charge.dispute.closed': {
-          const dispute = event.data.object as Stripe.Dispute
+          const dispute = event.data.object
           const paymentIntentId =
             typeof dispute.payment_intent === 'string'
               ? dispute.payment_intent

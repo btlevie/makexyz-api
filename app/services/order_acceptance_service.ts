@@ -12,6 +12,7 @@ import { captureCheckoutSession } from '#services/checkout_service'
 import { vendorCanAcceptOrder } from '#services/order_routing_service'
 import { computePayoutBreakdown } from '#services/payout_calculation_service'
 import { assertPayoutMethodReady } from '#services/vendor_payout_method_service'
+import { hasCurrentAgreement } from '#services/vendor_onboarding_service'
 import { createPayoutForAcceptedOrder } from '#services/vendor_payout_service'
 
 export class VendorNotEligibleError extends Error {
@@ -33,6 +34,12 @@ export class OrderNotAvailableError extends Error {
  * for a vendor's "what can I accept right now" listing.
  */
 export async function listAcceptableOrders(vendor: Vendor): Promise<Order[]> {
+  // vendorCanAcceptOrder would say no to every order anyway (it only counts
+  // active vendors) - this just skips the per-order queries.
+  if (vendor.status !== 'active') {
+    return []
+  }
+
   // Candidates are any unaccepted open order, regardless of routing stage -
   // vendorCanAcceptOrder is what actually applies the preferred/open
   // eligibility rule per order below.
@@ -67,8 +74,17 @@ export async function listAcceptableOrders(vendor: Vendor): Promise<Order[]> {
  * ready payout method (PayoutMethodNotReadyError) and a payout rate for every
  * item's material (PayoutRateMissingError), and the payout snapshot is
  * created in the same transaction as the status flip.
+ *
+ * The vendor must also be active with approved capabilities (checked inside
+ * vendorCanAcceptOrder) and on the current vendor agreement version - a
+ * version bump blocks new acceptances until they re-accept, without
+ * deactivating them (see docs/VENDOR_ONBOARDING.md).
  */
 export async function acceptOrder(order: Order, vendor: Vendor, userId: number): Promise<Order> {
+  if (!hasCurrentAgreement(vendor)) {
+    throw new VendorNotEligibleError('Accept the current vendor agreement before accepting orders')
+  }
+
   const eligible = await vendorCanAcceptOrder(vendor.id, order)
   if (!eligible) {
     throw new VendorNotEligibleError(

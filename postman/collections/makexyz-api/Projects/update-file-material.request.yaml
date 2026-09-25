@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Update File Material'
+method: PATCH
+url: '{{base_url}}/projects/files/{{file_uuid}}/material'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "materialUuid": "{{material_uuid}}"
+    }

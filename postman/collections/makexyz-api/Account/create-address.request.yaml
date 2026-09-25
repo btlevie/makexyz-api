@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Create Address'
+method: POST
+url: '{{base_url}}/account/addresses'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "label": "Home",
+      "recipientName": "Jane Doe",
+      "line1": "123 Main St",
+      "line2": "",
+      "city": "San Francisco",
+      "state": "CA",
+      "postalCode": "94105",
+      "country": "US",
+      "isDefault": true
+    }

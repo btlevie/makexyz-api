@@ -1,0 +1,3 @@
+$kind: collection
+name: Auth
+description: 'Authentication endpoints: signup, login, logout, and new customer registration.'

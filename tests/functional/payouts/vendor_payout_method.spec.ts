@@ -4,6 +4,7 @@ import { test } from '@japa/runner'
 import testUtils from '@adonisjs/core/services/test_utils'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { activeVendorAttributes } from '#tests/helpers/vendors'
 import { fakePaypalIdentityClient } from '#services/paypal_identity_service'
 import { fakeStripeConnectClient } from '#services/stripe_connect_service'
 
@@ -20,7 +21,11 @@ async function signupVendor(client: any) {
   const user = await User.findByOrFail('email', email)
   user.role = 'vendor'
   await user.save()
-  const vendor = await Vendor.create({ uuid: string.uuid(), userId: user.id })
+  const vendor = await Vendor.create({
+    uuid: string.uuid(),
+    userId: user.id,
+    ...activeVendorAttributes(),
+  })
 
   return { session: response.session(), user, vendor }
 }

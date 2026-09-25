@@ -1,0 +1,3 @@
+$kind: collection
+name: Quotes
+description: 'Quote endpoints. Prices project files and manages the quote lifecycle: create, configure (shipping/address/production time), accept.'
