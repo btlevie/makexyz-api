@@ -18,3 +18,18 @@ body:
       type: text
       value: fdm
       description: 'fdm, sla, or sls (defaults to fdm)'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // Capture the project, its first file, and the anonymous grant for the
+      // follow-up requests. An authenticated caller gets no grant, so clear any
+      // stale one rather than leave it pointing at a different project.
+      const data = pm.response.json().data;
+      if (data && data.project) {
+        pm.collectionVariables.set('project_uuid', data.project.uuid);
+        if (data.project.files && data.project.files.length > 0) {
+          pm.collectionVariables.set('file_uuid', data.project.files[0].uuid);
+        }
+        pm.collectionVariables.set('project_grant', data.grant || '');
+      }

@@ -3,3 +3,6 @@ name: 'List Production Time Options'
 method: GET
 url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/production-time-options'
 order: 1500
+headers:
+  - key: x-project-grant
+    value: '{{project_grant}}'

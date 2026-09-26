@@ -22,3 +22,22 @@ variables:
     value: ''
   - key: payout_uuid
     value: ''
+  - key: project_grant
+    value: ''
+scripts:
+  - type: http:beforeRequest
+    language: text/javascript
+    code: |-
+      // Requests that authorize with an anonymous project grant declare an
+      // x-project-grant header. Refuse to send them without a grant, so a
+      // missing one fails loudly here instead of as the API's deliberately
+      // vague "Project not found" 404.
+      const grantHeader = pm.request.headers.get('x-project-grant');
+      if (grantHeader !== undefined) {
+        const grant = pm.variables.replaceIn(grantHeader);
+        if (!grant || /{{.*}}/.test(grant)) {
+          throw new Error(
+            'x-project-grant is required: project_grant is empty. Run "Upload Instant Quote Files" first to capture one.'
+          );
+        }
+      }

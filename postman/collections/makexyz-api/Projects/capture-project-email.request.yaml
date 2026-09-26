@@ -4,6 +4,8 @@ method: POST
 url: '{{base_url}}/projects/{{project_uuid}}/email'
 order: 6000
 headers:
+  - key: x-project-grant
+    value: '{{project_grant}}'
   - key: Content-Type
     value: application/json
 body:
