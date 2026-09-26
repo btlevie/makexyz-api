@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Update Onboarding Profile'
+method: PATCH
+url: '{{base_url}}/vendor/onboarding/profile'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "displayName": "Acme 3D Printing",
+      "legalName": "Acme Corp LLC",
+      "phone": "+1-555-555-5555"
+    }

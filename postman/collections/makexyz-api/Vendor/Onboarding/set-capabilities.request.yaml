@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Set Capabilities'
+method: PUT
+url: '{{base_url}}/vendor/onboarding/capabilities'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "technologies": ["fdm", "sla"]
+    }

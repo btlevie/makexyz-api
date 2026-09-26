@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Vendor'
+method: GET
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}'
+order: 2000

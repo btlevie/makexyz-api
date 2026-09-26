@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Revoke Invitation'
+method: POST
+url: '{{base_url}}/admin/invitations/{{invitation_uuid}}/revoke'
+order: 4000

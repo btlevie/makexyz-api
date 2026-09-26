@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Activate Vendor'
+method: POST
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/activate'
+order: 7000

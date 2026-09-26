@@ -1,0 +1,35 @@
+$kind: http-request
+name: 'Update Slicing Result'
+method: PATCH
+url: '{{base_url}}/projects/files/{{file_uuid}}/slicing-result'
+order: 5000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "completed",
+      "gcodeStorageKey": "slices/project-uuid/file-uuid.gcode",
+      "volume": 12.5,
+      "x": 50.0,
+      "y": 40.0,
+      "z": 30.0,
+      "infill": 15,
+      "layerHeight": 0.2,
+      "supportMaterialGrams": 1.2,
+      "modelMaterialGrams": 8.5,
+      "printTimeEstimatedSeconds": 3600,
+      "surfaceAreaMm2": 4200.0,
+      "variants": [
+        {
+          "variant": "baseline",
+          "infill": 15,
+          "layerHeight": 0.2,
+          "filamentUsedGrams": 9.7,
+          "printTimeEstimatedSeconds": 3600,
+          "gcodeStorageKey": "slices/project-uuid/file-uuid-baseline.gcode"
+        }
+      ]
+    }

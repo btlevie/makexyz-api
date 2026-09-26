@@ -1,0 +1,19 @@
+$kind: http-request
+url: localhost:9000/2015-03-31/functions/function/invocations
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"Records\": [\r
+
+    \        {\r
+
+    \            \"body\": \"{\\\"projectFileUuid\\\": \\\"a6fce9fb-b5fc-4658-a14f-e52812c01176\\\", \\\"fileStorageKey\\\": \\\"projects/02d17e24-6546-4d7a-9c4d-5cb8c4e767d3/a6fce9fb-b5fc-4658-a14f-e52812c01176.stl\\\", \\\"technology\\\": \\\"fdm\\\", \\\"material\\\": \\\"PLA\\\"}\"\r
+
+    \        }\r
+
+    \    ]\r
+
+    }"
+order: 1790350434308

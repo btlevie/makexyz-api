@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Reinstate Vendor'
+method: POST
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/reinstate'
+order: 9000

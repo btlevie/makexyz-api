@@ -1,0 +1,8 @@
+$kind: http-request
+name: 'Show Invitation'
+method: GET
+url: '{{base_url}}/auth/invitations/{{invitation_uuid}}?signature={{invitation_signature}}'
+order: 4000
+queryParams:
+  - key: signature
+    value: '{{invitation_signature}}'

@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Suspend Vendor'
+method: POST
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/suspend'
+order: 8000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Policy violation."
+    }

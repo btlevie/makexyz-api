@@ -1,0 +1,10 @@
+$kind: http-request
+name: 'List Vendors'
+method: GET
+url: '{{base_url}}/admin/vendors'
+order: 1000
+queryParams:
+  - key: status
+    value: pending_review
+    description: 'Filter by status: onboarding, pending_review, active, suspended'
+    disabled: true

@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Accept Invitation'
+method: POST
+url: '{{base_url}}/auth/invitations/{{invitation_uuid}}/accept?signature={{invitation_signature}}'
+order: 5000
+queryParams:
+  - key: signature
+    value: '{{invitation_signature}}'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fullName": "Jane Vendor",
+      "password": "password123",
+      "passwordConfirmation": "password123"
+    }

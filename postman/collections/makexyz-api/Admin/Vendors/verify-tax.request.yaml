@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Verify Tax'
+method: POST
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/tax/verify'
+order: 5000

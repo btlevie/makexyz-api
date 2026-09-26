@@ -1,0 +1,18 @@
+$kind: http-request
+name: 'Upload Tax'
+method: PUT
+url: '{{base_url}}/vendor/onboarding/tax'
+order: 5000
+body:
+  type: formdata
+  content:
+    - key: taxClassification
+      type: text
+      value: individual
+    - key: formType
+      type: text
+      value: w9
+    - key: file
+      type: file
+      src: ''
+      description: 'PDF tax document (max 10mb)'

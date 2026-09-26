@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Accept Agreement'
+method: POST
+url: '{{base_url}}/vendor/onboarding/agreement'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "version": "2024-01-01"
+    }

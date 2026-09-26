@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'Get Tax Document'
+method: GET
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/tax/document'
+order: 4000

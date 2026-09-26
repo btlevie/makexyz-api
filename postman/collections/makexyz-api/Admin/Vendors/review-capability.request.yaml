@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Review Capability'
+method: PATCH
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/capabilities/{{technology}}'
+order: 3000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "approved",
+      "isPreferred": true
+    }

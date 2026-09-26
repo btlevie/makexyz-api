@@ -1,0 +1,14 @@
+$kind: http-request
+name: 'Reject Tax'
+method: POST
+url: '{{base_url}}/admin/vendors/{{vendor_uuid}}/tax/reject'
+order: 6000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Document is illegible or incorrect form type."
+    }
