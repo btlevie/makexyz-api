@@ -81,7 +81,9 @@ export async function getActiveProductionTimeConfig(): Promise<ResolvedProductio
     problems.push(`baseFee must not be negative (got ${baseFee})`)
   }
   if (growthRate <= 1) {
-    problems.push(`growthRate must be greater than 1 for cost to increase with speed (got ${growthRate})`)
+    problems.push(
+      `growthRate must be greater than 1 for cost to increase with speed (got ${growthRate})`
+    )
   }
 
   if (problems.length > 0) {
@@ -144,4 +146,32 @@ export function isProductionTimeFeasible(
 
   const availableSeconds = selectedBusinessDays * 24 * 60 * 60
   return printTimeEstimatedSeconds <= availableSeconds
+}
+
+export type ProductionTimeOption = {
+  businessDays: number
+  /** Dollars, not cents. */
+  feeAmount: number
+  isStandard: boolean
+  /** False when the slowest part can't be produced within this turnaround. */
+  available: boolean
+}
+
+/**
+ * Every configured tier, slowest first (config order), priced with the same
+ * computeProductionTimeFee/isProductionTimeFeasible configure uses - so an
+ * `available` tier is exactly one configure will accept for this quote.
+ * Unavailable tiers are kept rather than dropped so the frontend can show
+ * them disabled.
+ */
+export function listProductionTimeOptions(
+  config: ResolvedProductionTimeConfig,
+  slowestPrintTimeSeconds: number
+): ProductionTimeOption[] {
+  return config.tierBusinessDays.map((businessDays) => ({
+    businessDays,
+    feeAmount: computeProductionTimeFee(businessDays, config),
+    isStandard: businessDays === config.standardBusinessDays,
+    available: isProductionTimeFeasible(slowestPrintTimeSeconds, businessDays),
+  }))
 }

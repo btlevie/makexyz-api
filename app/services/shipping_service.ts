@@ -5,7 +5,22 @@
  * about them is meant to be ops-tunable without a deploy.
  */
 
-export type ShippingMethod = 'free' | 'ups_2day' | 'ups_overnight' | 'international_expedited'
+export const SHIPPING_METHODS = [
+  'free',
+  'ups_2day',
+  'ups_overnight',
+  'international_expedited',
+] as const
+
+export type ShippingMethod = (typeof SHIPPING_METHODS)[number]
+
+/** Customer-facing labels, served with the options so the frontend doesn't hardcode them. */
+export const SHIPPING_METHOD_NAMES: Record<ShippingMethod, string> = {
+  free: 'Free shipping',
+  ups_2day: 'UPS 2nd Day Air',
+  ups_overnight: 'UPS Next Day Air',
+  international_expedited: 'International Expedited',
+}
 
 export type ShippingOption = {
   method: ShippingMethod

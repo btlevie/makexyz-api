@@ -79,7 +79,31 @@ export function resolveColorForMaterialChange(
   return resolveDefaultColor(newMaterial)
 }
 
-const ALL_MATERIAL_TECHNOLOGIES = ['fdm', 'sla', 'sls'] as const
+export const ALL_MATERIAL_TECHNOLOGIES = ['fdm', 'sla', 'sls'] as const
+
+export type MaterialCatalogGroup = {
+  technology: Material['technology']
+  materials: Material[]
+}
+
+/**
+ * Every selectable technology -> material -> color, for the instant-quote
+ * option pickers. Grouped per technology in ALL_MATERIAL_TECHNOLOGIES order,
+ * including a technology with no materials (an empty group) so the frontend's
+ * technology list doesn't silently depend on seed data. Defaults sort first
+ * at both levels, so the frontend can render the lists as-is.
+ */
+export async function listMaterialCatalog(): Promise<MaterialCatalogGroup[]> {
+  const materials = await Material.query()
+    .preload('colors', (query) => query.orderBy('isDefault', 'desc').orderBy('name', 'asc'))
+    .orderBy('isDefault', 'desc')
+    .orderBy('name', 'asc')
+
+  return ALL_MATERIAL_TECHNOLOGIES.map((technology) => ({
+    technology,
+    materials: materials.filter((material) => material.technology === technology),
+  }))
+}
 
 /**
  * Checked at server boot (see start/material_defaults.ts) so a missing default

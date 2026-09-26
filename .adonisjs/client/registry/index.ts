@@ -150,6 +150,12 @@ const routes = {
     tokens: [{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes","type":0,"val":"quotes","end":""}],
     types: placeholder as Registry['projects.quotes.index']['types'],
   },
+  'projects.quotes.production_time_options': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/production-time-options',
+    tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/production-time-options","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/production-time-options","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/production-time-options","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/production-time-options","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/production-time-options","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/production-time-options","type":0,"val":"production-time-options","end":""}],
+    types: placeholder as Registry['projects.quotes.production_time_options']['types'],
+  },
   'projects.quotes.configure': {
     methods: ["PATCH"],
     pattern: '/v1/projects/:projectUuid/quotes/:uuid/configure',
@@ -191,6 +197,18 @@ const routes = {
     pattern: '/v1/serviceable-countries',
     tokens: [{"old":"/v1/serviceable-countries","type":0,"val":"v1","end":""},{"old":"/v1/serviceable-countries","type":0,"val":"serviceable-countries","end":""}],
     types: placeholder as Registry['serviceable_countries.index']['types'],
+  },
+  'materials.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/materials',
+    tokens: [{"old":"/v1/materials","type":0,"val":"v1","end":""},{"old":"/v1/materials","type":0,"val":"materials","end":""}],
+    types: placeholder as Registry['materials.index']['types'],
+  },
+  'shipping_options.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/shipping-options',
+    tokens: [{"old":"/v1/shipping-options","type":0,"val":"v1","end":""},{"old":"/v1/shipping-options","type":0,"val":"shipping-options","end":""}],
+    types: placeholder as Registry['shipping_options.index']['types'],
   },
   'vendor.vendor_orders.index': {
     methods: ["GET","HEAD"],

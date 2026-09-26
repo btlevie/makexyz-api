@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Materials'
+method: GET
+url: '{{base_url}}/materials'
+order: 1000

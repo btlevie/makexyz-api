@@ -28,6 +28,7 @@ export type ScannedRoutes = {
     'projects.project_files.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.quotes.store': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'projects.quotes.index': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
+    'projects.quotes.production_time_options': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.quotes.configure': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.quotes.accept': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.checkout_sessions.store': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
@@ -35,6 +36,8 @@ export type ScannedRoutes = {
     'projects.orders.show': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'projects.projects.capture_email': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'serviceable_countries.index': { paramsTuple?: []; params?: {} }
+    'materials.index': { paramsTuple?: []; params?: {} }
+    'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.accept': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -93,8 +96,11 @@ export type ScannedRoutes = {
     'profile.addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.project_files.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.quotes.index': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
+    'projects.quotes.production_time_options': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.orders.show': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'serviceable_countries.index': { paramsTuple?: []; params?: {} }
+    'materials.index': { paramsTuple?: []; params?: {} }
+    'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
     'vendor.vendor_shipments.index': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -119,8 +125,11 @@ export type ScannedRoutes = {
     'profile.addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.project_files.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.quotes.index': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
+    'projects.quotes.production_time_options': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.orders.show': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'serviceable_countries.index': { paramsTuple?: []; params?: {} }
+    'materials.index': { paramsTuple?: []; params?: {} }
+    'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
     'vendor.vendor_shipments.index': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }

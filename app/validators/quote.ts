@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine'
+import { SHIPPING_METHODS } from '#services/shipping_service'
 
 export const createQuoteValidator = vine.create({
   items: vine
@@ -19,7 +20,7 @@ export const createQuoteValidator = vine.create({
  */
 export const configureQuoteValidator = vine.create({
   destinationCountry: vine.string().fixedLength(2).toUpperCase(),
-  shippingMethod: vine.enum(['free', 'ups_2day', 'ups_overnight', 'international_expedited'] as const),
+  shippingMethod: vine.enum(SHIPPING_METHODS),
   productionTimeBusinessDays: vine.number().withoutDecimals().min(1),
   /**
    * Either addressUuid (an existing saved address) or the inline fields

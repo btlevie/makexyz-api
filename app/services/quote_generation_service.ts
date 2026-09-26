@@ -305,6 +305,23 @@ export type ComputedQuotePricing = {
 }
 
 /**
+ * The print time production-time feasibility is judged against - the
+ * slowest part in `items`. Shared with the production-time options endpoint
+ * so what it marks available is exactly what configure accepts.
+ */
+export async function slowestPrintTimeSeconds(items: QuoteItem[]): Promise<number> {
+  return Math.max(
+    0,
+    ...(await Promise.all(
+      items.map(async (item) => {
+        await item.load('projectFile')
+        return item.projectFile?.printTimeEstimatedSeconds ?? 0
+      })
+    ))
+  )
+}
+
+/**
  * Shipping fee, production-time feasibility + fee, and tax - the real
  * pricing computation, shared by `configureQuote` (normal path) and
  * `quote_split_service.ts` (finalizing each resulting quote after a split).
@@ -328,16 +345,7 @@ export async function computeShippingProductionAndTax(
   const shippingFeeAmount = resolveShippingFee(destinationCountry, shippingMethod)
 
   const productionTimeConfig = await getActiveProductionTimeConfig()
-  const slowestPrintTimeSeconds = Math.max(
-    0,
-    ...(await Promise.all(
-      items.map(async (item) => {
-        await item.load('projectFile')
-        return item.projectFile?.printTimeEstimatedSeconds ?? 0
-      })
-    ))
-  )
-  if (!isProductionTimeFeasible(slowestPrintTimeSeconds, productionTimeBusinessDays)) {
+  if (!isProductionTimeFeasible(await slowestPrintTimeSeconds(items), productionTimeBusinessDays)) {
     throw new ProductionTimeInfeasibleError(
       `${productionTimeBusinessDays} business days is not enough time to produce this order`
     )

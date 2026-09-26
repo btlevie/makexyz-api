@@ -48,6 +48,7 @@ export interface ApiDefinition {
     quotes: {
       store: typeof routes['projects.quotes.store']
       index: typeof routes['projects.quotes.index']
+      productionTimeOptions: typeof routes['projects.quotes.production_time_options']
       configure: typeof routes['projects.quotes.configure']
       accept: typeof routes['projects.quotes.accept']
     }
@@ -64,6 +65,12 @@ export interface ApiDefinition {
   }
   serviceableCountries: {
     index: typeof routes['serviceable_countries.index']
+  }
+  materials: {
+    index: typeof routes['materials.index']
+  }
+  shippingOptions: {
+    index: typeof routes['shipping_options.index']
   }
   vendor: {
     vendorOrders: {

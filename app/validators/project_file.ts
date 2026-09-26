@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine'
+import { ALL_MATERIAL_TECHNOLOGIES } from '#services/material_service'
 
 const ALLOWED_EXTENSIONS = [
   'stl',
@@ -17,7 +18,7 @@ const ALLOWED_EXTENSIONS = [
 
 export const uploadProjectFileValidator = vine.create({
   projectUuid: vine.string().uuid().optional(),
-  technology: vine.enum(['fdm', 'sla', 'sls'] as const).optional(),
+  technology: vine.enum(ALL_MATERIAL_TECHNOLOGIES).optional(),
   files: vine.array(
     vine.file({
       size: '100mb',
@@ -31,7 +32,7 @@ export const uploadProjectFileValidator = vine.create({
  * endpoint that uses this.
  */
 export const updateProjectFileTechnologyValidator = vine.create({
-  technology: vine.enum(['fdm', 'sla', 'sls'] as const),
+  technology: vine.enum(ALL_MATERIAL_TECHNOLOGIES),
 })
 
 /**

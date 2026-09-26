@@ -12,12 +12,15 @@ import type CheckoutSessionTransformer from '#transformers/checkout_session_tran
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
 import type InvitationTransformer from '#transformers/invitation_transformer'
+import type MaterialCatalogTransformer from '#transformers/material_catalog_transformer'
 import type OrderTransformer from '#transformers/order_transformer'
+import type ProductionTimeOptionTransformer from '#transformers/production_time_option_transformer'
 import type ProjectFileTransformer from '#transformers/project_file_transformer'
 import type PublicInvitationTransformer from '#transformers/public_invitation_transformer'
 import type QuoteTransformer from '#transformers/quote_transformer'
 import type ServiceableCountryTransformer from '#transformers/serviceable_country_transformer'
 import type ShipmentTransformer from '#transformers/shipment_transformer'
+import type ShippingOptionTransformer from '#transformers/shipping_option_transformer'
 import type UserTransformer from '#transformers/user_transformer'
 import type VendorOnboardingTransformer from '#transformers/vendor_onboarding_transformer'
 import type VendorPayoutMethodTransformer from '#transformers/vendor_payout_method_transformer'
@@ -54,9 +57,17 @@ export namespace Data {
   export namespace Invitation {
     export type Variants = InferVariants<InvitationTransformer>
   }
+  export type MaterialCatalog = InferData<MaterialCatalogTransformer>
+  export namespace MaterialCatalog {
+    export type Variants = InferVariants<MaterialCatalogTransformer>
+  }
   export type Order = InferData<OrderTransformer>
   export namespace Order {
     export type Variants = InferVariants<OrderTransformer>
+  }
+  export type ProductionTimeOption = InferData<ProductionTimeOptionTransformer>
+  export namespace ProductionTimeOption {
+    export type Variants = InferVariants<ProductionTimeOptionTransformer>
   }
   export type ProjectFile = InferData<ProjectFileTransformer>
   export namespace ProjectFile {
@@ -77,6 +88,10 @@ export namespace Data {
   export type Shipment = InferData<ShipmentTransformer>
   export namespace Shipment {
     export type Variants = InferVariants<ShipmentTransformer>
+  }
+  export type ShippingOption = InferData<ShippingOptionTransformer>
+  export namespace ShippingOption {
+    export type Variants = InferVariants<ShippingOptionTransformer>
   }
   export type User = InferData<UserTransformer>
   export namespace User {

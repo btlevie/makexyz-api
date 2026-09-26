@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Shipping Options'
+method: GET
+url: '{{base_url}}/shipping-options?country=US'
+order: 1000

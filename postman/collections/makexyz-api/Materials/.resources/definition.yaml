@@ -1,0 +1,3 @@
+$kind: collection
+name: 'Materials'
+description: 'Public endpoint returning every technology with its materials and each material''s colors. Used to populate the instant-quote technology/material/color pickers; the returned uuids are what the project-file material/color PATCH endpoints accept.'

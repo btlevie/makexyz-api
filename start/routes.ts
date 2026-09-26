@@ -110,6 +110,14 @@ router
         // single 'needs_review' quote awaiting one). Not throttled: a read
         // costs no S3 write or Lambda invocation.
         router.get(':projectUuid/quotes', [controllers.Quotes, 'index'])
+        // Public, same grant/customer/staff authorization as the other quote
+        // endpoints - the production-time tiers, fees, and which ones this
+        // quote's parts can meet, for the configure step. Not throttled: a
+        // read with no external calls.
+        router.get(':projectUuid/quotes/:uuid/production-time-options', [
+          controllers.Quotes,
+          'productionTimeOptions',
+        ])
         // Public: instant-quote customers are anonymous and authorize with
         // their project grant, same as the file-mutation endpoints above.
         // Throttled since it calls out to the tax calculator.
@@ -147,6 +155,18 @@ router
     // Public: feeds the checkout/quote-configuration address form's country
     // dropdown. Not project-scoped, so it lives outside the projects group.
     router.get('serviceable-countries', [controllers.ServiceableCountries, 'index'])
+
+    // Public: the instant-quote option pickers - every technology, its
+    // materials, and each material's colors, i.e. the valid values for the
+    // PATCH files/:uuid/{technology,material,color} endpoints. Not
+    // project-scoped and costs no S3 write or Lambda invocation, so it is
+    // neither grant-authorized nor throttled.
+    router.get('materials', [controllers.Materials, 'index'])
+
+    // Public: the configure step's shipping-method picker - the methods and
+    // fees offered to ?country=XX. Not project-scoped (shipping depends only
+    // on the destination), and not throttled: a read with no external calls.
+    router.get('shipping-options', [controllers.ShippingOptions, 'index'])
 
     // Vendor-authenticated - middleware.auth() resolves the user, the
     // controller does the role/Vendor-record check (no policy/ability

@@ -1,0 +1,3 @@
+$kind: collection
+name: 'Shipping Options'
+description: 'Public endpoint returning the shipping methods and fees offered to a destination country. Used to populate the quote-configuration shipping-method picker; the returned method is what the configure endpoint accepts as shippingMethod.'

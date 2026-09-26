@@ -295,6 +295,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['index']>>>
     }
   }
+  'projects.quotes.production_time_options': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/production-time-options'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { projectUuid: ParamValue; uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['productionTimeOptions']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['productionTimeOptions']>>>
+    }
+  }
   'projects.quotes.configure': {
     methods: ["PATCH"]
     pattern: '/v1/projects/:projectUuid/quotes/:uuid/configure'
@@ -377,6 +389,30 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/serviceable_countries_controller').default['index']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/serviceable_countries_controller').default['index']>>>
+    }
+  }
+  'materials.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/materials'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/materials_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/materials_controller').default['index']>>>
+    }
+  }
+  'shipping_options.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/shipping-options'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/shipping_option').listShippingOptionsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/shipping_options_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/shipping_options_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'vendor.vendor_orders.index': {

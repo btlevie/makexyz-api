@@ -1,0 +1,5 @@
+$kind: http-request
+name: 'List Production Time Options'
+method: GET
+url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/production-time-options'
+order: 1500

@@ -6,6 +6,7 @@ import Project from '#models/project'
 import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import QuoteTransformer from '#transformers/quote_transformer'
+import ProductionTimeOptionTransformer from '#transformers/production_time_option_transformer'
 import { configureQuoteValidator, createQuoteValidator } from '#validators/quote'
 import type { FdmPricingResult } from '#services/fdm_pricing_calculator'
 import { getActiveFdmConfig, PricingConfigurationError } from '#services/pricing_config_service'
@@ -15,12 +16,17 @@ import {
   priceLine,
   ProductionTimeInfeasibleError,
   QuoteNotConfigurableError,
+  slowestPrintTimeSeconds,
   UnpriceableLineError,
   type QuoteAddressInput,
   type ResolvedPricingConfigs,
 } from '#services/quote_generation_service'
 import { InvalidShippingSelectionError } from '#services/shipping_service'
-import { InvalidProductionTimeSelectionError } from '#services/production_time_service'
+import {
+  getActiveProductionTimeConfig,
+  InvalidProductionTimeSelectionError,
+  listProductionTimeOptions,
+} from '#services/production_time_service'
 import { isServiceableCountry } from '#services/serviceable_country_service'
 import { isStaff, resolveProject } from '#services/project_grant_service'
 
@@ -63,6 +69,40 @@ export default class QuotesController {
     const active = [...latestByLineage.values()].filter((quote) => quote.status !== 'rejected')
 
     return await serialize(QuoteTransformer.transform(active))
+  }
+
+  /**
+   * Feeds the quote-configuration production-time picker: every configured
+   * tier with its fee, and whether this quote's slowest part can actually be
+   * produced in that time. Quote-scoped (unlike shipping options) because
+   * feasibility depends on the quote's items. Uses the same config, fee
+   * formula, and feasibility check as configure, so an `available` tier is
+   * one configure will accept. Public, same grant/customer/staff
+   * authorization as configure/accept.
+   */
+  async productionTimeOptions(ctx: HttpContext) {
+    const { params, response, serialize } = ctx
+
+    const project = (await isStaff(ctx))
+      ? await Project.findBy('uuid', params.projectUuid)
+      : await resolveProject(ctx, params.projectUuid)
+    if (!project) {
+      return response.notFound({ error: 'Project not found' })
+    }
+
+    const quote = await Quote.query()
+      .where('uuid', params.uuid)
+      .where('projectId', project.id)
+      .preload('items')
+      .first()
+    if (!quote) {
+      return response.notFound({ error: 'Quote not found' })
+    }
+
+    const config = await getActiveProductionTimeConfig()
+    const options = listProductionTimeOptions(config, await slowestPrintTimeSeconds(quote.items))
+
+    return await serialize(ProductionTimeOptionTransformer.transform(options))
   }
 
   /**
