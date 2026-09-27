@@ -9,6 +9,7 @@ import ProjectFile from '#models/project_file'
 import ProductionTimeConfig from '#models/production_time_config'
 import Quote from '#models/quote'
 import ServiceableCountry from '#models/serviceable_country'
+import User from '#models/user'
 import { issueGrant } from '#services/project_grant_service'
 import { DEFAULT_ADDRESS_LABEL } from '#services/address_service'
 
@@ -82,6 +83,24 @@ async function createQuoteWithItem(
   })
 
   return { project, projectFile, quote, customer, grant: issueGrant(project) }
+}
+
+/** A logged-in admin session - staff may configure any project, grant or not. */
+async function signupAsAdmin(client: any) {
+  const email = `admin-${string.uuid()}@test.com`
+  const response = await client.post('/v1/auth/new-customer').json({
+    firstName: 'Admin',
+    lastName: 'User',
+    email,
+    password: 'password123',
+  })
+  response.assertStatus(200)
+
+  const user = await User.findByOrFail('email', email)
+  user.role = 'admin'
+  await user.save()
+
+  return response.session()
 }
 
 test.group('Quotes | configure', (group) => {
@@ -169,7 +188,10 @@ test.group('Quotes | configure', (group) => {
     assert.equal(data.productionTimeFeeAmount, '27.77')
   })
 
-  test('creates an unowned address for a fully anonymous project', async ({ client, assert }) => {
+  test('requires an email for a guest project, creating nothing without one', async ({
+    client,
+    assert,
+  }) => {
     await seedProductionTimeConfig()
     await seedServiceableCountry()
     const { project, quote, grant } = await createQuoteWithItem(3600, { withCustomer: false })
@@ -184,11 +206,177 @@ test.group('Quotes | configure', (group) => {
         ...validShippingAddress,
       })
 
+    response.assertStatus(422)
+    assert.lengthOf(await Quote.query().where('projectId', project.id), 1)
+    assert.lengthOf(await Address.all(), 0)
+    await project.refresh()
+    assert.isNull(project.customerId)
+  })
+
+  test('attaches a guest customer from the email and owns the new address', async ({
+    client,
+    assert,
+  }) => {
+    await seedProductionTimeConfig()
+    await seedServiceableCountry()
+    const { project, quote, grant } = await createQuoteWithItem(3600, { withCustomer: false })
+
+    const response = await client
+      .patch(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/configure`)
+      .header('x-project-grant', grant)
+      .json({
+        destinationCountry: 'US',
+        shippingMethod: 'free',
+        productionTimeBusinessDays: 5,
+        email: '  Guest@Example.com ',
+        ...validShippingAddress,
+      })
+
+    response.assertStatus(200)
+    const customer = await Customer.findByOrFail('email', 'guest@example.com')
+    assert.isNull(customer.userId)
+    assert.isFalse(customer.marketingOptIn)
+    assert.isNull(customer.marketingOptInUpdatedAt)
+    await project.refresh()
+    assert.equal(project.customerId, customer.id)
+
+    const data = response.body().data as Record<string, any>
+    const configuredQuote = await Quote.findByOrFail('uuid', data.uuid)
+    const address = await Address.findOrFail(configuredQuote.addressId!)
+    assert.equal(address.customerId, customer.id)
+  })
+
+  test('reuses the existing lead for an email given before', async ({ client, assert }) => {
+    await seedProductionTimeConfig()
+    await seedServiceableCountry()
+    const lead = await Customer.create({ uuid: string.uuid(), email: 'lead@example.com' })
+    const { project, quote, grant } = await createQuoteWithItem(3600, { withCustomer: false })
+
+    const response = await client
+      .patch(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/configure`)
+      .header('x-project-grant', grant)
+      .json({
+        destinationCountry: 'US',
+        shippingMethod: 'free',
+        productionTimeBusinessDays: 5,
+        email: 'LEAD@example.com',
+        ...validShippingAddress,
+      })
+
+    response.assertStatus(200)
+    await project.refresh()
+    assert.equal(project.customerId, lead.id)
+    assert.lengthOf(await Customer.all(), 1)
+  })
+
+  test('keeps the email even when the configuration is rejected', async ({ client, assert }) => {
+    await seedProductionTimeConfig()
+    await seedServiceableCountry()
+    const { project, quote, grant } = await createQuoteWithItem(3600, { withCustomer: false })
+
+    const response = await client
+      .patch(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/configure`)
+      .header('x-project-grant', grant)
+      .json({
+        destinationCountry: 'ZZ',
+        shippingMethod: 'free',
+        productionTimeBusinessDays: 5,
+        email: 'abandoner@example.com',
+        marketingOptIn: true,
+        ...validShippingAddress,
+      })
+
+    response.assertStatus(422)
+    const customer = await Customer.findByOrFail('email', 'abandoner@example.com')
+    assert.isTrue(customer.marketingOptIn)
+    await project.refresh()
+    assert.equal(project.customerId, customer.id)
+  })
+
+  test('never reassigns an owned project to a submitted email', async ({ client, assert }) => {
+    await seedProductionTimeConfig()
+    await seedServiceableCountry()
+    const { project, quote, grant, customer } = await createQuoteWithItem()
+
+    const response = await client
+      .patch(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/configure`)
+      .header('x-project-grant', grant)
+      .json({
+        destinationCountry: 'US',
+        shippingMethod: 'free',
+        productionTimeBusinessDays: 5,
+        email: 'someone-else@example.com',
+        marketingOptIn: true,
+        ...validShippingAddress,
+      })
+
+    response.assertStatus(200)
+    await project.refresh()
+    assert.equal(project.customerId, customer!.id)
+    assert.isNull(await Customer.findBy('email', 'someone-else@example.com'))
+    await customer!.refresh()
+    assert.isFalse(customer!.marketingOptIn)
+  })
+
+  test('records, revokes, and leaves alone a guest marketing opt-in', async ({
+    client,
+    assert,
+  }) => {
+    await seedProductionTimeConfig()
+    await seedServiceableCountry()
+    const { project, quote, grant } = await createQuoteWithItem(3600, { withCustomer: false })
+    const configure = (quoteUuid: string, extra: Record<string, unknown>) =>
+      client
+        .patch(`/v1/projects/${project.uuid}/quotes/${quoteUuid}/configure`)
+        .header('x-project-grant', grant)
+        .json({
+          destinationCountry: 'US',
+          shippingMethod: 'free',
+          productionTimeBusinessDays: 5,
+          email: 'consent@example.com',
+          ...validShippingAddress,
+          ...extra,
+        })
+
+    const optedIn = await configure(quote.uuid, { marketingOptIn: true })
+    optedIn.assertStatus(200)
+    let customer = await Customer.findByOrFail('email', 'consent@example.com')
+    assert.isTrue(customer.marketingOptIn)
+    assert.isNotNull(customer.marketingOptInUpdatedAt)
+
+    const optedInQuote = optedIn.body().data as Record<string, any>
+    const unchanged = await configure(optedInQuote.uuid, {})
+    unchanged.assertStatus(200)
+    customer = await Customer.findByOrFail('email', 'consent@example.com')
+    assert.isTrue(customer.marketingOptIn)
+
+    const unchangedQuote = unchanged.body().data as Record<string, any>
+    const revoked = await configure(unchangedQuote.uuid, { marketingOptIn: false })
+    revoked.assertStatus(200)
+    customer = await Customer.findByOrFail('email', 'consent@example.com')
+    assert.isFalse(customer.marketingOptIn)
+  })
+
+  test('lets staff configure a guest project without an email', async ({ client, assert }) => {
+    await seedProductionTimeConfig()
+    await seedServiceableCountry()
+    const { project, quote } = await createQuoteWithItem(3600, { withCustomer: false })
+    const session = await signupAsAdmin(client)
+
+    const response = await client
+      .patch(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/configure`)
+      .withSession(session)
+      .json({
+        destinationCountry: 'US',
+        shippingMethod: 'free',
+        productionTimeBusinessDays: 5,
+        ...validShippingAddress,
+      })
+
     response.assertStatus(200)
     const data = response.body().data as Record<string, any>
-    const address = await Address.findOrFail(
-      (await Quote.findByOrFail('uuid', data.uuid)).addressId!
-    )
+    const configuredQuote = await Quote.findByOrFail('uuid', data.uuid)
+    const address = await Address.findOrFail(configuredQuote.addressId!)
     assert.isNull(address.customerId)
   })
 

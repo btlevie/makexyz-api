@@ -120,7 +120,7 @@ export class CheckoutSessionSchema extends BaseModel {
 }
 
 export class CustomerSchema extends BaseModel {
-  static $columns = ['companyName', 'createdAt', 'email', 'firstName', 'id', 'lastName', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
+  static $columns = ['companyName', 'createdAt', 'email', 'firstName', 'id', 'lastName', 'marketingOptIn', 'marketingOptInUpdatedAt', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
   $columns = CustomerSchema.$columns
   @column()
   declare companyName: string | null
@@ -134,6 +134,10 @@ export class CustomerSchema extends BaseModel {
   declare id: number
   @column()
   declare lastName: string | null
+  @column()
+  declare marketingOptIn: boolean
+  @column.dateTime()
+  declare marketingOptInUpdatedAt: DateTime | null
   @column()
   declare paypalCustomerId: string | null
   @column()

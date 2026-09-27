@@ -29,6 +29,7 @@ import {
 } from '#services/production_time_service'
 import { isServiceableCountry } from '#services/serviceable_country_service'
 import { isStaff, resolveProject } from '#services/project_grant_service'
+import { attachLeadCustomer } from '#services/lead_customer_service'
 
 export default class QuotesController {
   /**
@@ -195,6 +196,12 @@ export default class QuotesController {
    * quote before the customer accepts it. Public: instant-quote customers
    * are anonymous and authorize with their project grant, same as the rest
    * of this flow.
+   *
+   * A guest project (no customer yet) must send `email` with the address:
+   * the lead is attached before anything else is checked, so it's kept even
+   * when the configuration itself is then rejected - a mailing address alone
+   * is no use for following up an abandoned quote. Staff configuring on a
+   * guest's behalf are exempt.
    */
   async configure(ctx: HttpContext) {
     const { params, request, response, serialize } = ctx
@@ -210,13 +217,25 @@ export default class QuotesController {
       shippingCity,
       shippingState,
       shippingPostalCode,
+      email,
+      marketingOptIn,
     } = await request.validateUsing(configureQuoteValidator)
 
-    const project = (await isStaff(ctx))
+    const staff = await isStaff(ctx)
+    const project = staff
       ? await Project.findBy('uuid', params.projectUuid)
       : await resolveProject(ctx, params.projectUuid)
     if (!project) {
       return response.notFound({ error: 'Project not found' })
+    }
+
+    if (!project.customerId && !staff && !email) {
+      return response.unprocessableEntity({
+        error: 'An email address is required with the shipping address',
+      })
+    }
+    if (email) {
+      await attachLeadCustomer(project, email, marketingOptIn)
     }
 
     if (!(await isServiceableCountry(destinationCountry))) {
@@ -226,9 +245,9 @@ export default class QuotesController {
     }
 
     // Either an existing saved address (scoped to this project's own
-    // customer - never another customer's, and never matched at all for an
-    // anonymous project with no customer yet) or inline fields to create a
-    // new one.
+    // customer - never another customer's, and never matched at all for a
+    // staff-configured project with no customer yet) or inline fields to
+    // create a new one.
     let address: QuoteAddressInput
     if (addressUuid) {
       const existing = await Address.query()

@@ -19,6 +19,12 @@ export default class extends BaseSchema {
       table.string('first_name').nullable()
       table.string('last_name').nullable()
       table.string('company_name').nullable()
+      // Explicit marketing opt-in (e.g. quote follow-up campaigns), collected
+      // with the email on configure / "email this quote to me". Defaults off:
+      // follow-ups only go to customers who ticked the box. The timestamp is
+      // when the choice last changed - evidence of when consent was given.
+      table.boolean('marketing_opt_in').notNullable().defaultTo(false)
+      table.timestamp('marketing_opt_in_updated_at').nullable()
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

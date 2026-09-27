@@ -51,6 +51,8 @@ Additional profile information is stored in role-specific tables:
 
 This separation allows role-specific integrations and metadata while keeping authentication centralized.
 
+A `customers` row does not require a user. Instant-quote visitors never need an account: the moment they give an email (alongside the shipping address on quote configuration, or via "email this quote to me") a **guest customer** is created with `customers.email` set and `user_id` null, and one guest row is shared by every project the same email is given for. This is what lets an abandoned quote be followed up by email. Guest customers also record an explicit marketing opt-in (`marketing_opt_in`, default false, with `marketing_opt_in_updated_at` as evidence of when the choice last changed); follow-up campaigns only go to customers who opted in. An account's consent is never changed through these public, unverified guest endpoints.
+
 ---
 
 ## Addresses
@@ -63,7 +65,7 @@ Addresses may be used for:
 * Vendor business addresses
 * Vendor shipping origin addresses
 
-The `owner_type` field identifies whether the address belongs to a customer or vendor. An owner may have many addresses (e.g. a "Personal" and a "Business" one, distinguished by `label`), with at most one marked `is_default` at a time. A quote's shipping address is either selected from the customer's existing addresses or created new during quote configuration (see Quotes below) — a newly-created one starts unowned (`customer_id: null`) if the project has no resolved customer yet, and is backfilled once checkout resolves one.
+The `owner_type` field identifies whether the address belongs to a customer or vendor. An owner may have many addresses (e.g. a "Personal" and a "Business" one, distinguished by `label`), with at most one marked `is_default` at a time. A quote's shipping address is either selected from the customer's existing addresses or created new during quote configuration (see Quotes below) — a guest must give an email alongside a new shipping address, which attaches a guest customer (no user account) to the project first, so the address is owned from the start. Only a quote staff configure on a guest's behalf can create an unowned address (`customer_id: null`), which is backfilled once checkout resolves a customer.
 
 Once an order references an address, its location fields (recipient, lines, city, state, postal code, country) are frozen — the order's tax was calculated on it and its shipping label is bought against it. Only `label` and `is_default` remain editable; a customer who moves adds a new address instead.
 

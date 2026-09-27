@@ -35,4 +35,13 @@ export const configureQuoteValidator = vine.create({
   shippingCity: vine.string().trim().maxLength(255).optional(),
   shippingState: vine.string().trim().maxLength(255).optional(),
   shippingPostalCode: vine.string().trim().maxLength(20).optional(),
+  /**
+   * Required (in the controller) when the project has no customer yet - a
+   * guest gives their email on the same form as the shipping address, so an
+   * abandoned checkout still leaves someone to follow up with. Ignored for an
+   * owned project.
+   */
+  email: vine.string().trim().email().maxLength(254).optional(),
+  /** The guest's explicit follow-up-email choice - see lead_customer_service.ts. */
+  marketingOptIn: vine.boolean().optional(),
 })

@@ -12,5 +12,6 @@ body:
   type: json
   content: |-
     {
-      "email": "customer@example.com"
+      "email": "customer@example.com",
+      "marketingOptIn": false
     }

@@ -3,6 +3,7 @@ name: 'Configure Quote'
 method: PATCH
 url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/configure'
 order: 3000
+description: 'A guest project (no customer yet) must send email with the shipping address - it attaches a guest customer before anything else is checked. Ignored for an owned project. marketingOptIn is the explicit follow-up-email opt-in (default off).'
 headers:
   - key: x-project-grant
     value: '{{project_grant}}'
@@ -20,5 +21,7 @@ body:
       "shippingLine1": "123 Main St",
       "shippingCity": "San Francisco",
       "shippingState": "CA",
-      "shippingPostalCode": "94105"
+      "shippingPostalCode": "94105",
+      "email": "customer@example.com",
+      "marketingOptIn": false
     }

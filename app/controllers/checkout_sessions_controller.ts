@@ -1,7 +1,5 @@
-import string from '@adonisjs/core/helpers/string'
 import type { HttpContext } from '@adonisjs/core/http'
 import CheckoutSession from '#models/checkout_session'
-import Customer from '#models/customer'
 import Project from '#models/project'
 import Quote from '#models/quote'
 import CheckoutSessionTransformer from '#transformers/checkout_session_transformer'
@@ -11,6 +9,7 @@ import {
   createCheckoutSessionValidator,
 } from '#validators/checkout'
 import { isStaff, resolveProject } from '#services/project_grant_service'
+import { attachLeadCustomer } from '#services/lead_customer_service'
 import {
   authorizeCheckoutSession,
   createCheckoutSession,
@@ -25,9 +24,10 @@ export default class CheckoutSessionsController {
    * against an accepted quote. Public: instant-quote customers are anonymous
    * and authorize with their project grant, same as the rest of this flow.
    *
-   * If the project has no Customer attached yet (a guest who skipped the
-   * optional lead-capture step), attaches one from `email` the same way
-   * lead-capture already does - forcing an account here would break the
+   * If the project has no Customer attached yet, attaches one from `email`
+   * the same way configure and lead-capture do. A guest always has one by now
+   * (configure requires an email), so this only matters for a quote staff
+   * configured on a guest's behalf - forcing an account here would break the
    * no-account-needed guest flow this system is built on.
    */
   async store(ctx: HttpContext) {
@@ -48,13 +48,7 @@ export default class CheckoutSessionsController {
             'An email address is required to check out (no account or lead-capture email on file yet)',
         })
       }
-      const normalizedEmail = email.toLowerCase()
-      const customer = await Customer.firstOrCreate(
-        { email: normalizedEmail },
-        { email: normalizedEmail, uuid: string.uuid() }
-      )
-      project.customerId = customer.id
-      await project.save()
+      await attachLeadCustomer(project, email)
     }
 
     const quote = await Quote.query()

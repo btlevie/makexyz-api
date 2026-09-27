@@ -4,6 +4,7 @@ import { test } from '@japa/runner'
 import testUtils from '@adonisjs/core/services/test_utils'
 import Customer from '#models/customer'
 import Project from '#models/project'
+import User from '#models/user'
 import { issueGrant } from '#services/project_grant_service'
 
 async function anonymousProject() {
@@ -133,6 +134,66 @@ test.group('Projects | email capture', (group) => {
 
     await project.refresh()
     assert.isNull(project.customerId)
+  })
+
+  test('records the latest explicit marketing choice', async ({ client, assert }) => {
+    const { project, grant } = await anonymousProject()
+    const capture = (body: Record<string, unknown>) =>
+      client
+        .post(`/v1/projects/${project.uuid}/email`)
+        .header('x-project-grant', grant)
+        .json({ email: 'lead@example.com', ...body })
+
+    // Off by default - follow-ups only go to people who ticked the box.
+    const withoutChoice = await capture({})
+    withoutChoice.assertStatus(200)
+    let customer = await Customer.findByOrFail('email', 'lead@example.com')
+    assert.isFalse(customer.marketingOptIn)
+    assert.isNull(customer.marketingOptInUpdatedAt)
+
+    const optedIn = await capture({ marketingOptIn: true })
+    optedIn.assertStatus(200)
+    customer = await Customer.findByOrFail('email', 'lead@example.com')
+    assert.isTrue(customer.marketingOptIn)
+    assert.isNotNull(customer.marketingOptInUpdatedAt)
+
+    // Omitting it leaves the recorded choice alone.
+    const omitted = await capture({})
+    omitted.assertStatus(200)
+    customer = await Customer.findByOrFail('email', 'lead@example.com')
+    assert.isTrue(customer.marketingOptIn)
+
+    const revoked = await capture({ marketingOptIn: false })
+    revoked.assertStatus(200)
+    customer = await Customer.findByOrFail('email', 'lead@example.com')
+    assert.isFalse(customer.marketingOptIn)
+  })
+
+  test("never changes an account's marketing choice", async ({ client, assert }) => {
+    const { project, grant } = await anonymousProject()
+    const user = await User.create({
+      uuid: string.uuid(),
+      fullName: 'Account Holder',
+      email: 'account@example.com',
+      password: 'password123',
+      role: 'customer',
+    })
+    const owner = await Customer.create({
+      uuid: string.uuid(),
+      userId: user.id,
+      email: 'account@example.com',
+    })
+    project.customerId = owner.id
+    await project.save()
+
+    const response = await client
+      .post(`/v1/projects/${project.uuid}/email`)
+      .header('x-project-grant', grant)
+      .json({ email: 'account@example.com', marketingOptIn: true })
+
+    response.assertStatus(200)
+    await owner.refresh()
+    assert.isFalse(owner.marketingOptIn)
   })
 
   test('rejects an invalid address', async ({ client, assert }) => {
