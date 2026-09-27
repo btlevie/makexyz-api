@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Resend Guest Claim'
+method: POST
+url: '{{base_url}}/account/guest-claims'
+order: 8000
+description: 'Emails the signed-in customer a link to claim earlier guest quotes/orders placed under their email. Always 202 - it never reveals whether that email has guest history.'

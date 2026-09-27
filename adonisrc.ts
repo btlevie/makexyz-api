@@ -28,7 +28,8 @@ export default defineConfig({
     () => import('@adonisjs/core/commands'),
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/session/commands'),
-    () => import('@adonisjs/queue/commands')
+    () => import('@adonisjs/queue/commands'),
+    () => import('@adonisjs/mail/commands')
   ],
 
   /*
@@ -57,7 +58,8 @@ export default defineConfig({
     () => import('#providers/api_provider'),
     () => import('@adonisjs/limiter/limiter_provider'),
     () => import('@adonisjs/queue/queue_provider'),
-    () => import('@adonisjs/transmit/transmit_provider')
+    () => import('@adonisjs/transmit/transmit_provider'),
+    () => import('@adonisjs/mail/mail_provider')
   ],
 
   /*

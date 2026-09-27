@@ -53,6 +53,15 @@ This separation allows role-specific integrations and metadata while keeping aut
 
 A `customers` row does not require a user. Instant-quote visitors never need an account: the moment they give an email (alongside the shipping address on quote configuration, or via "email this quote to me") a **guest customer** is created with `customers.email` set and `user_id` null, and one guest row is shared by every project the same email is given for. This is what lets an abandoned quote be followed up by email. Guest customers also record an explicit marketing opt-in (`marketing_opt_in`, default false, with `marketing_opt_in_updated_at` as evidence of when the choice last changed); follow-up campaigns only go to customers who opted in. An account's consent is never changed through these public, unverified guest endpoints.
 
+### Guest customers and account claiming
+
+When a guest later creates an account, their guest work has to follow them. Matching by email alone is unsafe (anyone can sign up with someone else's email), so linking always needs proof:
+
+* **Same browser (grant):** a signup request carrying a project grant (`x-project-grant`) attaches *that one project* to the new account's customer, along with its orders, checkout sessions and quote shipping addresses. The grant proves nothing about the guest's other projects, so nothing else moves.
+* **Verified email (signed link):** if a guest customer with the same email holds projects, signup emails that address a signed link (`${ACCOUNT_CLAIM_URL}?link=<signed API path>`, 24 hours). Opening it **while signed in to that account** merges the guest into it: every project, order, address and checkout session moves to the account's customer, the more recent marketing choice is kept, and the guest row is deleted (so the link works once). Requiring the signed-in account blocks someone who signed up with a victim's email from pulling the victim's orders in if the victim clicks the link.
+
+Neither path ever takes work from a customer that already has an account. See `app/services/customer_claim_service.ts` and `app/services/guest_claim_service.ts`.
+
 ---
 
 ## Addresses

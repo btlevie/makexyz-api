@@ -12,6 +12,7 @@ export const controllers = {
   AdminVendors: () => import('#controllers/admin_vendors_controller'),
   CheckoutSessions: () => import('#controllers/checkout_sessions_controller'),
   EasypostWebhooks: () => import('#controllers/easypost_webhooks_controller'),
+  GuestClaims: () => import('#controllers/guest_claims_controller'),
   Invitations: () => import('#controllers/invitations_controller'),
   Materials: () => import('#controllers/materials_controller'),
   NewAccount: () => import('#controllers/new_account_controller'),

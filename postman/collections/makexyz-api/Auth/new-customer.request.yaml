@@ -3,6 +3,7 @@ name: 'New Customer'
 method: POST
 url: '{{base_url}}/auth/new-customer'
 order: 3000
+description: 'Optionally send x-project-grant: {{project_grant}} to attach the current instant-quote project to the new account. Not added as a header here, because the collection script blocks requests whose grant header is empty. If earlier guest work exists under this email, a claim link is emailed (see Account > Confirm Guest Claim).'
 headers:
   - key: Content-Type
     value: application/json

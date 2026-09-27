@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Confirm Guest Claim'
+method: POST
+url: '{{guest_claim_link}}'
+order: 9000
+description: 'Merges a guest customer into the signed-in account. Set guest_claim_link to the full signed API URL from the claim email (the link query parameter of the ACCOUNT_CLAIM_URL page, prefixed with the API origin, e.g. http://localhost:3333/v1/account/guest-claims/...?signature=...). Must be signed in as the account the link was issued to.'

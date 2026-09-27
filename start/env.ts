@@ -210,4 +210,19 @@ export default await Env.create(new URL('../', import.meta.url), {
   VENDOR_AGREEMENT_VERSION: Env.schema.string.optionalWhen(
     () => process.env.NODE_ENV !== 'production'
   ),
+
+  /*
+  |----------------------------------------------------------
+  | Transactional mail (Amazon SES via @adonisjs/mail)
+  |----------------------------------------------------------
+  | SES credentials come from the default AWS chain (AWS_PROFILE locally,
+  | the ECS task role in production), same as S3/SQS - no access keys.
+  | MAIL_FROM_ADDRESS must be on a domain verified in SES.
+  | ACCOUNT_CLAIM_URL is the frontend page that handles guest-claim links
+  | (customers get `${ACCOUNT_CLAIM_URL}?link=<signed API path>`).
+  */
+  MAIL_MAILER: Env.schema.enum(['ses'] as const),
+  MAIL_FROM_NAME: Env.schema.string(),
+  MAIL_FROM_ADDRESS: Env.schema.string({ format: 'email' }),
+  ACCOUNT_CLAIM_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
 })

@@ -34,6 +34,10 @@ export interface ApiDefinition {
       update: typeof routes['profile.addresses.update']
       destroy: typeof routes['profile.addresses.destroy']
     }
+    guestClaims: {
+      store: typeof routes['profile.guest_claims.store']
+      confirm: typeof routes['profile.guest_claims.confirm']
+    }
   }
   projects: {
     projectFiles: {

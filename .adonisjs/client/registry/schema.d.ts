@@ -187,6 +187,30 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/addresses_controller').default['destroy']>>>
     }
   }
+  'profile.guest_claims.store': {
+    methods: ["POST"]
+    pattern: '/v1/account/guest-claims'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/guest_claims_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/guest_claims_controller').default['store']>>>
+    }
+  }
+  'profile.guest_claims.confirm': {
+    methods: ["POST"]
+    pattern: '/v1/account/guest-claims/:customerUuid/:userUuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { customerUuid: ParamValue; userUuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/guest_claims_controller').default['confirm']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/guest_claims_controller').default['confirm']>>>
+    }
+  }
   'projects.project_files.store_instant_quote_files': {
     methods: ["POST"]
     pattern: '/v1/projects/files'

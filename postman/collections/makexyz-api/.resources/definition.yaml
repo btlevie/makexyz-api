@@ -24,6 +24,8 @@ variables:
     value: ''
   - key: project_grant
     value: ''
+  - key: guest_claim_link
+    value: ''
 scripts:
   - type: http:beforeRequest
     language: text/javascript

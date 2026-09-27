@@ -53,6 +53,13 @@ router
         router.get('addresses/:uuid', [controllers.Addresses, 'show'])
         router.patch('addresses/:uuid', [controllers.Addresses, 'update'])
         router.delete('addresses/:uuid', [controllers.Addresses, 'destroy'])
+
+        // Linking earlier guest quotes/orders placed under this account's
+        // email: resend the emailed link, and confirm it (signed - checked in
+        // the controller, and only for the account it was issued to). See
+        // guest_claim_service.ts.
+        router.post('guest-claims', [controllers.GuestClaims, 'store'])
+        router.post('guest-claims/:customerUuid/:userUuid', [controllers.GuestClaims, 'confirm'])
       })
       .prefix('account')
       .as('profile')

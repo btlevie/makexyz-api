@@ -96,6 +96,18 @@ const routes = {
     tokens: [{"old":"/v1/account/addresses/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"account","end":""},{"old":"/v1/account/addresses/:uuid","type":0,"val":"addresses","end":""},{"old":"/v1/account/addresses/:uuid","type":1,"val":"uuid","end":""}],
     types: placeholder as Registry['profile.addresses.destroy']['types'],
   },
+  'profile.guest_claims.store': {
+    methods: ["POST"],
+    pattern: '/v1/account/guest-claims',
+    tokens: [{"old":"/v1/account/guest-claims","type":0,"val":"v1","end":""},{"old":"/v1/account/guest-claims","type":0,"val":"account","end":""},{"old":"/v1/account/guest-claims","type":0,"val":"guest-claims","end":""}],
+    types: placeholder as Registry['profile.guest_claims.store']['types'],
+  },
+  'profile.guest_claims.confirm': {
+    methods: ["POST"],
+    pattern: '/v1/account/guest-claims/:customerUuid/:userUuid',
+    tokens: [{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":0,"val":"v1","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":0,"val":"account","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":0,"val":"guest-claims","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":1,"val":"customerUuid","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":1,"val":"userUuid","end":""}],
+    types: placeholder as Registry['profile.guest_claims.confirm']['types'],
+  },
   'projects.project_files.store_instant_quote_files': {
     methods: ["POST"],
     pattern: '/v1/projects/files',

@@ -19,6 +19,8 @@ export type ScannedRoutes = {
     'profile.addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'profile.addresses.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'profile.addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'profile.guest_claims.store': { paramsTuple?: []; params?: {} }
+    'profile.guest_claims.confirm': { paramsTuple: [ParamValue,ParamValue]; params: {'customerUuid': ParamValue,'userUuid': ParamValue} }
     'projects.project_files.store_instant_quote_files': { paramsTuple?: []; params?: {} }
     'projects.project_files.update_technology': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.project_files.update_material': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -155,6 +157,8 @@ export type ScannedRoutes = {
     'auth.invitations.accept': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'profile.access_tokens.destroy': { paramsTuple?: []; params?: {} }
     'profile.addresses.store': { paramsTuple?: []; params?: {} }
+    'profile.guest_claims.store': { paramsTuple?: []; params?: {} }
+    'profile.guest_claims.confirm': { paramsTuple: [ParamValue,ParamValue]; params: {'customerUuid': ParamValue,'userUuid': ParamValue} }
     'projects.project_files.store_instant_quote_files': { paramsTuple?: []; params?: {} }
     'projects.quotes.store': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'projects.checkout_sessions.store': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }

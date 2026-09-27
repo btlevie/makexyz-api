@@ -48,7 +48,7 @@ This is the single most important pattern in the codebase and is **not** standar
 - `middleware.auth()` (named middleware in `start/kernel.ts`) protects routes; it accepts an optional `guards` option but existing usages don't pass one, so it authenticates against the default guard resolution.
 - `SilentAuthMiddleware` runs globally and calls `ctx.auth.check()` on every request (not just protected ones), so `auth.user`/`auth.check()` state is available even on public routes.
 - Import aliases exist in `package.json` for `#policies/*` and `#abilities/*` (Bouncer-style authorization), but `app/policies/` and `app/abilities/` don't exist yet — there's no established authorization pattern beyond route-level `middleware.auth()` and manual `role` checks. Don't invent a policy/ability convention without checking with the user first.
-- Similarly, `#services/*`, `#mails/*`, `#events/*`, `#listeners/*` are wired as import aliases and provider slots but have no code yet.
+- Similarly, `#events/*` and `#listeners/*` are wired as import aliases and provider slots but have no code yet.
 
 ## Validation
 
@@ -60,6 +60,13 @@ This is the single most important pattern in the codebase and is **not** standar
 
 - File uploads go through `@adonisjs/drive` (S3-backed, see `config/drive.ts`); the only configured disk is `s3` (`DRIVE_DISK=s3`, private visibility). Storage keys are built as `${S3_FILE_STORAGE_KEY}/${projectUuid}/${fileUuid}.${extname}` — follow this convention for new project-scoped uploads rather than inventing a new key scheme.
 - Allowed upload extensions for project files are enumerated in `app/validators/project_file.ts` (`ALLOWED_EXTENSIONS`) — this is a 3D-manufacturing file whitelist (STL, OBJ, STEP, etc.), not a generic upload allowlist.
+
+## Mail
+
+- Transactional email goes through `@adonisjs/mail` with the SES transport (`config/mail.ts`); mail classes live in `app/mails/` (`#mails/*`) and send plain HTML/text, no Edge templates. SES credentials come from the default AWS chain (`AWS_PROFILE` locally, the ECS task role in production), same as S3/SQS — never add AWS access keys to env.
+- Sending is best-effort around the request it belongs to (see `sendGuestClaimEmail` in `app/services/guest_claim_service.ts`): a mail failure is logged, never allowed to fail signup or checkout.
+- Tests always use `mail.fake()` (restore in teardown), so nothing reaches SES.
+- Marketing/campaign email is deliberately not built yet; `customers.marketing_opt_in` records guests' explicit opt-in for it (see `app/services/lead_customer_service.ts`).
 
 ## Conventions
 
