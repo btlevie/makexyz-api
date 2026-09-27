@@ -295,6 +295,10 @@ Payment statuses:
 * `refunded`
 * `cancelled`
 
+A payment is only ever `pending` while a card awaits 3D Secure: the provider returned "requires action", so no hold exists yet and no order has been created. The customer completes the bank's challenge in the browser (Stripe.js), and the next checkout call on the same session re-reads that same provider transaction. If it's now authorized, the payment becomes `authorized` and the order is created; if the challenge failed, the payment and session become `failed`. A pending payment on a session that expires is cancelled at the provider.
+
+Every authorization is checked against the quote before a hold counts: Stripe amounts are set by the backend and re-checked on resume, and a PayPal order must have been created for exactly this quote's total (the backend creates it; the frontend only has the customer approve it).
+
 The payment record stores:
 
 * Payment provider

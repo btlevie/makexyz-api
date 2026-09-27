@@ -186,6 +186,12 @@ const routes = {
     tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"pay","end":""}],
     types: placeholder as Registry['projects.checkout_sessions.pay']['types'],
   },
+  'projects.checkout_sessions.paypal_order': {
+    methods: ["POST"],
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/paypal-order',
+    tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/paypal-order","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/paypal-order","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/paypal-order","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/paypal-order","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/paypal-order","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/paypal-order","type":0,"val":"paypal-order","end":""}],
+    types: placeholder as Registry['projects.checkout_sessions.paypal_order']['types'],
+  },
   'projects.orders.show': {
     methods: ["GET","HEAD"],
     pattern: '/v1/projects/:projectUuid/order',

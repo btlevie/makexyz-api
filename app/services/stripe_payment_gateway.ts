@@ -1,21 +1,25 @@
 /**
- * Real Stripe-backed PaymentGateway. Never exercised by tests (test env
- * always uses FakePaymentGateway, see payment_gateway_service.ts) - this is
- * the implementation that needs real STRIPE_SECRET_KEY credentials to run at
- * all, which don't exist yet.
+ * Real Stripe-backed PaymentGateway. Never exercised by functional tests
+ * (test env always uses FakePaymentGateway, see payment_gateway_service.ts);
+ * unit-tested with a stubbed client.
  *
- * Happy-path only, matching the rest of this plan's scope: uses PaymentIntent's
- * synchronous confirm (`confirm: true` with a frontend-collected payment
- * method) rather than a webhook-driven async flow, so authorize() resolves in
- * one request/response. This does not handle 3D Secure redirects or other
- * cases requiring further customer action after the initial request - those,
- * plus webhook-based reliability against a dropped response, are deferred
- * hardening, not this pass.
+ * Confirms the PaymentIntent server-side (`confirm: true`) with the
+ * PaymentMethod Stripe.js created in the browser - the card number never
+ * reaches this API. `capture_method: 'manual'` makes it a hold, captured
+ * only when a vendor accepts the order.
+ *
+ * 3D Secure: when the bank requires verification the intent comes back
+ * `requires_action`, and authorize() returns its client secret instead of
+ * failing. The frontend completes the challenge in-page with Stripe.js
+ * (`handleNextAction` - card 3DS needs no redirect, hence
+ * `allow_redirects: 'never'`), then checkout calls retrieve() to pick the
+ * now-authorized intent back up.
  */
 import Stripe from 'stripe'
 import env from '#start/env'
 import {
   PaymentGatewayError,
+  toCents,
   type AuthorizeParams,
   type AuthorizeResult,
   type CaptureResult,
@@ -25,7 +29,12 @@ import {
 export class StripePaymentGateway implements PaymentGateway {
   private client: Stripe
 
-  constructor() {
+  /** `client` is injectable for unit tests; production builds one from STRIPE_SECRET_KEY. */
+  constructor(client?: Stripe) {
+    if (client) {
+      this.client = client
+      return
+    }
     const secretKey = env.get('STRIPE_SECRET_KEY')
     if (!secretKey) {
       throw new PaymentGatewayError('STRIPE_SECRET_KEY is not configured')
@@ -40,24 +49,51 @@ export class StripePaymentGateway implements PaymentGateway {
       )
     }
 
-    const amountInCents = Math.round(params.amount * 100)
     const intent = await this.client.paymentIntents.create({
-      amount: amountInCents,
+      amount: toCents(params.expectedAmount),
       currency: 'usd',
       capture_method: 'manual',
       confirm: true,
       payment_method: params.providerToken,
-      metadata: params.metadata,
+      metadata: { ...params.metadata, quoteUuid: params.quoteUuid },
       automatic_payment_methods: { enabled: true, allow_redirects: 'never' },
     })
 
-    if (intent.status !== 'requires_capture') {
+    return this.outcomeOf(intent)
+  }
+
+  async retrieve(
+    transactionId: string,
+    expected: { expectedAmount: string }
+  ): Promise<AuthorizeResult> {
+    const intent = await this.client.paymentIntents.retrieve(transactionId)
+    if (intent.amount !== toCents(expected.expectedAmount) || intent.currency !== 'usd') {
       throw new PaymentGatewayError(
-        `Stripe PaymentIntent ${intent.id} did not reach an authorized state (status: ${intent.status})`
+        `Stripe PaymentIntent ${intent.id} is for ${intent.amount} ${intent.currency}, not the quote total`
       )
     }
+    return this.outcomeOf(intent)
+  }
 
-    return { transactionId: intent.id }
+  /**
+   * requires_capture is an authorized hold; requires_action awaits the
+   * customer (3D Secure). Anything else - requires_payment_method after a
+   * failed challenge or decline, canceled, etc. - is a failed authorization.
+   */
+  private outcomeOf(intent: Stripe.PaymentIntent): AuthorizeResult {
+    if (intent.status === 'requires_capture') {
+      return { status: 'authorized', transactionId: intent.id }
+    }
+    if (intent.status === 'requires_action' && intent.client_secret) {
+      return {
+        status: 'requires_action',
+        transactionId: intent.id,
+        clientSecret: intent.client_secret,
+      }
+    }
+    throw new PaymentGatewayError(
+      `Stripe PaymentIntent ${intent.id} did not reach an authorized state (status: ${intent.status})`
+    )
   }
 
   async capture(transactionId: string): Promise<CaptureResult> {

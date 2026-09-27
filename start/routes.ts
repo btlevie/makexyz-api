@@ -141,6 +141,15 @@ router
         router
           .post(':projectUuid/quotes/:uuid/pay', [controllers.CheckoutSessions, 'pay'])
           .use(instantQuoteThrottle)
+        // Same access, and throttled for the same reason: creates the PayPal
+        // order for the quote (server-side, so the browser never sets the
+        // amount) for the frontend's PayPal Buttons to approve before pay.
+        router
+          .post(':projectUuid/quotes/:uuid/paypal-order', [
+            controllers.CheckoutSessions,
+            'paypalOrder',
+          ])
+          .use(instantQuoteThrottle)
         // Public, same grant/customer/staff authorization as the other
         // project endpoints - a receipt/status check after checkout. Not
         // throttled: a read costs no S3 write or Lambda invocation.

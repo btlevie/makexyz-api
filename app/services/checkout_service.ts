@@ -17,6 +17,7 @@ import Quote from '#models/quote'
 import {
   getPaymentGateway,
   PaymentGatewayError,
+  type AuthorizeResult,
   type PaymentProviderName,
 } from '#services/payment_gateway_service'
 import { getTaxCalculator } from '#services/tax_calculator_service'
@@ -84,6 +85,16 @@ export async function createCheckoutSession(
 }
 
 /**
+ * What a checkout attempt produced: an authorized hold and its Order, or a
+ * card that needs the customer to complete 3D Secure first (see
+ * stripe_payment_gateway.ts) - the frontend hands `clientSecret` to Stripe.js
+ * and then calls pay again, which resumes this same attempt.
+ */
+export type CheckoutAuthorization =
+  | { status: 'authorized'; payment: Payment; order: Order }
+  | { status: 'requires_action'; clientSecret: string }
+
+/**
  * Authorizes payment (a hold, never a charge) against the checkout session's
  * quote, then creates the Order vendors will see - QuoteItems copied into
  * OrderItems as immutable snapshots, same pattern as everywhere else in this
@@ -91,8 +102,14 @@ export async function createCheckoutSession(
  * session is deliberately left `active`, not `completed` - the transaction
  * isn't done until a vendor accepts and payment is captured.
  *
- * On a gateway failure, marks the session `failed` and rethrows
- * PaymentAuthorizationFailedError - no order is created, and the customer can
+ * If the card needs 3D Secure, records a `pending` Payment for the provider's
+ * transaction and returns `requires_action` with no order. Calling this again
+ * on the same session re-reads that transaction (gateway retrieve) instead of
+ * authorizing a second time, and finishes the order once it's authorized.
+ *
+ * On a gateway failure (decline, failed verification, amount mismatch), marks
+ * the session - and any pending Payment - `failed` and rethrows
+ * PaymentAuthorizationFailedError; no order is created, and the customer can
  * start a new checkout session.
  */
 export async function authorizeCheckoutSession(
@@ -100,7 +117,7 @@ export async function authorizeCheckoutSession(
   quote: Quote,
   provider: PaymentProviderName,
   providerToken?: string
-): Promise<{ payment: Payment; order: Order }> {
+): Promise<CheckoutAuthorization> {
   if (checkoutSession.status !== 'active') {
     throw new CheckoutSessionNotActiveError(
       `Checkout session ${checkoutSession.uuid} is ${checkoutSession.status}, not active`
@@ -108,31 +125,32 @@ export async function authorizeCheckoutSession(
   }
 
   // A session stays 'active' on success (see below), so that alone can't
-  // prevent calling this twice - an existing Payment is what makes a retry
-  // idempotent instead of authorizing (and ordering) a second time.
+  // prevent calling this twice - an existing authorized Payment is what makes
+  // a retry idempotent instead of authorizing (and ordering) a second time.
+  // A pending one is an attempt still awaiting 3D Secure, resumed below.
   const existingPayment = await Payment.query()
     .where('checkoutSessionId', checkoutSession.id)
     .first()
-  if (existingPayment) {
+  if (existingPayment && existingPayment.status !== 'pending') {
     const existingOrder = await Order.findByOrFail('quoteId', quote.id)
-    return { payment: existingPayment, order: existingOrder }
+    return { status: 'authorized', payment: existingPayment, order: existingOrder }
   }
 
-  await quote.load('items')
-  const amount = Number(quote.total)
-
-  let transactionId: string
+  let result: AuthorizeResult
   try {
-    const result = await getPaymentGateway(provider).authorize({
-      amount,
-      metadata: { checkoutSessionUuid: checkoutSession.uuid, quoteUuid: quote.uuid },
-      providerToken,
-    })
-    transactionId = result.transactionId
+    result = existingPayment
+      ? await getPaymentGateway(existingPayment.provider as PaymentProviderName).retrieve(
+          existingPayment.transactionId!,
+          { expectedAmount: quote.total }
+        )
+      : await getPaymentGateway(provider).authorize({
+          expectedAmount: quote.total,
+          quoteUuid: quote.uuid,
+          metadata: { checkoutSessionUuid: checkoutSession.uuid },
+          providerToken,
+        })
   } catch (error) {
-    checkoutSession.status = 'failed'
-    checkoutSession.failedAt = DateTime.now()
-    await checkoutSession.save()
+    await failAttempt(checkoutSession, existingPayment)
 
     if (error instanceof PaymentGatewayError) {
       throw new PaymentAuthorizationFailedError(error.message)
@@ -140,23 +158,83 @@ export async function authorizeCheckoutSession(
     throw error
   }
 
+  if (result.status === 'requires_action') {
+    if (!existingPayment) {
+      await Payment.create({
+        checkoutSessionId: checkoutSession.id,
+        provider,
+        transactionId: result.transactionId,
+        amount: quote.total,
+        status: 'pending',
+        providerFee: '0.00',
+        netAmount: quote.total,
+      })
+    }
+    return { status: 'requires_action', clientSecret: result.clientSecret }
+  }
+
+  const { payment, order } = await finalizeAuthorization(
+    checkoutSession,
+    quote,
+    provider,
+    result.transactionId,
+    existingPayment
+  )
+  return { status: 'authorized', payment, order }
+}
+
+/** A failed attempt fails its session (and any pending Payment) - the next checkout starts fresh. */
+async function failAttempt(checkoutSession: CheckoutSession, pendingPayment: Payment | null) {
+  const now = DateTime.now()
+  checkoutSession.status = 'failed'
+  checkoutSession.failedAt = now
+  await checkoutSession.save()
+
+  if (pendingPayment) {
+    pendingPayment.status = 'failed'
+    pendingPayment.failedAt = now
+    await pendingPayment.save()
+  }
+}
+
+/**
+ * Records the authorized hold (a new Payment, or the pending one flipping to
+ * authorized) and creates the Order, then routes it.
+ */
+async function finalizeAuthorization(
+  checkoutSession: CheckoutSession,
+  quote: Quote,
+  provider: PaymentProviderName,
+  transactionId: string,
+  pendingPayment: Payment | null
+): Promise<{ payment: Payment; order: Order }> {
+  await quote.load('items')
+
   return db
     .transaction(async (trx) => {
-      const payment = await Payment.create(
-        {
-          checkoutSessionId: checkoutSession.id,
-          provider,
-          transactionId,
-          amount: amount.toFixed(2),
-          status: 'authorized',
-          authorizedAt: DateTime.now(),
-          // Not known until capture (see captureCheckoutSession below).
-          // Net defaults to the full amount since no fee has been taken yet.
-          providerFee: '0.00',
-          netAmount: amount.toFixed(2),
-        },
-        { client: trx }
-      )
+      let payment: Payment
+      if (pendingPayment) {
+        pendingPayment.useTransaction(trx)
+        pendingPayment.merge({ status: 'authorized', authorizedAt: DateTime.now() })
+        await pendingPayment.save()
+        payment = pendingPayment
+      } else {
+        payment = await Payment.create(
+          {
+            checkoutSessionId: checkoutSession.id,
+            provider,
+            transactionId,
+            amount: quote.total,
+            status: 'authorized',
+            authorizedAt: DateTime.now(),
+            // Not known until capture (see captureCheckoutSession below).
+            // Net defaults to the full amount since no fee has been taken yet.
+            providerFee: '0.00',
+            netAmount: quote.total,
+          },
+          { client: trx }
+        )
+      }
 
       // Backfill the quote's address to the now-guaranteed-resolved customer -
       // it may have been created unowned (customerId: null) at configure
@@ -311,9 +389,11 @@ export async function expireCheckoutSession(checkoutSession: CheckoutSession): P
       return
     }
 
+    // An authorized hold is released; a pending one (customer never finished
+    // 3D Secure) holds no money but is abandoned at the provider too.
     const payment = await Payment.query({ client: trx })
       .where('checkoutSessionId', checkoutSession.id)
-      .where('status', 'authorized')
+      .whereIn('status', ['authorized', 'pending'])
       .first()
     if (payment) {
       await getPaymentGateway(payment.provider as PaymentProviderName).cancel(

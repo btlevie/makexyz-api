@@ -58,6 +58,7 @@ export interface ApiDefinition {
     }
     checkoutSessions: {
       pay: typeof routes['projects.checkout_sessions.pay']
+      paypalOrder: typeof routes['projects.checkout_sessions.paypal_order']
     }
     orders: {
       show: typeof routes['projects.orders.show']

@@ -11,7 +11,8 @@ import Project from '#models/project'
 import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import { issueGrant } from '#services/project_grant_service'
-import { fakePaymentGateway, PaymentGatewayError } from '#services/payment_gateway_service'
+import { expireCheckoutSession } from '#services/checkout_service'
+import { fakePaymentGateway } from '#services/payment_gateway_service'
 
 async function createAcceptedQuote(options: { withCustomer?: boolean } = {}) {
   const customer = options.withCustomer === false ? null : await Customer.create({ uuid: string.uuid() })
@@ -173,20 +174,13 @@ test.group('Checkout | pay', (group) => {
     assert,
   }) => {
     const { project, quote, grant } = await createAcceptedQuote()
-    const realAuthorize = fakePaymentGateway.authorize
-    fakePaymentGateway.authorize = async () => {
-      throw new PaymentGatewayError('Your card was declined')
-    }
+    fakePaymentGateway.declineNextAuthorize()
 
-    try {
-      const declined = await pay(client, project, quote, grant)
-      declined.assertStatus(422)
-      assert.lengthOf(await Order.all(), 0)
-      const failed = await CheckoutSession.findByOrFail('quoteId', quote.id)
-      assert.equal(failed.status, 'failed')
-    } finally {
-      fakePaymentGateway.authorize = realAuthorize
-    }
+    const declined = await pay(client, project, quote, grant)
+    declined.assertStatus(422)
+    assert.lengthOf(await Order.all(), 0)
+    const failed = await CheckoutSession.findByOrFail('quoteId', quote.id)
+    assert.equal(failed.status, 'failed')
 
     const retried = await pay(client, project, quote, grant)
 
@@ -218,6 +212,81 @@ test.group('Checkout | pay', (group) => {
     assert.equal(address.customerId, customer.id)
   })
 
+  test('a card needing 3D Secure returns the client secret, then finishes on the next call', async ({
+    client,
+    assert,
+  }) => {
+    const { project, quote, grant } = await createAcceptedQuote()
+    fakePaymentGateway.requireActionOnNextAuthorize()
+
+    const first = await pay(client, project, quote, grant)
+
+    first.assertStatus(202)
+    const action = first.body().data as { status: string; clientSecret: string }
+    assert.equal(action.status, 'requires_action')
+    assert.isString(action.clientSecret)
+    assert.lengthOf(await Order.all(), 0)
+    const pending = await Payment.firstOrFail()
+    assert.equal(pending.status, 'pending')
+
+    // Customer hasn't finished the challenge yet - still waiting.
+    const stillWaiting = await pay(client, project, quote, grant)
+    stillWaiting.assertStatus(202)
+
+    fakePaymentGateway.completeAction(pending.transactionId!, 'authorized')
+    const second = await pay(client, project, quote, grant)
+
+    second.assertStatus(200)
+    const order = second.body().data as Record<string, any>
+    assert.equal(order.status, 'open')
+    await pending.refresh()
+    assert.equal(pending.status, 'authorized')
+    assert.isNotNull(pending.authorizedAt)
+    // Resumed, not re-authorized: one session, one payment, one transaction.
+    assert.lengthOf(await CheckoutSession.all(), 1)
+    assert.lengthOf(await Payment.all(), 1)
+  })
+
+  test('a failed 3D Secure challenge fails the attempt, and the next call starts fresh', async ({
+    client,
+    assert,
+  }) => {
+    const { project, quote, grant } = await createAcceptedQuote()
+    fakePaymentGateway.requireActionOnNextAuthorize()
+    const first = await pay(client, project, quote, grant)
+    first.assertStatus(202)
+    const pending = await Payment.firstOrFail()
+
+    fakePaymentGateway.completeAction(pending.transactionId!, 'failed')
+    const failedResponse = await pay(client, project, quote, grant)
+
+    failedResponse.assertStatus(422)
+    await pending.refresh()
+    assert.equal(pending.status, 'failed')
+    const failedSession = await CheckoutSession.findByOrFail('quoteId', quote.id)
+    assert.equal(failedSession.status, 'failed')
+    assert.lengthOf(await Order.all(), 0)
+
+    const retried = await pay(client, project, quote, grant)
+    retried.assertStatus(200)
+    assert.lengthOf(await CheckoutSession.all(), 2)
+  })
+
+  test('expiring a session abandons a pending 3D Secure attempt', async ({ client, assert }) => {
+    const { project, quote, grant } = await createAcceptedQuote()
+    fakePaymentGateway.requireActionOnNextAuthorize()
+    const first = await pay(client, project, quote, grant)
+    first.assertStatus(202)
+    const session = await CheckoutSession.findByOrFail('quoteId', quote.id)
+
+    await expireCheckoutSession(session)
+
+    const pending = await Payment.firstOrFail()
+    assert.equal(pending.status, 'cancelled')
+    await session.refresh()
+    assert.equal(session.status, 'expired')
+  })
+
   test('returns 404 without the right grant', async ({ client, assert }) => {
     const { project, quote } = await createAcceptedQuote()
     const other = await createAcceptedQuote()
@@ -226,5 +295,56 @@ test.group('Checkout | pay', (group) => {
 
     response.assertStatus(404)
     assert.lengthOf(await Order.all(), 0)
+  })
+})
+
+test.group('Checkout | PayPal order', (group) => {
+  group.setup(async () => {
+    const rollback = await testUtils.db().migrate()
+    await rollback()
+    await testUtils.db().migrate()
+  })
+
+  group.each.setup(async () => {
+    await limiter.clear()
+    fakePaymentGateway.reset()
+    return async () => {
+      const truncate = await testUtils.db().truncate()
+      await truncate()
+    }
+  })
+
+  test('creates a PayPal order for an accepted quote', async ({ client, assert }) => {
+    const { project, quote, grant } = await createAcceptedQuote()
+
+    const response = await client
+      .post(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/paypal-order`)
+      .header('x-project-grant', grant)
+
+    response.assertStatus(200)
+    assert.isString((response.body().data as { orderId: string }).orderId)
+  })
+
+  test('refuses a quote that has not been accepted', async ({ client }) => {
+    const { project, quote, grant } = await createAcceptedQuote()
+    quote.status = 'draft'
+    await quote.save()
+
+    const response = await client
+      .post(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/paypal-order`)
+      .header('x-project-grant', grant)
+
+    response.assertStatus(422)
+  })
+
+  test('returns 404 without the right grant', async ({ client }) => {
+    const { project, quote } = await createAcceptedQuote()
+    const other = await createAcceptedQuote()
+
+    const response = await client
+      .post(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/paypal-order`)
+      .header('x-project-grant', other.grant)
+
+    response.assertStatus(404)
   })
 })

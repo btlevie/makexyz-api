@@ -1,0 +1,17 @@
+$kind: http-request
+name: 'Create PayPal Order'
+method: POST
+url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/paypal-order'
+order: 400
+description: 'Creates the PayPal order for an accepted quote, server-side from the quote total (the frontend PayPal Buttons createOrder callback calls this). Approve the returned order in PayPal, then Pay with provider paypal and providerToken {{paypal_order_id}}.'
+headers:
+  - key: x-project-grant
+    value: '{{project_grant}}'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const data = pm.response.json().data;
+      if (data && data.orderId) {
+        pm.collectionVariables.set('paypal_order_id', data.orderId);
+      }

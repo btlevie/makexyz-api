@@ -34,6 +34,7 @@ export type ScannedRoutes = {
     'projects.quotes.configure': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.quotes.accept': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.checkout_sessions.pay': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
+    'projects.checkout_sessions.paypal_order': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.orders.show': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'projects.projects.capture_email': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'serviceable_countries.index': { paramsTuple?: []; params?: {} }
@@ -161,6 +162,7 @@ export type ScannedRoutes = {
     'projects.project_files.store_instant_quote_files': { paramsTuple?: []; params?: {} }
     'projects.quotes.store': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'projects.checkout_sessions.pay': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
+    'projects.checkout_sessions.paypal_order': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.projects.capture_email': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'vendor.vendor_shipments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_shipments.void': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'shipmentUuid': ParamValue} }

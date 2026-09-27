@@ -94,7 +94,11 @@ async function createAcceptedOrder(vendor: Vendor, status: Order['status'] = 'ac
     unitPrice: '100.00',
     total: '100.00',
   })
-  const { transactionId } = await fakePaymentGateway.authorize({ amount: 108, metadata: {} })
+  const { transactionId } = await fakePaymentGateway.authorize({
+    expectedAmount: '108.00',
+    quoteUuid: 'test-quote',
+    metadata: {},
+  })
   await Payment.create({
     checkoutSessionId: checkoutSession.id,
     provider: 'stripe',

@@ -367,6 +367,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['pay']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'projects.checkout_sessions.paypal_order': {
+    methods: ["POST"]
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/paypal-order'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { projectUuid: ParamValue; uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['paypalOrder']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['paypalOrder']>>>
+    }
+  }
   'projects.orders.show': {
     methods: ["GET","HEAD"]
     pattern: '/v1/projects/:projectUuid/order'

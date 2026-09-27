@@ -122,7 +122,11 @@ async function createOpenOrder(technologies: ('fdm' | 'sla' | 'sls')[] = ['fdm']
     })
   }
 
-  const { transactionId } = await fakePaymentGateway.authorize({ amount: 108, metadata: {} })
+  const { transactionId } = await fakePaymentGateway.authorize({
+    expectedAmount: '108.00',
+    quoteUuid: 'test-quote',
+    metadata: {},
+  })
   const payment = await Payment.create({
     checkoutSessionId: checkoutSession.id,
     provider: 'stripe',

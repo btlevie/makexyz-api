@@ -12,6 +12,7 @@ variables:
   vendor_uuid: ""
   payout_uuid: ""
   project_grant: ""
+  paypal_order_id: ""
 scripts:
   - type: http:beforeRequest
     code: |-

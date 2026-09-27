@@ -3,7 +3,7 @@ name: 'Pay'
 method: POST
 url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/pay'
 order: 500
-description: 'Checkout in one call for an accepted quote: opens (or reuses) the checkout session, authorizes payment (a hold, not a charge) and returns the Order. Idempotent per quote - once an order exists it is returned without authorizing again. A decline returns 422 and the next call starts a fresh attempt. email is only needed if the project has no customer yet (a staff-configured guest quote).'
+description: 'Checkout in one call for an accepted quote: opens (or reuses) the checkout session, authorizes payment (a hold, not a charge) and returns the Order. Stripe: providerToken is the PaymentMethod id from Stripe.js (pm_card_visa in test mode; pm_card_threeDSecure2Required exercises 3D Secure). A card needing 3D Secure gets 202 with status requires_action and a clientSecret - complete it with Stripe.js handleNextAction, then send this same request again. PayPal: run Create PayPal Order, approve it in PayPal, then send provider paypal with providerToken {{paypal_order_id}}. Idempotent per quote - once an order exists it is returned without authorizing again. A decline returns 422 and the next call starts a fresh attempt. email is only needed if the project has no customer yet (a staff-configured guest quote).'
 headers:
   - key: x-project-grant
     value: '{{project_grant}}'
