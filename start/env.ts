@@ -121,7 +121,9 @@ export default await Env.create(new URL('../', import.meta.url), {
   | rather than a Fake. PAYPAL_WEBHOOK_ID is only read by the real PayPal
   | verifier, which test env never uses (see paypal_webhook_service.ts).
   */
-  STRIPE_WEBHOOK_SECRET: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  STRIPE_WEBHOOK_SECRET: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
   PAYPAL_WEBHOOK_ID: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
 
   /*
