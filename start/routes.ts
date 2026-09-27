@@ -135,16 +135,11 @@ router
           .patch(':projectUuid/quotes/:uuid/accept', [controllers.Quotes, 'accept'])
           .use(instantQuoteThrottle)
         // Public, same grant/customer/staff authorization as the quote
-        // endpoints above. Throttled: authorize calls out to a payment
+        // endpoints above. Checkout in one call: opens the checkout session
+        // and authorizes payment. Throttled: it calls out to a payment
         // provider.
         router
-          .post(':projectUuid/quotes/:uuid/checkout', [controllers.CheckoutSessions, 'store'])
-          .use(instantQuoteThrottle)
-        router
-          .patch(':projectUuid/checkout-sessions/:uuid/authorize', [
-            controllers.CheckoutSessions,
-            'authorize',
-          ])
+          .post(':projectUuid/quotes/:uuid/pay', [controllers.CheckoutSessions, 'pay'])
           .use(instantQuoteThrottle)
         // Public, same grant/customer/staff authorization as the other
         // project endpoints - a receipt/status check after checkout. Not

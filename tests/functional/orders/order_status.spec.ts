@@ -67,14 +67,8 @@ async function createAcceptedQuote(options: { customerId?: number | null } = {})
 }
 
 async function authorizeOrder(client: any, project: Project, quote: Quote, grant: string) {
-  const sessionResponse = await client
-    .post(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/checkout`)
-    .header('x-project-grant', grant)
-    .json({})
-  const sessionUuid = (sessionResponse.body().data as { uuid: string }).uuid
-
   await client
-    .patch(`/v1/projects/${project.uuid}/checkout-sessions/${sessionUuid}/authorize`)
+    .post(`/v1/projects/${project.uuid}/quotes/${quote.uuid}/pay`)
     .header('x-project-grant', grant)
     .json({ provider: 'stripe' })
 }

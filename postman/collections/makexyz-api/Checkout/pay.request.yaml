@@ -1,0 +1,26 @@
+$kind: http-request
+name: 'Pay'
+method: POST
+url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/pay'
+order: 500
+description: 'Checkout in one call for an accepted quote: opens (or reuses) the checkout session, authorizes payment (a hold, not a charge) and returns the Order. Idempotent per quote - once an order exists it is returned without authorizing again. A decline returns 422 and the next call starts a fresh attempt. email is only needed if the project has no customer yet (a staff-configured guest quote).'
+headers:
+  - key: x-project-grant
+    value: '{{project_grant}}'
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "provider": "stripe",
+      "providerToken": "pm_card_visa"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      const data = pm.response.json().data;
+      if (data && data.uuid) {
+        pm.collectionVariables.set('order_uuid', data.uuid);
+      }

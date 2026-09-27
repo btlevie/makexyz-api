@@ -8,7 +8,6 @@ import type { InferData, InferVariants } from '@adonisjs/core/types/transformers
 import type AddressTransformer from '#transformers/address_transformer'
 import type AdminQuoteReviewTransformer from '#transformers/admin_quote_review_transformer'
 import type AdminVendorTransformer from '#transformers/admin_vendor_transformer'
-import type CheckoutSessionTransformer from '#transformers/checkout_session_transformer'
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
 import type InvitationTransformer from '#transformers/invitation_transformer'
@@ -40,10 +39,6 @@ export namespace Data {
   export type AdminVendor = InferData<AdminVendorTransformer>
   export namespace AdminVendor {
     export type Variants = InferVariants<AdminVendorTransformer>
-  }
-  export type CheckoutSession = InferData<CheckoutSessionTransformer>
-  export namespace CheckoutSession {
-    export type Variants = InferVariants<CheckoutSessionTransformer>
   }
   export type Customer = InferData<CustomerTransformer>
   export namespace Customer {

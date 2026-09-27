@@ -25,7 +25,7 @@ export const configureQuoteValidator = vine.create({
   /**
    * Either addressUuid (an existing saved address) or the inline fields
    * below to create a new one - enforced in the controller, not here, same
-   * pattern as createCheckoutSessionValidator's `email` field.
+   * pattern as payValidator's `email` field.
    */
   addressUuid: vine.string().uuid().optional(),
   shippingAddressLabel: vine.string().trim().maxLength(100).optional(),

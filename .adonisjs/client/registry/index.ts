@@ -180,17 +180,11 @@ const routes = {
     tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/accept","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/accept","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/accept","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/accept","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/accept","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/accept","type":0,"val":"accept","end":""}],
     types: placeholder as Registry['projects.quotes.accept']['types'],
   },
-  'projects.checkout_sessions.store': {
+  'projects.checkout_sessions.pay': {
     methods: ["POST"],
-    pattern: '/v1/projects/:projectUuid/quotes/:uuid/checkout',
-    tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/checkout","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/checkout","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/checkout","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/checkout","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/checkout","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/checkout","type":0,"val":"checkout","end":""}],
-    types: placeholder as Registry['projects.checkout_sessions.store']['types'],
-  },
-  'projects.checkout_sessions.authorize': {
-    methods: ["PATCH"],
-    pattern: '/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize',
-    tokens: [{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"checkout-sessions","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize","type":0,"val":"authorize","end":""}],
-    types: placeholder as Registry['projects.checkout_sessions.authorize']['types'],
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/pay',
+    tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/pay","type":0,"val":"pay","end":""}],
+    types: placeholder as Registry['projects.checkout_sessions.pay']['types'],
   },
   'projects.orders.show': {
     methods: ["GET","HEAD"],

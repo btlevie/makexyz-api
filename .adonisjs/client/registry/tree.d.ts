@@ -57,8 +57,7 @@ export interface ApiDefinition {
       accept: typeof routes['projects.quotes.accept']
     }
     checkoutSessions: {
-      store: typeof routes['projects.checkout_sessions.store']
-      authorize: typeof routes['projects.checkout_sessions.authorize']
+      pay: typeof routes['projects.checkout_sessions.pay']
     }
     orders: {
       show: typeof routes['projects.orders.show']

@@ -355,28 +355,16 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['accept']>>>
     }
   }
-  'projects.checkout_sessions.store': {
+  'projects.checkout_sessions.pay': {
     methods: ["POST"]
-    pattern: '/v1/projects/:projectUuid/quotes/:uuid/checkout'
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/pay'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/checkout').createCheckoutSessionValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/checkout').payValidator)>>
       paramsTuple: [ParamValue, ParamValue]
       params: { projectUuid: ParamValue; uuid: ParamValue }
-      query: ExtractQuery<InferInput<(typeof import('#validators/checkout').createCheckoutSessionValidator)>>
-      response: ExtractResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['store']>>>
-      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
-    }
-  }
-  'projects.checkout_sessions.authorize': {
-    methods: ["PATCH"]
-    pattern: '/v1/projects/:projectUuid/checkout-sessions/:uuid/authorize'
-    types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/checkout').authorizeCheckoutSessionValidator)>>
-      paramsTuple: [ParamValue, ParamValue]
-      params: { projectUuid: ParamValue; uuid: ParamValue }
-      query: ExtractQuery<InferInput<(typeof import('#validators/checkout').authorizeCheckoutSessionValidator)>>
-      response: ExtractResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['authorize']>>>
-      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['authorize']>>> | { status: 422; response: { errors: SimpleError[] } }
+      query: ExtractQuery<InferInput<(typeof import('#validators/checkout').payValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['pay']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/checkout_sessions_controller').default['pay']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'projects.orders.show': {
