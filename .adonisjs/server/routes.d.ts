@@ -32,6 +32,7 @@ export type ScannedRoutes = {
     'projects.quotes.index': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'projects.quotes.production_time_options': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.quotes.configure': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
+    'projects.quotes.update_quantities': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.quotes.accept': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.checkout_sessions.pay': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.checkout_sessions.paypal_order': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
@@ -196,6 +197,7 @@ export type ScannedRoutes = {
     'projects.project_files.update_slicing_result': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.project_files.update_slicing_progress': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'projects.quotes.configure': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
+    'projects.quotes.update_quantities': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'projects.quotes.accept': { paramsTuple: [ParamValue,ParamValue]; params: {'projectUuid': ParamValue,'uuid': ParamValue} }
     'vendor.vendor_orders.accept': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_orders.start_production': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }

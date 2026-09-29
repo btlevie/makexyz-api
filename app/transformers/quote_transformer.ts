@@ -25,6 +25,9 @@ export default class QuoteTransformer extends BaseTransformer<Quote> {
         ? await AddressTransformer.transform(this.resource.address)
         : null,
       items: this.resource.items.map((item) => ({
+        // What PATCH .../quantities addresses a line by. Needs items'
+        // projectFile preloaded; null only for a line with no file.
+        projectFileUuid: item.projectFile?.uuid ?? null,
         itemType: item.itemType,
         description: item.description,
         quantity: item.quantity,

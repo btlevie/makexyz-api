@@ -174,6 +174,12 @@ const routes = {
     tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/configure","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/configure","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/configure","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/configure","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/configure","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/configure","type":0,"val":"configure","end":""}],
     types: placeholder as Registry['projects.quotes.configure']['types'],
   },
+  'projects.quotes.update_quantities': {
+    methods: ["PATCH"],
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/quantities',
+    tokens: [{"old":"/v1/projects/:projectUuid/quotes/:uuid/quantities","type":0,"val":"v1","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/quantities","type":0,"val":"projects","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/quantities","type":1,"val":"projectUuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/quantities","type":0,"val":"quotes","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/quantities","type":1,"val":"uuid","end":""},{"old":"/v1/projects/:projectUuid/quotes/:uuid/quantities","type":0,"val":"quantities","end":""}],
+    types: placeholder as Registry['projects.quotes.update_quantities']['types'],
+  },
   'projects.quotes.accept': {
     methods: ["PATCH"],
     pattern: '/v1/projects/:projectUuid/quotes/:uuid/accept',

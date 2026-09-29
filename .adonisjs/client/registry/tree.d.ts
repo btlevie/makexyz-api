@@ -54,6 +54,7 @@ export interface ApiDefinition {
       index: typeof routes['projects.quotes.index']
       productionTimeOptions: typeof routes['projects.quotes.production_time_options']
       configure: typeof routes['projects.quotes.configure']
+      updateQuantities: typeof routes['projects.quotes.update_quantities']
       accept: typeof routes['projects.quotes.accept']
     }
     checkoutSessions: {

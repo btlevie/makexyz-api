@@ -343,6 +343,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['configure']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'projects.quotes.update_quantities': {
+    methods: ["PATCH"]
+    pattern: '/v1/projects/:projectUuid/quotes/:uuid/quantities'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/quote').updateQuoteQuantitiesValidator)>>
+      paramsTuple: [ParamValue, ParamValue]
+      params: { projectUuid: ParamValue; uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/quote').updateQuoteQuantitiesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['updateQuantities']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/quotes_controller').default['updateQuantities']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'projects.quotes.accept': {
     methods: ["PATCH"]
     pattern: '/v1/projects/:projectUuid/quotes/:uuid/accept'

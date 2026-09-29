@@ -168,6 +168,14 @@ Quotes may be:
 
 Quotes are immutable pricing snapshots and should be preserved for historical reference.
 
+Quantity lives only on quote items. Until a quote is accepted, the customer can
+change line quantities (`PATCH /v1/projects/:projectUuid/quotes/:uuid/quantities`).
+Each change writes a new revision in the same lineage: changed lines are repriced,
+other lines carry over unchanged, and a quote that was already configured has its
+tax recomputed. Automatic requotes (a material change, a newly sliced part) keep
+the quantities from the latest revision, and a part quoted for the first time
+starts at one.
+
 ---
 
 ## Quote Items

@@ -7,7 +7,11 @@ import ProjectFile from '#models/project_file'
 import Quote from '#models/quote'
 import QuoteTransformer from '#transformers/quote_transformer'
 import ProductionTimeOptionTransformer from '#transformers/production_time_option_transformer'
-import { configureQuoteValidator, createQuoteValidator } from '#validators/quote'
+import {
+  configureQuoteValidator,
+  createQuoteValidator,
+  updateQuoteQuantitiesValidator,
+} from '#validators/quote'
 import type { FdmPricingResult } from '#services/fdm_pricing_calculator'
 import { getActiveFdmConfig, PricingConfigurationError } from '#services/pricing_config_service'
 import {
@@ -16,6 +20,7 @@ import {
   priceLine,
   ProductionTimeInfeasibleError,
   QuoteNotConfigurableError,
+  requantifyQuote,
   slowestPrintTimeSeconds,
   UnpriceableLineError,
   type QuoteAddressInput,
@@ -53,7 +58,7 @@ export default class QuotesController {
 
     const quotes = await Quote.query()
       .where('projectId', project.id)
-      .preload('items')
+      .preload('items', (q) => q.preload('projectFile'))
       .preload('address')
 
     // A project only ever had one quote lineage before quote splitting
@@ -94,7 +99,7 @@ export default class QuotesController {
     const quote = await Quote.query()
       .where('uuid', params.uuid)
       .where('projectId', project.id)
-      .preload('items')
+      .preload('items', (q) => q.preload('projectFile'))
       .first()
     if (!quote) {
       return response.notFound({ error: 'Quote not found' })
@@ -185,7 +190,7 @@ export default class QuotesController {
     }
 
     const quote = await persistQuote(project, pricedLines, { createdById: user.id })
-    await quote.load('items')
+    await quote.load('items', (q) => q.preload('projectFile'))
     await quote.load('address')
 
     return await serialize(QuoteTransformer.transform(quote))
@@ -300,7 +305,7 @@ export default class QuotesController {
         productionTimeBusinessDays,
         address,
       })
-      await configured.load('items')
+      await configured.load('items', (q) => q.preload('projectFile'))
       await configured.load('address')
       return await serialize(QuoteTransformer.transform(configured))
     } catch (error) {
@@ -321,6 +326,73 @@ export default class QuotesController {
         )
         return response.serviceUnavailable({
           error: 'Pricing is unavailable because no valid configuration is active',
+        })
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Changes line quantities on a quote before the customer accepts it,
+   * writing a new revision (see requantifyQuote). Public, same access as
+   * configure above - this is how an instant-quote customer orders more than
+   * one of a part, since auto-quoting starts every file at one.
+   */
+  async updateQuantities(ctx: HttpContext) {
+    const { params, request, response, serialize } = ctx
+    const { items } = await request.validateUsing(updateQuoteQuantitiesValidator)
+
+    const project = (await isStaff(ctx))
+      ? await Project.findBy('uuid', params.projectUuid)
+      : await resolveProject(ctx, params.projectUuid)
+    if (!project) {
+      return response.notFound({ error: 'Project not found' })
+    }
+
+    const quote = await Quote.query()
+      .where('uuid', params.uuid)
+      .where('projectId', project.id)
+      .preload('items', (q) => q.preload('projectFile'))
+      .first()
+    if (!quote) {
+      return response.notFound({ error: 'Quote not found' })
+    }
+
+    const quantities = new Map<number, number>()
+    for (const { projectFileUuid, quantity } of items) {
+      const line = quote.items.find((item) => item.projectFile?.uuid === projectFileUuid)
+      if (!line) {
+        return response.unprocessableEntity({
+          error: `Project file ${projectFileUuid} is not on quote ${quote.uuid}`,
+        })
+      }
+      quantities.set(line.projectFileId!, quantity)
+    }
+
+    try {
+      const revised = await requantifyQuote(project, quote, quantities)
+      await revised.load('items', (q) => q.preload('projectFile'))
+      await revised.load('address')
+      return await serialize(QuoteTransformer.transform(revised))
+    } catch (error) {
+      if (error instanceof QuoteNotConfigurableError) {
+        return response.conflict({ error: error.message })
+      }
+      if (
+        error instanceof UnpriceableLineError ||
+        error instanceof ProductionTimeInfeasibleError ||
+        error instanceof InvalidShippingSelectionError ||
+        error instanceof InvalidProductionTimeSelectionError
+      ) {
+        return response.unprocessableEntity({ error: error.message })
+      }
+      if (error instanceof PricingConfigurationError) {
+        logger.error(
+          { projectUuid: project.uuid, error: error.message },
+          'Pricing configuration unavailable'
+        )
+        return response.serviceUnavailable({
+          error: 'Pricing is unavailable because no valid pricing configuration is active',
         })
       }
       throw error
@@ -352,7 +424,7 @@ export default class QuotesController {
     if (quote.status === 'accepted') {
       // Idempotent - re-accepting an already-accepted quote is a no-op, not
       // an error.
-      await quote.load('items')
+      await quote.load('items', (q) => q.preload('projectFile'))
       await quote.load('address')
       return await serialize(QuoteTransformer.transform(quote))
     }
@@ -390,7 +462,7 @@ export default class QuotesController {
 
     quote.status = 'accepted'
     await quote.save()
-    await quote.load('items')
+    await quote.load('items', (q) => q.preload('projectFile'))
     await quote.load('address')
 
     return await serialize(QuoteTransformer.transform(quote))

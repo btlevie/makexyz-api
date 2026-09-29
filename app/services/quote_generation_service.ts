@@ -20,6 +20,7 @@ import {
   type ResolvedFdmPricingConfig,
 } from '#services/fdm_pricing_calculator'
 import { buildFdmPricingInputs } from '#services/project_file_pricing_inputs'
+import { getActiveFdmConfig } from '#services/pricing_config_service'
 import { resolveShippingFee, type ShippingMethod } from '#services/shipping_service'
 import {
   computeProductionTimeFee,
@@ -153,17 +154,46 @@ function priceFdmLine(
   }
 }
 
+export type PricedLine = { projectFile: ProjectFile; result: FdmPricingResult }
+
+/** The quote_items row for a freshly priced line. */
+function pricedLineToItem({ projectFile, result }: PricedLine) {
+  return {
+    projectFileId: projectFile.id,
+    itemType: 'printing',
+    description: projectFile.originalName,
+    quantity: result.quantity,
+    // Display convenience only. Because it is rounded before display,
+    // unitPrice * quantity will not always equal total - the authoritative
+    // figures are total and the full-precision pricingSnapshot.
+    unitPrice: roundCurrency(result.calculation.finalPrice / result.quantity).toFixed(2),
+    total: result.calculation.finalPriceRounded.toFixed(2),
+    // Read from the line's own result, not a single shared config - once a
+    // quote can mix technologies, different lines are priced against
+    // different configs.
+    pricingConfigId: result.pricingConfiguration.id,
+    pricingSnapshot: result,
+  }
+}
+
 /**
  * Persists a new quote revision from already-priced lines.
  *
  * Locks the project row before reading the latest revision: files finish slicing
  * in parallel and SQS delivers at least once, so two callers can otherwise
  * observe the same "latest" and both write revision N+1.
+ *
+ * Pass `originQuoteId` when this revises an existing lineage (an auto-requote),
+ * otherwise the new quote becomes a lineage root of its own.
  */
 export async function persistQuote(
   project: Project,
-  pricedLines: { projectFile: ProjectFile; result: FdmPricingResult }[],
-  options: { createdById?: number | null; trx?: TransactionClientContract } = {}
+  pricedLines: PricedLine[],
+  options: {
+    createdById?: number | null
+    originQuoteId?: number | null
+    trx?: TransactionClientContract
+  } = {}
 ): Promise<Quote> {
   const subtotal = roundCurrency(
     pricedLines.reduce((sum, line) => sum + line.result.calculation.finalPriceRounded, 0)
@@ -203,6 +233,7 @@ export async function persistQuote(
         projectId: project.id,
         // Null for system-generated anonymous quotes - there is no author.
         createdById: options.createdById ?? null,
+        originQuoteId: options.originQuoteId ?? null,
         revision: (latest?.revision ?? 0) + 1,
         subtotal: subtotal.toFixed(2),
         // Not yet known - no destination to calculate tax against until the
@@ -222,24 +253,7 @@ export async function persistQuote(
       { client: trx }
     )
 
-    await quote.related('items').createMany(
-      pricedLines.map(({ projectFile, result }) => ({
-        projectFileId: projectFile.id,
-        itemType: 'printing',
-        description: projectFile.originalName,
-        quantity: result.quantity,
-        // Display convenience only. Because it is rounded before display,
-        // unitPrice * quantity will not always equal total - the authoritative
-        // figures are total and the full-precision pricingSnapshot.
-        unitPrice: roundCurrency(result.calculation.finalPrice / result.quantity).toFixed(2),
-        total: result.calculation.finalPriceRounded.toFixed(2),
-        // Read from the line's own result, not a single shared config - once a
-        // quote can mix technologies, different lines are priced against
-        // different configs.
-        pricingConfigId: result.pricingConfiguration.id,
-        pricingSnapshot: result,
-      }))
-    )
+    await quote.related('items').createMany(pricedLines.map(pricedLineToItem))
 
     return quote
   }
@@ -418,27 +432,7 @@ export async function configureQuote(
   latestQuote: Quote,
   input: QuoteConfigurationInput
 ): Promise<Quote> {
-  if (
-    latestQuote.status !== 'draft' &&
-    latestQuote.status !== 'sent' &&
-    latestQuote.status !== 'needs_review'
-  ) {
-    throw new QuoteNotConfigurableError(
-      `Quote ${latestQuote.uuid} is ${latestQuote.status} and can no longer be configured`
-    )
-  }
-
-  const lineageRoot = latestQuote.originQuoteId ?? latestQuote.id
-  const currentLatest = await Quote.query()
-    .where('projectId', project.id)
-    .where((q) => q.where('id', lineageRoot).orWhere('originQuoteId', lineageRoot))
-    .orderBy('revision', 'desc')
-    .firstOrFail()
-  if (currentLatest.id !== latestQuote.id) {
-    throw new QuoteNotConfigurableError(
-      `Quote ${latestQuote.uuid} (revision ${latestQuote.revision}) is no longer the latest revision for this project`
-    )
-  }
+  const lineageRoot = await assertRevisable(project, latestQuote, 'configured')
 
   await latestQuote.load('items')
 
@@ -523,5 +517,160 @@ export async function configureQuote(
     )
 
     return configured
+  })
+}
+
+/**
+ * Guards shared by everything that writes a customer-driven revision: the
+ * quote must still be open (not accepted/rejected - a quote is frozen once
+ * accepted, see docs/DATABASE_FLOW.md) and must be the latest revision
+ * *within its own lineage* (stale client state otherwise; a project can have
+ * independent lineages once a quote has been split). Returns the lineage root
+ * the new revision belongs to.
+ */
+async function assertRevisable(project: Project, latestQuote: Quote, action: string) {
+  if (
+    latestQuote.status !== 'draft' &&
+    latestQuote.status !== 'sent' &&
+    latestQuote.status !== 'needs_review'
+  ) {
+    throw new QuoteNotConfigurableError(
+      `Quote ${latestQuote.uuid} is ${latestQuote.status} and can no longer be ${action}`
+    )
+  }
+
+  const lineageRoot = latestQuote.originQuoteId ?? latestQuote.id
+  const currentLatest = await Quote.query()
+    .where('projectId', project.id)
+    .where((q) => q.where('id', lineageRoot).orWhere('originQuoteId', lineageRoot))
+    .orderBy('revision', 'desc')
+    .firstOrFail()
+  if (currentLatest.id !== latestQuote.id) {
+    throw new QuoteNotConfigurableError(
+      `Quote ${latestQuote.uuid} (revision ${latestQuote.revision}) is no longer the latest revision for this project`
+    )
+  }
+
+  return lineageRoot
+}
+
+/**
+ * Changes line quantities on an open quote, as a new revision in the same
+ * lineage - quotes are immutable snapshots, so the old revision is kept as-is.
+ *
+ * `quantities` maps project file id to its new quantity; lines not in it keep
+ * theirs. Only changed lines are repriced (against the currently active
+ * config); unchanged lines are cloned forward with their original snapshot,
+ * same as configureQuote. Returns `latestQuote` itself, with no new revision,
+ * when nothing actually changes.
+ *
+ * Tax depends on the subtotal, so a quote that was already configured has its
+ * shipping/production-time/tax recomputed with the same selection and address.
+ * An unconfigured or `needs_review` quote gets none of that - see
+ * configureQuote for why `needs_review` skips it.
+ *
+ * Throws QuoteNotConfigurableError (see assertRevisable), UnpriceableLineError
+ * if a changed line can't be priced, PricingConfigurationError if no pricing
+ * config is active, and whatever computeShippingProductionAndTax throws.
+ */
+export async function requantifyQuote(
+  project: Project,
+  latestQuote: Quote,
+  quantities: Map<number, number>
+): Promise<Quote> {
+  const lineageRoot = await assertRevisable(project, latestQuote, 'changed')
+
+  await latestQuote.load('items', (q) =>
+    q.preload('projectFile', (file) => file.preload('material').preload('sliceVariants'))
+  )
+
+  const changed = latestQuote.items.filter((item) => {
+    const quantity = item.projectFileId === null ? undefined : quantities.get(item.projectFileId)
+    return quantity !== undefined && quantity !== item.quantity
+  })
+  if (changed.length === 0) {
+    return latestQuote
+  }
+
+  // One configuration snapshot for every repriced line, same as QuotesController#store.
+  const configs: ResolvedPricingConfigs = { fdm: await getActiveFdmConfig() }
+
+  const items = latestQuote.items.map((item) => {
+    if (!changed.includes(item)) {
+      return {
+        projectFileId: item.projectFileId,
+        itemType: item.itemType,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.total,
+        pricingConfigId: item.pricingConfigId,
+        pricingSnapshot: item.pricingSnapshot,
+      }
+    }
+    if (!item.projectFile) {
+      throw new UnpriceableLineError(`Quote ${latestQuote.uuid} has a line with no project file`)
+    }
+    const projectFile = item.projectFile
+    const quantity = quantities.get(projectFile.id)!
+    return pricedLineToItem({
+      projectFile,
+      result: priceLine(project, { projectFile, quantity }, configs),
+    })
+  })
+
+  const subtotal = roundCurrency(items.reduce((sum, item) => sum + Number(item.total), 0))
+
+  const configured =
+    latestQuote.status !== 'needs_review' &&
+    latestQuote.addressId !== null &&
+    latestQuote.destinationCountry !== null &&
+    latestQuote.shippingMethod !== null &&
+    latestQuote.productionTimeBusinessDays !== null
+
+  let pricing: ComputedQuotePricing | null = null
+  if (configured) {
+    await latestQuote.load('address')
+    pricing = await computeShippingProductionAndTax(
+      latestQuote.destinationCountry!,
+      latestQuote.shippingMethod!,
+      latestQuote.productionTimeBusinessDays!,
+      subtotal,
+      latestQuote.items,
+      latestQuote.address
+    )
+  }
+
+  return db.transaction(async (trx) => {
+    await Project.query({ client: trx }).where('id', project.id).forUpdate().first()
+
+    const revised = await Quote.create(
+      {
+        uuid: string.uuid(),
+        projectId: project.id,
+        createdById: latestQuote.createdById,
+        originQuoteId: lineageRoot,
+        revision: latestQuote.revision + 1,
+        subtotal: subtotal.toFixed(2),
+        tax: pricing ? pricing.taxAmount.toFixed(2) : '0.00',
+        total: pricing ? pricing.total.toFixed(2) : subtotal.toFixed(2),
+        status: latestQuote.status,
+        reviewReason: latestQuote.reviewReason,
+        generatedBy: latestQuote.generatedBy,
+        destinationCountry: latestQuote.destinationCountry,
+        shippingMethod: latestQuote.shippingMethod,
+        shippingFeeAmount: pricing ? pricing.shippingFeeAmount.toFixed(2) : null,
+        productionTimeBusinessDays: latestQuote.productionTimeBusinessDays,
+        productionTimeFeeAmount: pricing ? pricing.productionTimeFeeAmount.toFixed(2) : null,
+        stripeTaxCalculationId: pricing ? pricing.stripeTaxCalculationId : null,
+        // Explicit null rather than undefined - see persistQuote.
+        addressId: latestQuote.addressId ?? null,
+      },
+      { client: trx }
+    )
+
+    await revised.related('items').createMany(items)
+
+    return revised
   })
 }

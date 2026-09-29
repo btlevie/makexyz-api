@@ -237,7 +237,7 @@ export async function splitQuote(
     // never had `items`/`address` preloaded at all. Reload both on every
     // resulting quote so callers get fully-usable instances back.
     for (const resultQuote of resultingQuotes) {
-      await resultQuote.load('items')
+      await resultQuote.load('items', (q) => q.preload('projectFile'))
       await resultQuote.load('address')
     }
     return resultingQuotes

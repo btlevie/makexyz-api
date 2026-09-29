@@ -1,0 +1,22 @@
+$kind: http-request
+name: 'Update Quote Quantities'
+method: PATCH
+url: '{{base_url}}/projects/{{project_uuid}}/quotes/{{quote_uuid}}/quantities'
+order: 2500
+description: 'Changes line quantities (1-10000) before the quote is accepted, as a new revision. Only listed lines change; lines are addressed by projectFileUuid. A configured quote has its tax recomputed.'
+headers:
+  - key: x-project-grant
+    value: '{{project_grant}}'
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "items": [
+        {
+          "projectFileUuid": "{{file_uuid}}",
+          "quantity": 2
+        }
+      ]
+    }

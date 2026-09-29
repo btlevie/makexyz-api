@@ -1,16 +1,41 @@
 import vine from '@vinejs/vine'
 import { SHIPPING_METHODS } from '#services/shipping_service'
 
+/**
+ * Anything bigger is a production run to quote by hand, not an instant quote -
+ * and it keeps absurd values out of the pricing calculator.
+ */
+export const MAX_QUOTE_QUANTITY = 10_000
+
+/** Whole parts only, at least one. */
+const quantity = () => vine.number().withoutDecimals().min(1).max(MAX_QUOTE_QUANTITY)
+
 export const createQuoteValidator = vine.create({
   items: vine
     .array(
       vine.object({
         projectFileUuid: vine.string().uuid(),
-        // Whole parts only, at least one.
-        quantity: vine.number().withoutDecimals().min(1),
+        quantity: quantity(),
       })
     )
     .minLength(1),
+})
+
+/**
+ * Only the listed lines change; the rest of the quote keeps its quantities.
+ * Lines are addressed by project file rather than quote item, since items are
+ * recreated on every revision and a file appears at most once per quote.
+ */
+export const updateQuoteQuantitiesValidator = vine.create({
+  items: vine
+    .array(
+      vine.object({
+        projectFileUuid: vine.string().uuid(),
+        quantity: quantity(),
+      })
+    )
+    .minLength(1)
+    .distinct('projectFileUuid'),
 })
 
 /**

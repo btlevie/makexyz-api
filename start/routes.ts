@@ -131,6 +131,11 @@ router
         router
           .patch(':projectUuid/quotes/:uuid/configure', [controllers.Quotes, 'configure'])
           .use(instantQuoteThrottle)
+        // Public, same access as configure. Throttled since it reprices lines
+        // and, on a configured quote, calls out to the tax calculator.
+        router
+          .patch(':projectUuid/quotes/:uuid/quantities', [controllers.Quotes, 'updateQuantities'])
+          .use(instantQuoteThrottle)
         router
           .patch(':projectUuid/quotes/:uuid/accept', [controllers.Quotes, 'accept'])
           .use(instantQuoteThrottle)

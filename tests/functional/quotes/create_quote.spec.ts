@@ -173,6 +173,20 @@ test.group('Quotes | create', (group) => {
     assert.equal(quoteItems[0].projectFileId, projectFile.id)
   })
 
+  test('rejects a quantity above the instant-quote cap', async ({ client, assert }) => {
+    await seedPricingConfig()
+    const { session, customer } = await signup(client)
+    const { project, projectFile } = await createSlicedProjectFile(customer)
+
+    const response = await client
+      .post(`/v1/projects/${project.uuid}/quotes`)
+      .withSession(session)
+      .json({ items: [{ projectFileUuid: projectFile.uuid, quantity: 10_001 }] })
+
+    response.assertStatus(422)
+    assert.lengthOf(await Quote.all(), 0)
+  })
+
   test('stores the pricing configuration and full calculation snapshot', async ({
     client,
     assert,
