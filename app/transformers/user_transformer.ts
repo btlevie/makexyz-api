@@ -14,6 +14,8 @@ export default class UserTransformer extends BaseTransformer<User> {
         'updatedAt',
         'initials',
       ]),
+      emailVerified:
+        this.resource.emailVerifiedAt !== null && this.resource.emailVerifiedAt !== undefined,
       vendor: await this.vendorSummary(),
     }
   }

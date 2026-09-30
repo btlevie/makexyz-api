@@ -11,6 +11,10 @@ export default class extends BaseSchema {
       table.string('password').notNullable()
       table.enum('role', ['admin', 'customer', 'vendor']).notNullable().defaultTo('customer')
       table.string('full_name').nullable()
+      // Set when the user proves they own `email` (a signed link, or accepting
+      // an emailed invitation). Required before a customer can start an
+      // inquiry to a vendor - see email_verification_service.ts.
+      table.timestamp('email_verified_at').nullable()
 
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()

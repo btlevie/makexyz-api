@@ -51,6 +51,8 @@ Additional profile information is stored in role-specific tables:
 
 This separation allows role-specific integrations and metadata while keeping authentication centralized.
 
+`users.email_verified_at` records that the account holder proved they own their email: through a signed link emailed at signup (resendable), or by accepting an emailed invitation, which counts as proof on its own. Signup itself never checks the address. A verified email is required before a customer can message vendors (see Messaging). See `app/services/email_verification_service.ts`.
+
 A `customers` row does not require a user. Instant-quote visitors never need an account: the moment they give an email (alongside the shipping address on quote configuration, or via "email this quote to me") a **guest customer** is created with `customers.email` set and `user_id` null, and one guest row is shared by every project the same email is given for. This is what lets an abandoned quote be followed up by email. Guest customers also record an explicit marketing opt-in (`marketing_opt_in`, default false, with `marketing_opt_in_updated_at` as evidence of when the choice last changed); follow-up campaigns only go to customers who opted in. An account's consent is never changed through these public, unverified guest endpoints.
 
 ### Guest customers and account claiming
@@ -595,6 +597,35 @@ Each audit event stores:
 * User responsible for the change
 
 The audit system exists to provide accountability, debugging, and historical reconstruction of important business events.
+
+---
+
+# Messaging
+
+Customers and vendors talk in `conversations`. The full design, including the moderation pipeline and what is still to come, is in [plans/messaging_moderation.md](./plans/messaging_moderation.md).
+
+**Every conversation exists because of something else.** There are no free-form DMs, and vendors can never start a conversation:
+
+* `inquiry`: a customer account with a verified email writes to an active vendor. There's one open inquiry per (customer, vendor), and new ones are capped per day (5 for accounts under 7 days old, 20 otherwise). The vendor only sees an inquiry once its first message has been delivered. The vendor can decline it, or block the customer from sending more (which also opens a moderation case).
+* `order`: opened automatically when a vendor accepts an instant-quote order (`order_acceptance_service`, after payment capture). The customer sees the vendor only as "Your manufacturer" (white-label). A reassigned order cuts the previous vendor off.
+* `support`: a user and MakeXYZ staff (not yet exposed).
+
+`conversation_participants` holds who is in a thread and how they're shown (never an email address). Customers are shown to vendors as "First L.". A guest customer (no account) appears as a participant, but must create or claim an account to read or reply.
+
+**Messages are never edited, and every submission is kept.** `messages.seq` is gap-free per conversation, assigned under a row lock on the conversation (`conversations.last_seq`). Sends are idempotent by a client-generated `client_message_id`. Every message runs through moderation (`app/services/moderation/`) before anyone else can see it, and its status records the outcome:
+
+```text
+delivered | delivered_flagged   visible to the other side
+pending_review                   held for a person (queued in moderation_cases)
+blocked                          only the sender sees it, with the reason
+removed                          taken down after delivery; recipients see a tombstone
+```
+
+Each moderation pass is stored in `moderation_evaluations` (the extracted signals and every `rule@version` that ran), with one `moderation_rule_hits` row per rule that fired. Rules run in `off`, `shadow` or `enforce` mode, and `moderation_rule_configs` overrides a rule's code defaults. `messaging_risk_profiles` holds a sender's messaging trust tier: `restricted` sends everything to review, and `suspended` blocks sending except in a thread with a live order, where it's treated as `restricted`. Tiers affect messaging only, never ordering or fulfilment.
+
+**Lifecycle.** An inquiry becomes `read_only` after 60 days without messages (the customer can reopen it by posting within 90 days), or when the vendor declines or blocks. An order thread stops accepting messages as soon as its order is refunded, cancelled, reassigned, or delivered more than 14 days ago. The hourly `CloseExpiredConversations` job records that as `read_only`.
+
+**Notifications.** A delivered message schedules one debounced email per recipient, about 3 minutes later, covering everything they haven't read or been emailed about (`conversation_participants.last_notified_seq`). Message text is only included when every message in the email is delivered, unflagged and from an established sender.
 
 ---
 

@@ -1,0 +1,17 @@
+$kind: http-request
+name: 'Start Inquiry'
+method: POST
+url: '{{base_url}}/vendors/{{vendor_uuid}}/inquiries'
+order: 1000
+description: 'A customer (verified email required) opens a conversation with an active vendor, with its first message. 403 email_unverified / not_a_customer, 409 already_open (returns conversationUuid), 422 vendor_unavailable, 429 daily_cap_reached. The vendor only sees the inquiry once this first message is delivered.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "subject": "Bracket run",
+      "body": "Hi - could you print 20 of these brackets in PETG by next Friday?",
+      "clientMessageId": "{{$guid}}"
+    }

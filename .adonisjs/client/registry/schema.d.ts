@@ -211,6 +211,30 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/guest_claims_controller').default['confirm']>>>
     }
   }
+  'profile.email_verifications.store': {
+    methods: ["POST"]
+    pattern: '/v1/account/email-verification'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/email_verifications_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/email_verifications_controller').default['store']>>>
+    }
+  }
+  'profile.email_verifications.confirm': {
+    methods: ["POST"]
+    pattern: '/v1/account/email-verification/:userUuid/:emailHash'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { userUuid: ParamValue; emailHash: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/email_verifications_controller').default['confirm']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/email_verifications_controller').default['confirm']>>>
+    }
+  }
   'projects.project_files.store_instant_quote_files': {
     methods: ["POST"]
     pattern: '/v1/projects/files'
@@ -437,6 +461,78 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/materials_controller').default['index']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/materials_controller').default['index']>>>
+    }
+  }
+  'messaging.conversations.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/conversations'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['index']>>>
+    }
+  }
+  'messaging.conversations.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/conversations/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['show']>>>
+    }
+  }
+  'messaging.conversations.messages': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/conversations/:uuid/messages'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').listMessagesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['messages']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['messages']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'messaging.conversations.store_message': {
+    methods: ["POST"]
+    pattern: '/v1/conversations/:uuid/messages'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').sendMessageValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').sendMessageValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['storeMessage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['storeMessage']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'messaging.conversations.mark_read': {
+    methods: ["POST"]
+    pattern: '/v1/conversations/:uuid/read'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').markReadValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').markReadValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['markRead']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['markRead']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'messaging.inquiries.store': {
+    methods: ["POST"]
+    pattern: '/v1/vendors/:vendorUuid/inquiries'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').createInquiryValidator)>>
+      paramsTuple: [ParamValue]
+      params: { vendorUuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').createInquiryValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/inquiries_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/inquiries_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'shipping_options.index': {
@@ -739,6 +835,30 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['submit']>>>
     }
   }
+  'vendor.vendor_conversations.decline': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/conversations/:uuid/decline'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').closeConversationValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').closeConversationValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_conversations_controller').default['decline']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_conversations_controller').default['decline']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_conversations.block_customer': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/conversations/:uuid/block-customer'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').closeConversationValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').closeConversationValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_conversations_controller').default['blockCustomer']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_conversations_controller').default['blockCustomer']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'admin.admin_quotes.needs_review': {
     methods: ["GET","HEAD"]
     pattern: '/v1/admin/quotes/needs-review'
@@ -1001,6 +1121,66 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reinstate']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reinstate']>>>
+    }
+  }
+  'admin.admin_conversations.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/conversations'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').adminListConversationsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_conversations_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_conversations_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_conversations.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/conversations/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_conversations_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_conversations_controller').default['show']>>>
+    }
+  }
+  'admin.admin_moderation_cases.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/cases'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').adminListCasesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_cases.approve': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/cases/:uuid/approve'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['approve']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['approve']>>>
+    }
+  }
+  'admin.admin_moderation_cases.block': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/cases/:uuid/block'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['block']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['block']>>>
     }
   }
   'webhooks.stripe_webhooks': {

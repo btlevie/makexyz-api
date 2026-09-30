@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Send Message'
+method: POST
+url: '{{base_url}}/conversations/{{conversation_uuid}}/messages'
+order: 5000
+description: 'Sends a message. Moderated before anyone else sees it: status is delivered, delivered_flagged, pending_review or blocked (with reason). Retrying with the same clientMessageId returns the original (200). 409 if the conversation no longer takes messages, 403 if the sender''s messaging is suspended.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "body": "Can you do it in black PETG?",
+      "clientMessageId": "{{$guid}}"
+    }

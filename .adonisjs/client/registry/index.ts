@@ -108,6 +108,18 @@ const routes = {
     tokens: [{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":0,"val":"v1","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":0,"val":"account","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":0,"val":"guest-claims","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":1,"val":"customerUuid","end":""},{"old":"/v1/account/guest-claims/:customerUuid/:userUuid","type":1,"val":"userUuid","end":""}],
     types: placeholder as Registry['profile.guest_claims.confirm']['types'],
   },
+  'profile.email_verifications.store': {
+    methods: ["POST"],
+    pattern: '/v1/account/email-verification',
+    tokens: [{"old":"/v1/account/email-verification","type":0,"val":"v1","end":""},{"old":"/v1/account/email-verification","type":0,"val":"account","end":""},{"old":"/v1/account/email-verification","type":0,"val":"email-verification","end":""}],
+    types: placeholder as Registry['profile.email_verifications.store']['types'],
+  },
+  'profile.email_verifications.confirm': {
+    methods: ["POST"],
+    pattern: '/v1/account/email-verification/:userUuid/:emailHash',
+    tokens: [{"old":"/v1/account/email-verification/:userUuid/:emailHash","type":0,"val":"v1","end":""},{"old":"/v1/account/email-verification/:userUuid/:emailHash","type":0,"val":"account","end":""},{"old":"/v1/account/email-verification/:userUuid/:emailHash","type":0,"val":"email-verification","end":""},{"old":"/v1/account/email-verification/:userUuid/:emailHash","type":1,"val":"userUuid","end":""},{"old":"/v1/account/email-verification/:userUuid/:emailHash","type":1,"val":"emailHash","end":""}],
+    types: placeholder as Registry['profile.email_verifications.confirm']['types'],
+  },
   'projects.project_files.store_instant_quote_files': {
     methods: ["POST"],
     pattern: '/v1/projects/files',
@@ -221,6 +233,42 @@ const routes = {
     pattern: '/v1/materials',
     tokens: [{"old":"/v1/materials","type":0,"val":"v1","end":""},{"old":"/v1/materials","type":0,"val":"materials","end":""}],
     types: placeholder as Registry['materials.index']['types'],
+  },
+  'messaging.conversations.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/conversations',
+    tokens: [{"old":"/v1/conversations","type":0,"val":"v1","end":""},{"old":"/v1/conversations","type":0,"val":"conversations","end":""}],
+    types: placeholder as Registry['messaging.conversations.index']['types'],
+  },
+  'messaging.conversations.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/conversations/:uuid',
+    tokens: [{"old":"/v1/conversations/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['messaging.conversations.show']['types'],
+  },
+  'messaging.conversations.messages': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/conversations/:uuid/messages',
+    tokens: [{"old":"/v1/conversations/:uuid/messages","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/messages","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/messages","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/messages","type":0,"val":"messages","end":""}],
+    types: placeholder as Registry['messaging.conversations.messages']['types'],
+  },
+  'messaging.conversations.store_message': {
+    methods: ["POST"],
+    pattern: '/v1/conversations/:uuid/messages',
+    tokens: [{"old":"/v1/conversations/:uuid/messages","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/messages","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/messages","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/messages","type":0,"val":"messages","end":""}],
+    types: placeholder as Registry['messaging.conversations.store_message']['types'],
+  },
+  'messaging.conversations.mark_read': {
+    methods: ["POST"],
+    pattern: '/v1/conversations/:uuid/read',
+    tokens: [{"old":"/v1/conversations/:uuid/read","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/read","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/read","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/read","type":0,"val":"read","end":""}],
+    types: placeholder as Registry['messaging.conversations.mark_read']['types'],
+  },
+  'messaging.inquiries.store': {
+    methods: ["POST"],
+    pattern: '/v1/vendors/:vendorUuid/inquiries',
+    tokens: [{"old":"/v1/vendors/:vendorUuid/inquiries","type":0,"val":"v1","end":""},{"old":"/v1/vendors/:vendorUuid/inquiries","type":0,"val":"vendors","end":""},{"old":"/v1/vendors/:vendorUuid/inquiries","type":1,"val":"vendorUuid","end":""},{"old":"/v1/vendors/:vendorUuid/inquiries","type":0,"val":"inquiries","end":""}],
+    types: placeholder as Registry['messaging.inquiries.store']['types'],
   },
   'shipping_options.index': {
     methods: ["GET","HEAD"],
@@ -372,6 +420,18 @@ const routes = {
     tokens: [{"old":"/v1/vendor/onboarding/submit","type":0,"val":"v1","end":""},{"old":"/v1/vendor/onboarding/submit","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/onboarding/submit","type":0,"val":"onboarding","end":""},{"old":"/v1/vendor/onboarding/submit","type":0,"val":"submit","end":""}],
     types: placeholder as Registry['vendor.vendor_onboarding.submit']['types'],
   },
+  'vendor.vendor_conversations.decline': {
+    methods: ["POST"],
+    pattern: '/v1/vendor/conversations/:uuid/decline',
+    tokens: [{"old":"/v1/vendor/conversations/:uuid/decline","type":0,"val":"v1","end":""},{"old":"/v1/vendor/conversations/:uuid/decline","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/conversations/:uuid/decline","type":0,"val":"conversations","end":""},{"old":"/v1/vendor/conversations/:uuid/decline","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/conversations/:uuid/decline","type":0,"val":"decline","end":""}],
+    types: placeholder as Registry['vendor.vendor_conversations.decline']['types'],
+  },
+  'vendor.vendor_conversations.block_customer': {
+    methods: ["POST"],
+    pattern: '/v1/vendor/conversations/:uuid/block-customer',
+    tokens: [{"old":"/v1/vendor/conversations/:uuid/block-customer","type":0,"val":"v1","end":""},{"old":"/v1/vendor/conversations/:uuid/block-customer","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/conversations/:uuid/block-customer","type":0,"val":"conversations","end":""},{"old":"/v1/vendor/conversations/:uuid/block-customer","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/conversations/:uuid/block-customer","type":0,"val":"block-customer","end":""}],
+    types: placeholder as Registry['vendor.vendor_conversations.block_customer']['types'],
+  },
   'admin.admin_quotes.needs_review': {
     methods: ["GET","HEAD"],
     pattern: '/v1/admin/quotes/needs-review',
@@ -503,6 +563,36 @@ const routes = {
     pattern: '/v1/admin/vendors/:uuid/reinstate',
     tokens: [{"old":"/v1/admin/vendors/:uuid/reinstate","type":0,"val":"v1","end":""},{"old":"/v1/admin/vendors/:uuid/reinstate","type":0,"val":"admin","end":""},{"old":"/v1/admin/vendors/:uuid/reinstate","type":0,"val":"vendors","end":""},{"old":"/v1/admin/vendors/:uuid/reinstate","type":1,"val":"uuid","end":""},{"old":"/v1/admin/vendors/:uuid/reinstate","type":0,"val":"reinstate","end":""}],
     types: placeholder as Registry['admin.admin_vendors.reinstate']['types'],
+  },
+  'admin.admin_conversations.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/conversations',
+    tokens: [{"old":"/v1/admin/conversations","type":0,"val":"v1","end":""},{"old":"/v1/admin/conversations","type":0,"val":"admin","end":""},{"old":"/v1/admin/conversations","type":0,"val":"conversations","end":""}],
+    types: placeholder as Registry['admin.admin_conversations.index']['types'],
+  },
+  'admin.admin_conversations.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/conversations/:uuid',
+    tokens: [{"old":"/v1/admin/conversations/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/admin/conversations/:uuid","type":0,"val":"admin","end":""},{"old":"/v1/admin/conversations/:uuid","type":0,"val":"conversations","end":""},{"old":"/v1/admin/conversations/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['admin.admin_conversations.show']['types'],
+  },
+  'admin.admin_moderation_cases.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/moderation/cases',
+    tokens: [{"old":"/v1/admin/moderation/cases","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/cases","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/cases","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/cases","type":0,"val":"cases","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_cases.index']['types'],
+  },
+  'admin.admin_moderation_cases.approve': {
+    methods: ["POST"],
+    pattern: '/v1/admin/moderation/cases/:uuid/approve',
+    tokens: [{"old":"/v1/admin/moderation/cases/:uuid/approve","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/cases/:uuid/approve","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/cases/:uuid/approve","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/cases/:uuid/approve","type":0,"val":"cases","end":""},{"old":"/v1/admin/moderation/cases/:uuid/approve","type":1,"val":"uuid","end":""},{"old":"/v1/admin/moderation/cases/:uuid/approve","type":0,"val":"approve","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_cases.approve']['types'],
+  },
+  'admin.admin_moderation_cases.block': {
+    methods: ["POST"],
+    pattern: '/v1/admin/moderation/cases/:uuid/block',
+    tokens: [{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"cases","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":1,"val":"uuid","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"block","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_cases.block']['types'],
   },
   'webhooks.stripe_webhooks': {
     methods: ["POST"],

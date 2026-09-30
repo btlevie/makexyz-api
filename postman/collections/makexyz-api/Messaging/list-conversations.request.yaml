@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Conversations'
+method: GET
+url: '{{base_url}}/conversations'
+order: 2000
+description: 'The signed-in customer''s or vendor''s conversations, most recent first, with unreadCount and canPost.'

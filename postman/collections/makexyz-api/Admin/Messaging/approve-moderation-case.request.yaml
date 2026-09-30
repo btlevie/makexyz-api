@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Approve Moderation Case'
+method: POST
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/approve'
+order: 4000
+description: 'Approves the case: a held message is delivered, keeping its original place in the thread. 409 if already resolved.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "note": "Legitimate supplier datasheet link"
+    }

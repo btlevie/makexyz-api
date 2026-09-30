@@ -10,6 +10,7 @@ import string from '@adonisjs/core/helpers/string'
 import { readGrant } from '#services/project_grant_service'
 import { claimProject, GuestClaimNotAllowedError } from '#services/customer_claim_service'
 import { sendGuestClaimEmail } from '#services/guest_claim_service'
+import { sendVerificationEmail } from '#services/email_verification_service'
 
 export default class NewCustomerController {
   /**
@@ -19,7 +20,8 @@ export default class NewCustomerController {
    * customer_claim_service.ts): the instant-quote project whose grant this
    * request carries (x-project-grant - same browser) is attached right away,
    * and if earlier guest quotes/orders exist under this email, a signed link
-   * to claim them is emailed to it. Neither can fail the signup.
+   * to claim them is emailed to it. A link to verify the email is sent too
+   * (email_verification_service.ts). None of these can fail the signup.
    */
   async store(ctx: HttpContext) {
     const { request, serialize, auth } = ctx
@@ -42,6 +44,7 @@ export default class NewCustomerController {
 
     await this.claimGrantedProject(ctx, customer)
     await sendGuestClaimEmail(user)
+    await sendVerificationEmail(user)
 
     return serialize(CustomerTransformer.transform(customer))
   }

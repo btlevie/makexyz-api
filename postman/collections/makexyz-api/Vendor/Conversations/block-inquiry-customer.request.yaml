@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Block Inquiry Customer'
+method: POST
+url: '{{base_url}}/vendor/conversations/{{conversation_uuid}}/block-customer'
+order: 2000
+description: 'The vendor blocks the customer from sending them further inquiries; closes this inquiry and opens a moderation case for staff. The customer is not told (new inquiries read as vendor unavailable). 204.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "Keeps asking to pay outside MakeXYZ"
+    }

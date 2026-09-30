@@ -79,10 +79,13 @@
     "@tuyau/core": "^1.2.2",
     "@vinejs/vine": "^4.4.0",
     "better-sqlite3": "^12.10.0",
+    "libphonenumber-js": "^1.13.14",
+    "linkify-it": "^6.1.0",
     "luxon": "^3.7.2",
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
-    "stripe": "^22.6.1"
+    "stripe": "^22.6.1",
+    "tldts": "^7.4.16"
   },
   "hotHook": {
     "boundaries": [

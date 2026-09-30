@@ -191,5 +191,85 @@ export default {
         },
       },
     },
+    ['conversations']: {
+      columns: {
+        ['kind']: {
+          tsType: "'inquiry' | 'order' | 'support'",
+        },
+        ['status']: {
+          tsType: "'open' | 'read_only' | 'archived'",
+        },
+        ['closed_reason']: {
+          tsType: "'idle' | 'declined' | 'blocked' | 'order_closed' | 'reassigned' | 'staff'",
+        },
+      },
+    },
+    ['conversation_participants']: {
+      columns: {
+        ['role']: {
+          tsType: "'customer' | 'vendor' | 'staff'",
+        },
+      },
+    },
+    ['messages']: {
+      columns: {
+        ['kind']: {
+          tsType: "'text' | 'system' | 'quote_ref'",
+        },
+        ['channel']: {
+          tsType: "'web' | 'email' | 'system'",
+        },
+        ['status']: {
+          tsType:
+            "'held' | 'pending_review' | 'delivered' | 'delivered_flagged' | 'blocked' | 'removed' | 'withdrawn'",
+        },
+      },
+    },
+    ['messaging_risk_profiles']: {
+      columns: {
+        ['trust_tier']: {
+          tsType: "'new' | 'standard' | 'trusted' | 'restricted' | 'suspended'",
+        },
+      },
+    },
+    ['moderation_rule_configs']: {
+      columns: {
+        ['mode']: {
+          tsType: "'off' | 'shadow' | 'enforce'",
+        },
+      },
+    },
+    ['moderation_evaluations']: {
+      columns: {
+        ['stage']: {
+          tsType: "'sync' | 'async' | 'rescan'",
+        },
+        ['decision']: {
+          tsType: "'allow' | 'flag' | 'escalate' | 'review' | 'block'",
+        },
+      },
+    },
+    ['moderation_rule_hits']: {
+      columns: {
+        ['action']: {
+          tsType:
+            "'block' | 'review' | 'escalate' | 'flag' | 'allow_override' | 'continue' | 'redact'",
+        },
+      },
+    },
+    ['moderation_cases']: {
+      columns: {
+        ['source']: {
+          tsType:
+            "'auto_hold' | 'auto_flag' | 'report' | 'behavioral' | 'audit_sample' | 'url_rescan' | 'quote_outlier' | 'unconfirmed_delivery' | 'prohibited_item'",
+        },
+        ['status']: {
+          tsType: "'open' | 'claimed' | 'resolved'",
+        },
+        ['resolution']: {
+          tsType: "'approved' | 'blocked' | 'removed' | 'no_action'",
+        },
+      },
+    },
   },
 } satisfies SchemaRules

@@ -201,7 +201,8 @@ test.group('Account | guest claims', (group) => {
     const response = await signup(client, 'jane@example.com')
     response.assertStatus(200)
 
-    mails.assertNoneSent()
+    // Signup always sends an email-verification link; no claim link here.
+    mails.assertNotSent(GuestClaimNotification)
   })
 
   test('confirming a claim merges the guest into the account', async ({ client, assert }) => {
@@ -319,7 +320,7 @@ test.group('Account | guest claims', (group) => {
       .post('/v1/account/guest-claims')
       .withSession(noHistory.session())
     resendNone.assertStatus(202)
-    mails.assertNoneSent()
+    mails.assertNotSent(GuestClaimNotification)
 
     const guest = await guestCustomer('fresh@example.com')
     await projectWithOrder(guest.id)

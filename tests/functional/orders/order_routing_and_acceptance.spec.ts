@@ -4,6 +4,7 @@ import testUtils from '@adonisjs/core/services/test_utils'
 import limiter from '@adonisjs/limiter/services/main'
 import { DateTime } from 'luxon'
 import CheckoutSession from '#models/checkout_session'
+import Conversation from '#models/conversation'
 import Customer from '#models/customer'
 import Order from '#models/order'
 import OrderRoutingConfig from '#models/order_routing_config'
@@ -392,6 +393,19 @@ test.group('Vendor order acceptance', (group) => {
 
     response.assertStatus(200)
     assert.equal((response.body().data as { status: string }).status, 'accepted')
+
+    // Accepting opens the order's customer <-> vendor thread, with the vendor
+    // shown to the customer only as "Your manufacturer" (white-label).
+    const conversation = await Conversation.query()
+      .where('orderId', order.id)
+      .where('vendorId', vendor.id)
+      .preload('participants')
+      .firstOrFail()
+    assert.equal(conversation.kind, 'order')
+    assert.equal(
+      conversation.participants.find((participant) => participant.role === 'vendor')?.displayName,
+      'Your manufacturer'
+    )
   })
 
   test('a vendor without the required capability cannot accept', async ({ client }) => {

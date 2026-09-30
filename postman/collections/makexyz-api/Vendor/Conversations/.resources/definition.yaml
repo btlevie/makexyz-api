@@ -1,0 +1,3 @@
+$kind: collection
+name: Conversations
+description: 'A vendor''s controls over inquiries sent to them (reading and replying use the Messaging endpoints).'

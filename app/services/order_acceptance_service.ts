@@ -14,6 +14,7 @@ import { computePayoutBreakdown } from '#services/payout_calculation_service'
 import { assertPayoutMethodReady } from '#services/vendor_payout_method_service'
 import { hasCurrentAgreement } from '#services/vendor_onboarding_service'
 import { createPayoutForAcceptedOrder } from '#services/vendor_payout_service'
+import { openOrderThreadSafely } from '#services/conversation_service'
 
 export class VendorNotEligibleError extends Error {
   constructor(message: string) {
@@ -128,6 +129,11 @@ export async function acceptOrder(order: Order, vendor: Vendor, userId: number):
   await order.refresh()
   await captureCheckoutSession(order)
   await order.refresh()
+
+  // After capture, and best-effort: the order is accepted and paid whatever
+  // happens here. The customer and vendor now get a thread (the vendor stays
+  // white-label - see conversation_service.ts#openOrderThread).
+  await openOrderThreadSafely(order)
 
   return order
 }

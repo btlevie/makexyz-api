@@ -1,0 +1,3 @@
+$kind: collection
+name: Messaging
+description: 'Customer <-> vendor conversations. Every conversation belongs to an inquiry (a verified customer writing to an active vendor) or an accepted order; there are no free-form DMs and vendors can never start one. Every message is moderated before the other side sees it - the send response says whether it was delivered, is pending review, or was blocked (with the reason). See docs/plans/messaging_moderation.md.'

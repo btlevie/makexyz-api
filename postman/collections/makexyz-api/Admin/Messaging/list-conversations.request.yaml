@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Conversations'
+method: GET
+url: '{{base_url}}/admin/conversations?kind=inquiry&status=open'
+order: 1000
+description: 'Every conversation, most recent first. Optional filters: kind (inquiry, order, support), status (open, read_only, archived).'

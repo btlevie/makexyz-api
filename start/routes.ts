@@ -11,7 +11,7 @@ import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import transmit from '@adonisjs/transmit/services/main'
 import { controllers } from '#generated/controllers'
-import { instantQuoteThrottle } from '#start/limiter'
+import { emailVerificationThrottle, instantQuoteThrottle, messagingThrottle } from '#start/limiter'
 
 router.get('/', () => {
   return { hello: 'world' }
@@ -60,6 +60,18 @@ router
         // guest_claim_service.ts.
         router.post('guest-claims', [controllers.GuestClaims, 'store'])
         router.post('guest-claims/:customerUuid/:userUuid', [controllers.GuestClaims, 'confirm'])
+
+        // Proving this account owns its email - required before a customer
+        // can message vendors. Resend is throttled (it sends mail); confirm
+        // is signed and only valid for the account it was issued to. See
+        // email_verification_service.ts.
+        router
+          .post('email-verification', [controllers.EmailVerifications, 'store'])
+          .use(emailVerificationThrottle)
+        router.post('email-verification/:userUuid/:emailHash', [
+          controllers.EmailVerifications,
+          'confirm',
+        ])
       })
       .prefix('account')
       .as('profile')
@@ -179,6 +191,30 @@ router
     // neither grant-authorized nor throttled.
     router.get('materials', [controllers.Materials, 'index'])
 
+    // Messaging between customers and vendors - see
+    // docs/plans/messaging_moderation.md. Every conversation hangs off an
+    // inquiry or an order; access is per participant (404 otherwise, see
+    // conversation_access_service.ts). Every message is moderated before
+    // anyone else sees it.
+    router
+      .group(() => {
+        router.get('conversations', [controllers.Conversations, 'index'])
+        router.get('conversations/:uuid', [controllers.Conversations, 'show'])
+        router.get('conversations/:uuid/messages', [controllers.Conversations, 'messages'])
+        router
+          .post('conversations/:uuid/messages', [controllers.Conversations, 'storeMessage'])
+          .use(messagingThrottle)
+        router.post('conversations/:uuid/read', [controllers.Conversations, 'markRead'])
+
+        // A customer starting a conversation with a vendor (verified email
+        // required - see conversation_service.ts#createInquiry).
+        router
+          .post('vendors/:vendorUuid/inquiries', [controllers.Inquiries, 'store'])
+          .use(messagingThrottle)
+      })
+      .as('messaging')
+      .use(middleware.auth())
+
     // Public: the configure step's shipping-method picker - the methods and
     // fees offered to ?country=XX. Not project-scoped (shipping depends only
     // on the destination), and not throttled: a read with no external calls.
@@ -238,6 +274,14 @@ router
         router.post('onboarding/agreement', [controllers.VendorOnboarding, 'acceptAgreement'])
         router.put('onboarding/tax', [controllers.VendorOnboarding, 'uploadTax'])
         router.post('onboarding/submit', [controllers.VendorOnboarding, 'submit'])
+
+        // Vendor-only controls over inquiries: pass on one, or block the
+        // customer (also opens a moderation case).
+        router.post('conversations/:uuid/decline', [controllers.VendorConversations, 'decline'])
+        router.post('conversations/:uuid/block-customer', [
+          controllers.VendorConversations,
+          'blockCustomer',
+        ])
       })
       .prefix('vendor')
       .as('vendor')
@@ -277,6 +321,14 @@ router
         router.post('vendors/:uuid/activate', [controllers.AdminVendors, 'activate'])
         router.post('vendors/:uuid/suspend', [controllers.AdminVendors, 'suspend'])
         router.post('vendors/:uuid/reinstate', [controllers.AdminVendors, 'reinstate'])
+
+        // Messaging oversight: read-only conversations (every message, with
+        // the moderation rules that fired) and the review queue.
+        router.get('conversations', [controllers.AdminConversations, 'index'])
+        router.get('conversations/:uuid', [controllers.AdminConversations, 'show'])
+        router.get('moderation/cases', [controllers.AdminModerationCases, 'index'])
+        router.post('moderation/cases/:uuid/approve', [controllers.AdminModerationCases, 'approve'])
+        router.post('moderation/cases/:uuid/block', [controllers.AdminModerationCases, 'block'])
       })
       .prefix('admin')
       .as('admin')

@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Block Moderation Case'
+method: POST
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/block'
+order: 5000
+description: 'Blocks the case''s message: held -> blocked (the sender sees a generic reason); already delivered -> removed (the recipient sees a tombstone). 409 if already resolved.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "note": "Advertising an unrelated shop"
+    }

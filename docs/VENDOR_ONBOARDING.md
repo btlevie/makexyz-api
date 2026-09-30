@@ -28,7 +28,7 @@ Without a gate, a half-set-up vendor would still count as "capable". That makes 
 
 ## Two separate stages
 
-1. **Invitation** (`invitations` table). There is no user account yet. The invitee proves they received the link and chooses a password. Accepting creates the `users` row **and** the `vendors` row in one transaction.
+1. **Invitation** (`invitations` table). There is no user account yet. The invitee proves they received the link and chooses a password. Accepting creates the `users` row **and** the `vendors` row in one transaction. The link was emailed to that address, so the new user starts with `email_verified_at` set: no separate email verification is needed.
 2. **Vendor onboarding** (`vendors.status`). The account exists and is logged in. The vendor completes their checklist, then an admin reviews and activates.
 
 There is no half-created user: `users.password` is never null, because the user doesn't exist until the invitee chooses one.
@@ -258,6 +258,7 @@ Accept re-checks the email inside its transaction. If someone signed up with tha
 * **Can** still work on orders they already accepted: production updates, ready-to-ship, shipping labels. They keep staff access to projects so they can.
 * Their payouts keep flowing for work already done.
 * Onboarding edits (profile, capabilities) are blocked until they're reinstated.
+* They keep messaging access to their conversations, so they can finish accepted orders. They stop receiving new inquiries, since inquiries go only to **active** vendors.
 
 ## Agreement versions
 
@@ -278,6 +279,8 @@ Accept re-checks the email inside its transaction. If someone signed up with tha
 | Preferred routing window | `hasFullyPreferredVendor` | Same, plus `is_preferred` |
 | Can this vendor accept this order | `vendorCanAcceptOrder` + `acceptOrder` | Vendor is **active**, on the **current agreement version**, capabilities **approved** (and preferred during the preferred window), payout method ready, and a payout rate for every item's material |
 | Staff project access | `project_grant_service.ts` `isStaff` | Admins always. Vendors only when **active or suspended**. |
+| Messaging access | `conversation_access_service.ts` `resolveViewer` | Vendors only when **active or suspended**, and only in their own conversations (an order thread only while the order is still theirs) |
+| Receiving new inquiries | `conversation_service.ts` `createInquiry` | Vendor is **active** |
 
 ---
 
@@ -329,6 +332,7 @@ Mail isn't configured yet. Each email below is marked with `// TODO(mail):` at t
 | Routing / fulfillability gates | `app/services/order_routing_service.ts` |
 | Acceptance gate | `app/services/order_acceptance_service.ts` |
 | Staff project access | `app/services/project_grant_service.ts` (`isStaff`) |
+| Messaging access and inquiries | `app/services/conversation_access_service.ts`, `app/services/conversation_service.ts` |
 | Client IP trust | `config/app.ts` (`trustProxy`) |
 
 Adding a checklist item means adding it to the service's checklist function, to the tables above, and to the frontend checklist UI. **Update this document in the same PR.**

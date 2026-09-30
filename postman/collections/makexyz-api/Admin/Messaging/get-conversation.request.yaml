@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Get Conversation'
+method: GET
+url: '{{base_url}}/admin/conversations/{{conversation_uuid}}'
+order: 2000
+description: 'A conversation with every message (including held, blocked and removed) and each message''s rule hits.'

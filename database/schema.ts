@@ -119,6 +119,99 @@ export class CheckoutSessionSchema extends BaseModel {
   declare uuid: string
 }
 
+export class ConversationBlockSchema extends BaseModel {
+  static $columns = ['caseId', 'createdAt', 'createdById', 'customerId', 'id', 'reason', 'vendorId'] as const
+  $columns = ConversationBlockSchema.$columns
+  @column()
+  declare caseId: number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare createdById: number | null
+  @column()
+  declare customerId: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare reason: string | null
+  @column()
+  declare vendorId: number
+}
+
+export class ConversationParticipantSchema extends BaseModel {
+  static $columns = ['conversationId', 'createdAt', 'customerId', 'displayName', 'emailNotifications', 'id', 'lastNotifiedSeq', 'lastReadSeq', 'removedAt', 'replyToken', 'replyTokenExpiresAt', 'role', 'updatedAt', 'userId', 'vendorId'] as const
+  $columns = ConversationParticipantSchema.$columns
+  @column()
+  declare conversationId: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column()
+  declare displayName: string
+  @column()
+  declare emailNotifications: boolean
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare lastNotifiedSeq: number
+  @column()
+  declare lastReadSeq: number
+  @column.dateTime()
+  declare removedAt: DateTime | null
+  @column()
+  declare replyToken: string | null
+  @column.dateTime()
+  declare replyTokenExpiresAt: DateTime | null
+  @column()
+  declare role: 'customer' | 'vendor' | 'staff'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userId: number | null
+  @column()
+  declare vendorId: number | null
+}
+
+export class ConversationSchema extends BaseModel {
+  static $columns = ['closedReason', 'createdAt', 'customerId', 'firstCustomerMessageDeliveredAt', 'firstVendorResponseAt', 'id', 'kind', 'lastMessageAt', 'lastSeq', 'orderId', 'projectId', 'readOnlyAt', 'status', 'subject', 'updatedAt', 'uuid', 'vendorId'] as const
+  $columns = ConversationSchema.$columns
+  @column()
+  declare closedReason: 'idle' | 'declined' | 'blocked' | 'order_closed' | 'reassigned' | 'staff' | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column.dateTime()
+  declare firstCustomerMessageDeliveredAt: DateTime | null
+  @column.dateTime()
+  declare firstVendorResponseAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare kind: 'inquiry' | 'order' | 'support'
+  @column.dateTime()
+  declare lastMessageAt: DateTime | null
+  @column()
+  declare lastSeq: number
+  @column()
+  declare orderId: number | null
+  @column()
+  declare projectId: number | null
+  @column.dateTime()
+  declare readOnlyAt: DateTime | null
+  @column()
+  declare status: 'open' | 'read_only' | 'archived'
+  @column()
+  declare subject: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+  @column()
+  declare vendorId: number | null
+}
+
 export class CustomerSchema extends BaseModel {
   static $columns = ['companyName', 'createdAt', 'email', 'firstName', 'id', 'lastName', 'marketingOptIn', 'marketingOptInUpdatedAt', 'paypalCustomerId', 'quickbooksCustomerId', 'stripeCustomerId', 'updatedAt', 'userId', 'uuid'] as const
   $columns = CustomerSchema.$columns
@@ -279,6 +372,188 @@ export class MaterialSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare uuid: string
+}
+
+export class MessageSchema extends BaseModel {
+  static $columns = ['blockReasonCode', 'body', 'channel', 'clientMessageId', 'contentHash', 'conversationId', 'createdAt', 'deliveredAt', 'id', 'kind', 'refId', 'refType', 'removedAt', 'senderCustomerId', 'senderParticipantId', 'senderVendorId', 'seq', 'status', 'updatedAt', 'userFacingReason', 'uuid'] as const
+  $columns = MessageSchema.$columns
+  @column()
+  declare blockReasonCode: string | null
+  @column()
+  declare body: string
+  @column()
+  declare channel: 'web' | 'email' | 'system'
+  @column()
+  declare clientMessageId: string | null
+  @column()
+  declare contentHash: string | null
+  @column()
+  declare conversationId: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column.dateTime()
+  declare deliveredAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare kind: 'text' | 'system' | 'quote_ref'
+  @column()
+  declare refId: number | null
+  @column()
+  declare refType: string | null
+  @column.dateTime()
+  declare removedAt: DateTime | null
+  @column()
+  declare senderCustomerId: number | null
+  @column()
+  declare senderParticipantId: number | null
+  @column()
+  declare senderVendorId: number | null
+  @column()
+  declare seq: number
+  @column()
+  declare status: 'held' | 'pending_review' | 'delivered' | 'delivered_flagged' | 'blocked' | 'removed' | 'withdrawn'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare userFacingReason: string | null
+  @column()
+  declare uuid: string
+}
+
+export class MessagingRiskProfileSchema extends BaseModel {
+  static $columns = ['createdAt', 'customerId', 'id', 'restrictionExpiresAt', 'trustTier', 'updatedAt', 'vendorId'] as const
+  $columns = MessagingRiskProfileSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column.dateTime()
+  declare restrictionExpiresAt: DateTime | null
+  @column()
+  declare trustTier: 'new' | 'standard' | 'trusted' | 'restricted' | 'suspended'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number | null
+}
+
+export class ModerationCaseSchema extends BaseModel {
+  static $columns = ['abuseCategory', 'assignedToId', 'claimedAt', 'createdAt', 'customerId', 'id', 'messageId', 'missedByAutomation', 'patternNote', 'priority', 'resolution', 'resolvedAt', 'resolvedById', 'source', 'status', 'updatedAt', 'uuid', 'vendorId'] as const
+  $columns = ModerationCaseSchema.$columns
+  @column()
+  declare abuseCategory: string | null
+  @column()
+  declare assignedToId: number | null
+  @column.dateTime()
+  declare claimedAt: DateTime | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare messageId: number | null
+  @column()
+  declare missedByAutomation: boolean
+  @column()
+  declare patternNote: string | null
+  @column()
+  declare priority: number
+  @column()
+  declare resolution: 'approved' | 'blocked' | 'removed' | 'no_action' | null
+  @column.dateTime()
+  declare resolvedAt: DateTime | null
+  @column()
+  declare resolvedById: number | null
+  @column()
+  declare source: 'auto_hold' | 'auto_flag' | 'report' | 'behavioral' | 'audit_sample' | 'url_rescan' | 'quote_outlier' | 'unconfirmed_delivery' | 'prohibited_item'
+  @column()
+  declare status: 'open' | 'claimed' | 'resolved'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare uuid: string
+  @column()
+  declare vendorId: number | null
+}
+
+export class ModerationEvaluationSchema extends BaseModel {
+  static $columns = ['createdAt', 'decision', 'durationMs', 'id', 'llm', 'messageId', 'pipelineVersion', 'riskScore', 'rulesEvaluated', 'signals', 'stage'] as const
+  $columns = ModerationEvaluationSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare decision: 'allow' | 'flag' | 'escalate' | 'review' | 'block'
+  @column()
+  declare durationMs: number
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare llm: any | null
+  @column()
+  declare messageId: number | null
+  @column()
+  declare pipelineVersion: string
+  @column()
+  declare riskScore: number
+  @column()
+  declare rulesEvaluated: any | null
+  @column()
+  declare signals: any | null
+  @column()
+  declare stage: 'sync' | 'async' | 'rescan'
+}
+
+export class ModerationRuleConfigSchema extends BaseModel {
+  static $columns = ['config', 'configVersion', 'createdAt', 'id', 'mode', 'ruleId', 'updatedAt', 'updatedById'] as const
+  $columns = ModerationRuleConfigSchema.$columns
+  @column()
+  declare config: any | null
+  @column()
+  declare configVersion: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare mode: 'off' | 'shadow' | 'enforce'
+  @column()
+  declare ruleId: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare updatedById: number | null
+}
+
+export class ModerationRuleHitSchema extends BaseModel {
+  static $columns = ['action', 'configVersion', 'createdAt', 'evaluationId', 'evidence', 'id', 'messageId', 'ruleId', 'ruleVersion', 'shadow', 'weight'] as const
+  $columns = ModerationRuleHitSchema.$columns
+  @column()
+  declare action: 'block' | 'review' | 'escalate' | 'flag' | 'allow_override' | 'continue' | 'redact'
+  @column()
+  declare configVersion: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare evaluationId: number
+  @column()
+  declare evidence: any | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare messageId: number | null
+  @column()
+  declare ruleId: string
+  @column()
+  declare ruleVersion: number
+  @column()
+  declare shadow: boolean
+  @column()
+  declare weight: number
 }
 
 export class OrderFeeSchema extends BaseModel {
@@ -956,12 +1231,14 @@ export class ShippingLabelSchema extends BaseModel {
 }
 
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'email', 'fullName', 'id', 'password', 'role', 'updatedAt', 'uuid'] as const
+  static $columns = ['createdAt', 'email', 'emailVerifiedAt', 'fullName', 'id', 'password', 'role', 'updatedAt', 'uuid'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
   @column()
   declare email: string
+  @column.dateTime()
+  declare emailVerifiedAt: DateTime | null
   @column()
   declare fullName: string | null
   @column({ isPrimary: true })

@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Messages'
+method: GET
+url: '{{base_url}}/conversations/{{conversation_uuid}}/messages?afterSeq=0&limit=50'
+order: 4000
+description: 'Messages after afterSeq, oldest first - page or poll forward with the last seq seen. Recipients only see delivered messages (removed ones as a tombstone); the sender also sees their own pending_review and blocked messages, with the reason.'

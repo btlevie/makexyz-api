@@ -38,6 +38,10 @@ export interface ApiDefinition {
       store: typeof routes['profile.guest_claims.store']
       confirm: typeof routes['profile.guest_claims.confirm']
     }
+    emailVerifications: {
+      store: typeof routes['profile.email_verifications.store']
+      confirm: typeof routes['profile.email_verifications.confirm']
+    }
   }
   projects: {
     projectFiles: {
@@ -73,6 +77,18 @@ export interface ApiDefinition {
   }
   materials: {
     index: typeof routes['materials.index']
+  }
+  messaging: {
+    conversations: {
+      index: typeof routes['messaging.conversations.index']
+      show: typeof routes['messaging.conversations.show']
+      messages: typeof routes['messaging.conversations.messages']
+      storeMessage: typeof routes['messaging.conversations.store_message']
+      markRead: typeof routes['messaging.conversations.mark_read']
+    }
+    inquiries: {
+      store: typeof routes['messaging.inquiries.store']
+    }
   }
   shippingOptions: {
     index: typeof routes['shipping_options.index']
@@ -114,6 +130,10 @@ export interface ApiDefinition {
       uploadTax: typeof routes['vendor.vendor_onboarding.upload_tax']
       submit: typeof routes['vendor.vendor_onboarding.submit']
     }
+    vendorConversations: {
+      decline: typeof routes['vendor.vendor_conversations.decline']
+      blockCustomer: typeof routes['vendor.vendor_conversations.block_customer']
+    }
   }
   admin: {
     adminQuotes: {
@@ -145,6 +165,15 @@ export interface ApiDefinition {
       activate: typeof routes['admin.admin_vendors.activate']
       suspend: typeof routes['admin.admin_vendors.suspend']
       reinstate: typeof routes['admin.admin_vendors.reinstate']
+    }
+    adminConversations: {
+      index: typeof routes['admin.admin_conversations.index']
+      show: typeof routes['admin.admin_conversations.show']
+    }
+    adminModerationCases: {
+      index: typeof routes['admin.admin_moderation_cases.index']
+      approve: typeof routes['admin.admin_moderation_cases.approve']
+      block: typeof routes['admin.admin_moderation_cases.block']
     }
   }
   webhooks: {

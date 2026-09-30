@@ -222,9 +222,23 @@ export default await Env.create(new URL('../', import.meta.url), {
   | MAIL_FROM_ADDRESS must be on a domain verified in SES.
   | ACCOUNT_CLAIM_URL is the frontend page that handles guest-claim links
   | (customers get `${ACCOUNT_CLAIM_URL}?link=<signed API path>`).
+  | ACCOUNT_VERIFY_EMAIL_URL is the frontend page that handles email
+  | verification links, same `?link=<signed API path>` shape.
   */
   MAIL_MAILER: Env.schema.enum(['ses'] as const),
   MAIL_FROM_NAME: Env.schema.string(),
   MAIL_FROM_ADDRESS: Env.schema.string({ format: 'email' }),
   ACCOUNT_CLAIM_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  ACCOUNT_VERIFY_EMAIL_URL: Env.schema.string.optionalWhen(
+    () => process.env.NODE_ENV !== 'production'
+  ),
+
+  /*
+  |----------------------------------------------------------
+  | Messaging (see docs/plans/messaging_moderation.md)
+  |----------------------------------------------------------
+  | MESSAGES_URL is the frontend page for a conversation - notification
+  | emails link to `${MESSAGES_URL}/<conversation uuid>`.
+  */
+  MESSAGES_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
 })

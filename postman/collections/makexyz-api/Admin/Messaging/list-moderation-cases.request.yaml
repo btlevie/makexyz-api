@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Moderation Cases'
+method: GET
+url: '{{base_url}}/admin/moderation/cases?status=open'
+order: 3000
+description: 'The review queue - held messages first (someone is waiting), then flagged messages and vendor reports. status defaults to open.'

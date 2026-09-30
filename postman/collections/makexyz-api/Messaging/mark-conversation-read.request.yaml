@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Mark Conversation Read'
+method: POST
+url: '{{base_url}}/conversations/{{conversation_uuid}}/read'
+order: 6000
+description: 'Marks messages up to seq as read for the caller. Never moves backwards. 204.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "seq": 1
+    }

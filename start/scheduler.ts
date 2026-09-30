@@ -23,6 +23,7 @@ import PurgeExpiredProjects from '#jobs/purge_expired_projects'
 import EscalateOrderRouting from '#jobs/escalate_order_routing'
 import ExpireCheckoutSessions from '#jobs/expire_checkout_sessions'
 import ProcessVendorPayouts from '#jobs/process_vendor_payouts'
+import CloseExpiredConversations from '#jobs/close_expired_conversations'
 
 /**
  * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
@@ -61,3 +62,10 @@ ExpireCheckoutSessions.schedule({}).id('expire-checkout-sessions').cron('5 * * *
  * the payout's idempotency key (see vendor_payout_service.ts).
  */
 ProcessVendorPayouts.schedule({}).id('process-vendor-payouts').cron('20 * * * *').run()
+
+/**
+ * Hourly: idle inquiries and finished order threads become read-only (see
+ * conversation_service.ts). Bookkeeping only - posts to a finished order are
+ * refused the moment it finishes - so hourly is plenty.
+ */
+CloseExpiredConversations.schedule({}).id('close-expired-conversations').cron('35 * * * *').run()

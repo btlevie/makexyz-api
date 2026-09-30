@@ -41,7 +41,35 @@ export const plugins: Config['plugins'] = [
  * The teardown functions are executed after all the tests
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
-  setup: [],
+  setup: [
+    /**
+     * No test may ever reach SES. Signup sends a verification email, so any
+     * spec that signs someone up would otherwise try a real send (and the
+     * send is best-effort, so it wouldn't even fail loudly). Mail starts
+     * faked, and `restore()` - which specs call in their own teardown - puts
+     * a fresh fake back instead of the real mailer. Specs that assert on mail
+     * still call `mail.fake()` themselves to get their own recorder.
+     */
+    async () => {
+      const { default: mail } = await import('@adonisjs/mail/services/main')
+      mail.fake()
+      const restore = mail.restore.bind(mail)
+      // fake() itself calls restore() first, so the re-fake must not re-enter.
+      let restoring = false
+      mail.restore = () => {
+        if (restoring) {
+          return restore()
+        }
+        restoring = true
+        try {
+          restore()
+          mail.fake()
+        } finally {
+          restoring = false
+        }
+      }
+    },
+  ],
   teardown: [],
 }
 

@@ -278,6 +278,9 @@ export async function acceptInvitation(
         role: invitation.role,
         password: input.password,
         fullName: input.fullName ?? null,
+        // The invitation link was emailed to this address, so accepting it
+        // already proves the account holder owns it.
+        emailVerifiedAt: DateTime.now(),
       },
       { client: trx }
     )

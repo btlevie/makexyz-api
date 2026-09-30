@@ -1,0 +1,3 @@
+$kind: collection
+name: Messaging
+description: 'Read-only oversight of every conversation (all messages, whatever their moderation status, with the rules that fired) and the moderation review queue.'

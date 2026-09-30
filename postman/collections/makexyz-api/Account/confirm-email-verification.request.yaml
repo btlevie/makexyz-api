@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Confirm Email Verification'
+method: POST
+url: '{{email_verification_link}}'
+order: 11000
+description: 'Marks the signed-in account''s email verified. Set email_verification_link to the full signed API URL from the verification email (the link query parameter of the ACCOUNT_VERIFY_EMAIL_URL page, prefixed with the API origin, e.g. http://localhost:3333/v1/account/email-verification/...?signature=...). Must be signed in as the account the link was issued to; the link stops working if the account email changes.'

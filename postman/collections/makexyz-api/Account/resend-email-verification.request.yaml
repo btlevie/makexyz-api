@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Resend Email Verification'
+method: POST
+url: '{{base_url}}/account/email-verification'
+order: 10000
+description: 'Emails the signed-in user a link to confirm their email address. A verified email is required before a customer can message vendors. Always 202; a no-op once verified. Throttled to 3 per hour per account.'

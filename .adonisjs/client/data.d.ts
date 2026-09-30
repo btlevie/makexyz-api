@@ -6,12 +6,16 @@
 /// <reference path="./manifest.d.ts" />
 import type { InferData, InferVariants } from '@adonisjs/core/types/transformers'
 import type AddressTransformer from '#transformers/address_transformer'
+import type AdminMessageTransformer from '#transformers/admin_message_transformer'
 import type AdminQuoteReviewTransformer from '#transformers/admin_quote_review_transformer'
 import type AdminVendorTransformer from '#transformers/admin_vendor_transformer'
+import type ConversationTransformer from '#transformers/conversation_transformer'
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
 import type InvitationTransformer from '#transformers/invitation_transformer'
 import type MaterialCatalogTransformer from '#transformers/material_catalog_transformer'
+import type MessageTransformer from '#transformers/message_transformer'
+import type ModerationCaseTransformer from '#transformers/moderation_case_transformer'
 import type OrderTransformer from '#transformers/order_transformer'
 import type ProductionTimeOptionTransformer from '#transformers/production_time_option_transformer'
 import type ProjectFileTransformer from '#transformers/project_file_transformer'
@@ -32,6 +36,10 @@ export namespace Data {
   export namespace Address {
     export type Variants = InferVariants<AddressTransformer>
   }
+  export type AdminMessage = InferData<AdminMessageTransformer>
+  export namespace AdminMessage {
+    export type Variants = InferVariants<AdminMessageTransformer>
+  }
   export type AdminQuoteReview = InferData<AdminQuoteReviewTransformer>
   export namespace AdminQuoteReview {
     export type Variants = InferVariants<AdminQuoteReviewTransformer>
@@ -39,6 +47,10 @@ export namespace Data {
   export type AdminVendor = InferData<AdminVendorTransformer>
   export namespace AdminVendor {
     export type Variants = InferVariants<AdminVendorTransformer>
+  }
+  export type Conversation = InferData<ConversationTransformer>
+  export namespace Conversation {
+    export type Variants = InferVariants<ConversationTransformer>
   }
   export type Customer = InferData<CustomerTransformer>
   export namespace Customer {
@@ -55,6 +67,14 @@ export namespace Data {
   export type MaterialCatalog = InferData<MaterialCatalogTransformer>
   export namespace MaterialCatalog {
     export type Variants = InferVariants<MaterialCatalogTransformer>
+  }
+  export type Message = InferData<MessageTransformer>
+  export namespace Message {
+    export type Variants = InferVariants<MessageTransformer>
+  }
+  export type ModerationCase = InferData<ModerationCaseTransformer>
+  export namespace ModerationCase {
+    export type Variants = InferVariants<ModerationCaseTransformer>
   }
   export type Order = InferData<OrderTransformer>
   export namespace Order {
