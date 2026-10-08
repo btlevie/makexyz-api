@@ -621,7 +621,17 @@ blocked                          only the sender sees it, with the reason
 removed                          taken down after delivery; recipients see a tombstone
 ```
 
-Each moderation pass is stored in `moderation_evaluations` (the extracted signals and every `rule@version` that ran), with one `moderation_rule_hits` row per rule that fired. Rules run in `off`, `shadow` or `enforce` mode, and `moderation_rule_configs` overrides a rule's code defaults. `messaging_risk_profiles` holds a sender's messaging trust tier: `restricted` sends everything to review, and `suspended` blocks sending except in a thread with a live order, where it's treated as `restricted`. Tiers affect messaging only, never ordering or fulfilment.
+Each moderation pass is stored in `moderation_evaluations` (the extracted signals and every `rule@version` that ran), with one `moderation_rule_hits` row per rule that fired. Rules run in `off`, `shadow` or `enforce` mode, and `moderation_rule_configs` overrides a rule's code defaults. Admins change both at runtime (`/v1/admin/moderation/rules`).
+
+At launch, only near-certain rules enforce:
+* contact details (email, phone);
+* crypto wallet addresses and bank details (checksum-validated);
+* holding links outside a small allowlist;
+* unambiguous prohibited items (firearm parts, other weapons, drug paraphernalia, counterfeits and fraud devices). These are blocked with a policy reason and open a `prohibited_item` case.
+
+The rest (chat-app handles, payment-intent, advertising, spam, threats, harassment and more) run in shadow until live data shows they're precise enough to promote.
+
+`message_reports` records participants reporting messages they received; several reports on a message share one case. `moderation_actions` is the append-only log of every human decision (approve, block, remove, restrict/suspend) and rule change. `messaging_risk_profiles` holds a sender's messaging trust tier: `restricted` sends everything to review, and `suspended` blocks sending except in a thread with a live order, where it's treated as `restricted`. Tiers affect messaging only, never ordering or fulfilment.
 
 **Lifecycle.** An inquiry becomes `read_only` after 60 days without messages (the customer can reopen it by posting within 90 days), or when the vendor declines or blocks. An order thread stops accepting messages as soon as its order is refunded, cancelled, reassigned, or delivered more than 14 days ago. The hourly `CloseExpiredConversations` job records that as `read_only`.
 

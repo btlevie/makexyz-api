@@ -3,16 +3,27 @@ import Conversation from '#models/conversation'
 import ModerationCase from '#models/moderation_case'
 import ModerationRuleHit from '#models/moderation_rule_hit'
 import ModerationCaseTransformer from '#transformers/moderation_case_transformer'
-import { adminListCasesValidator, resolveCaseValidator } from '#validators/messaging'
+import {
+  adminListCasesValidator,
+  resolveCaseValidator,
+  restrictSubjectValidator,
+} from '#validators/messaging'
 import { isAdmin } from '#services/project_grant_service'
-import { approveCase, blockCase, CaseAlreadyResolvedError } from '#services/moderation_case_service'
+import {
+  approveCase,
+  blockCase,
+  CaseAlreadyResolvedError,
+  CaseHasNoSubjectError,
+  restrictCaseSubject,
+} from '#services/moderation_case_service'
 
 const MAX_LISTED = 200
 
 /**
  * The review queue - held messages first (someone is waiting), then flagged
  * ones and vendor reports. Step 1 of docs/plans/messaging_moderation.md:
- * approve or block; claiming, labels and user sanctions come later.
+ * approve, block, and restrict or suspend the sender; claiming and labels come
+ * later.
  */
 export default class AdminModerationCasesController {
   async index(ctx: HttpContext) {
@@ -39,6 +50,41 @@ export default class AdminModerationCasesController {
 
   async block(ctx: HttpContext) {
     return this.resolve(ctx, blockCase)
+  }
+
+  /**
+   * Restricts or suspends the case subject's messaging (or lifts it with
+   * tier 'standard'), optionally for `days`. Messaging only. Leaves the case
+   * open so its message can still be approved or blocked.
+   */
+  async restrict(ctx: HttpContext) {
+    const { auth, params, request, response, serialize } = ctx
+    if (!isAdmin(ctx)) {
+      return response.forbidden({ error: 'Admin access required' })
+    }
+    const { tier, days, note } = await request.validateUsing(restrictSubjectValidator)
+
+    const moderationCase = await ModerationCase.findBy('uuid', params.uuid)
+    if (!moderationCase) {
+      return response.notFound({ error: 'Case not found' })
+    }
+
+    try {
+      const profile = await restrictCaseSubject(moderationCase, auth.getUserOrFail(), {
+        tier,
+        days,
+        note,
+      })
+      return await serialize({
+        trustTier: profile.trustTier,
+        restrictionExpiresAt: profile.restrictionExpiresAt,
+      })
+    } catch (error) {
+      if (error instanceof CaseHasNoSubjectError) {
+        return response.unprocessableEntity({ error: error.message })
+      }
+      throw error
+    }
   }
 
   private async resolve(ctx: HttpContext, action: typeof approveCase) {

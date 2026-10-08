@@ -1,35 +1,44 @@
 /**
  * The synchronous moderation pass, run before a message is stored or
- * delivered: normalize -> extract -> rules -> combine. Pure CPU plus one
- * cached config read, so it stays in the request path (see
- * docs/plans/messaging_moderation.md, "Process placement").
+ * delivered: normalize -> extract -> look up history -> rules -> combine.
+ * Pure CPU plus a couple of indexed reads, so it stays in the request path
+ * (see docs/plans/messaging_moderation.md, "Process placement").
  *
  * It decides; it doesn't persist. message_service.ts stores the message, the
  * evaluation and the rule hits in one transaction with the outcome.
  */
+import { createHash } from 'node:crypto'
 import { buildViews } from '#services/moderation/normalizer'
 import { extractSignals } from '#services/moderation/extractors'
 import { combine, type FiredRule } from '#services/moderation/combiner'
 import { getActiveRules } from '#services/moderation/rule_registry'
+import type { TrustTier } from '#services/messaging_risk_service'
 import type {
   Channel,
-  ConversationKind,
+  ConversationContext,
   Decision,
   Evidence,
+  HistoryLookups,
   RuleAction,
+  RuleResult,
   SenderRole,
   Signals,
   TextViews,
 } from '#services/moderation/types'
 
 /** Bumped when the normalizer or extractors change, so old evaluations stay explainable. */
-export const PIPELINE_VERSION = '1'
+export const PIPELINE_VERSION = '2'
+
+const NO_HISTORY: HistoryLookups = { sameTextOtherConversations: 0, sameTextOtherSenders: 0 }
 
 export interface ModerationInput {
   text: string
   senderRole: SenderRole
   channel: Channel
-  conversationKind: ConversationKind
+  conversation: ConversationContext
+  trustTier?: TrustTier
+  /** Behavioral lookups keyed by the normalized text's hash (see message_service.ts). */
+  history?: (contentHash: string) => Promise<HistoryLookups>
 }
 
 export interface HitRecord {
@@ -47,24 +56,36 @@ export interface ModerationOutcome {
   riskScore: number
   views: TextViews
   signals: Signals
+  /** sha256 of the normalized text - exact-duplicate detection. */
+  contentHash: string
   rulesEvaluated: string[]
   hits: HitRecord[]
   /** The rule behind the decision, for the message's reason fields. */
   reasonCode: string | null
   userFacingReason: string | null
+  /** Set when the deciding rule asks for a moderation case (e.g. a prohibited item). */
+  caseSource: RuleResult['caseSource'] | null
   durationMs: number
+}
+
+export function hashNormalized(normalized: string): string {
+  return createHash('sha256').update(normalized).digest('hex')
 }
 
 export async function moderateMessage(input: ModerationInput): Promise<ModerationOutcome> {
   const startedAt = performance.now()
   const views = buildViews(input.text)
   const signals = extractSignals(views)
+  const contentHash = hashNormalized(views.normalized)
+  const history = input.history ? await input.history(contentHash) : NO_HISTORY
+
   const context = {
     views,
     signals,
     senderRole: input.senderRole,
     channel: input.channel,
-    conversationKind: input.conversationKind,
+    conversation: input.conversation,
+    history,
   }
 
   const activeRules = await getActiveRules()
@@ -92,17 +113,19 @@ export async function moderateMessage(input: ModerationInput): Promise<Moderatio
     })
   }
 
-  const { decision, riskScore, decidedBy } = combine(fired)
+  const { decision, riskScore, decidedBy } = combine(fired, input.trustTier ?? 'standard')
 
   return {
     decision,
     riskScore,
     views,
     signals,
+    contentHash,
     rulesEvaluated: rules.map(({ rule }) => `${rule.id}@${rule.version}`),
     hits,
     reasonCode: decidedBy?.result.reasonCode ?? null,
     userFacingReason: decidedBy?.result.userMessage ?? null,
+    caseSource: decision === 'block' ? (decidedBy?.result.caseSource ?? null) : null,
     durationMs: Math.round(performance.now() - startedAt),
   }
 }

@@ -1,26 +1,9 @@
 import { test } from '@japa/runner'
-import { buildViews } from '#services/moderation/normalizer'
-import { extractSignals } from '#services/moderation/extractors'
 import { combine } from '#services/moderation/combiner'
 import contactEmail from '#services/moderation/rules/contact_email'
 import contactPhone from '#services/moderation/rules/contact_phone'
 import urlNonAllowlisted from '#services/moderation/rules/url_non_allowlisted'
-import type { ModerationRule, RuleContext } from '#services/moderation/types'
-
-function contextFor(text: string): RuleContext {
-  const views = buildViews(text)
-  return {
-    views,
-    signals: extractSignals(views),
-    senderRole: 'vendor',
-    channel: 'web',
-    conversationKind: 'inquiry',
-  }
-}
-
-function run(rule: ModerationRule, text: string) {
-  return rule.evaluate(contextFor(text), rule.defaultConfig)
-}
+import { run } from '#tests/helpers/moderation'
 
 test.group('Moderation rule: contact.email', () => {
   test('blocks a plain address: {$self}')

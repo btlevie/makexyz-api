@@ -39,6 +39,38 @@ export const closeConversationValidator = vine.create({
   reason: vine.string().trim().maxLength(500).optional(),
 })
 
+export const declineInquiryValidator = vine.create({
+  reason: vine.string().trim().maxLength(500).optional(),
+  // 'prohibited_item' also opens a moderation case - vendors are the second
+  // line of defence against prohibited work the text rules can't see.
+  reasonCode: vine.enum(['not_a_fit', 'no_capacity', 'prohibited_item', 'other']).optional(),
+})
+
+export const reportMessageValidator = vine.create({
+  reason: vine.enum([
+    'contact_sharing',
+    'payment',
+    'spam_ad',
+    'scam',
+    'harassment',
+    'prohibited_item',
+    'other',
+  ]),
+  note: vine.string().trim().maxLength(1000).optional(),
+})
+
+export const updateRuleValidator = vine.create({
+  mode: vine.enum(['off', 'shadow', 'enforce']).optional(),
+  config: vine.record(vine.any()).optional(),
+  reason: vine.string().trim().maxLength(1000).optional(),
+})
+
+export const restrictSubjectValidator = vine.create({
+  tier: vine.enum(['restricted', 'suspended', 'standard']),
+  days: vine.number().withoutDecimals().range([1, 365]).optional(),
+  note: vine.string().trim().maxLength(2000).optional(),
+})
+
 export const resolveCaseValidator = vine.create({
   note: vine.string().trim().maxLength(2000).optional(),
 })

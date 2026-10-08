@@ -1,5 +1,5 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { closeConversationValidator } from '#validators/messaging'
+import { closeConversationValidator, declineInquiryValidator } from '#validators/messaging'
 import { resolveConversation } from '#services/conversation_access_service'
 import {
   blockInquiryCustomer,
@@ -19,10 +19,10 @@ export default class VendorConversationsController {
     if (!access || access.viewer.kind !== 'vendor') {
       return response.notFound({ error: 'Conversation not found' })
     }
-    const { reason } = await request.validateUsing(closeConversationValidator)
+    const { reason, reasonCode } = await request.validateUsing(declineInquiryValidator)
 
     try {
-      await declineInquiry(access.conversation, reason)
+      await declineInquiry(access.conversation, reason, reasonCode)
     } catch (error) {
       if (error instanceof ConversationClosedError) {
         return response.conflict({ error: error.message })

@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Moderation Rules'
+method: GET
+url: '{{base_url}}/admin/moderation/rules'
+order: 6000
+description: 'Every moderation rule with its version, description, default and current mode (off, shadow, enforce), default and current config, and config version.'

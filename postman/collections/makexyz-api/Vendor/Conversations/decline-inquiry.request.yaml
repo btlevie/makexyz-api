@@ -3,7 +3,7 @@ name: 'Decline Inquiry'
 method: POST
 url: '{{base_url}}/vendor/conversations/{{conversation_uuid}}/decline'
 order: 1000
-description: 'The vendor passes on an open inquiry: it becomes read-only and the customer sees a system message (with the optional reason). 204.'
+description: 'The vendor passes on an open inquiry: it becomes read-only and the customer sees a system message (with the optional reason). reasonCode: not_a_fit, no_capacity, prohibited_item, other - prohibited_item also opens a moderation case. 204.'
 headers:
   - key: Content-Type
     value: application/json
@@ -11,5 +11,6 @@ body:
   type: json
   content: |-
     {
-      "reason": "We only do SLA resin work"
+      "reason": "We only do SLA resin work",
+      "reasonCode": "not_a_fit"
     }

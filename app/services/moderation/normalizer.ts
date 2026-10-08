@@ -1,3 +1,4 @@
+import { remove as removeConfusables } from 'confusables'
 import type { TextViews } from '#services/moderation/types'
 
 /**
@@ -22,8 +23,61 @@ const BRACKETED_COLON = /\[:\]/g
  */
 const SPACED_AT = /(?<=[\w.+-])\s+at\s+(?=[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}\b)/g
 
+/** Anything outside printable ASCII - the only characters handed to the confusables map. */
+const NON_ASCII = /[^\x20-\x7e\n\r\t]/g
+
+/**
+ * Look-alike characters (Cyrillic "а" in "pаypal", script "𝓰") mapped to
+ * Latin. NFKC runs first, so full-width digits are already real digits by
+ * here - the confusables map would otherwise read "０" as the letter O. ASCII
+ * is never touched.
+ */
+function foldConfusables(text: string): string {
+  return text.replace(NON_ASCII, (character) => removeConfusables(character))
+}
+
+/** Leetspeak, for word-list matching only (it destroys real digits). */
+const LEET: Record<string, string> = {
+  '0': 'o',
+  '1': 'i',
+  '3': 'e',
+  '4': 'a',
+  '5': 's',
+  '7': 't',
+  '@': 'a',
+  '$': 's',
+  '!': 'i',
+  '|': 'l',
+}
+const LEET_CHARACTERS = /[013457@$!|]/g
+
+/**
+ * Three or more single letters split by spaces or punctuation ("w h a t s a p
+ * p", "t.e.l.e.g.r.a.m") - joined back into one word.
+ */
+const SPACED_LETTERS = /\b[a-z](?:[\s.\-_*/]+[a-z]\b){2,}/g
+
+const NUMBER_WORDS: Record<string, string> = {
+  zero: '0',
+  oh: '0',
+  one: '1',
+  two: '2',
+  three: '3',
+  four: '4',
+  five: '5',
+  six: '6',
+  seven: '7',
+  eight: '8',
+  nine: '9',
+}
+const NUMBER_WORD = /\b(?:zero|oh|one|two|three|four|five|six|seven|eight|nine)\b/g
+/** Separators between digit groups: "555 - 234 . 9876", "five five five, two..." */
+const DIGIT_SEPARATORS = /(?<=\d)[\s.,\-()/]+(?=\d)/g
+
 export function buildViews(text: string): TextViews {
-  const normalized = text.normalize('NFKC').replace(INVISIBLE_CHARACTERS, '').toLowerCase()
+  const normalized = foldConfusables(
+    text.normalize('NFKC').replace(INVISIBLE_CHARACTERS, '')
+  ).toLowerCase()
 
   const deobfuscated = normalized
     .replace(DEFANGED_SCHEME, 'http$1')
@@ -34,5 +88,13 @@ export function buildViews(text: string): TextViews {
 
   const deobfuscatedLoose = deobfuscated.replace(SPACED_AT, '@')
 
-  return { raw: text, normalized, deobfuscated, deobfuscatedLoose }
+  const compact = deobfuscated
+    .replace(LEET_CHARACTERS, (character) => LEET[character] ?? character)
+    .replace(SPACED_LETTERS, (run) => run.replace(/[^a-z]/g, ''))
+
+  const numeric = deobfuscated
+    .replace(NUMBER_WORD, (word) => NUMBER_WORDS[word] ?? word)
+    .replace(DIGIT_SEPARATORS, '')
+
+  return { raw: text, normalized, deobfuscated, deobfuscatedLoose, compact, numeric }
 }

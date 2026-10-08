@@ -47,6 +47,7 @@ export type ScannedRoutes = {
     'messaging.conversations.messages': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversations.store_message': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversations.mark_read': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'messaging.message_reports.store': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'messageUuid': ParamValue} }
     'messaging.inquiries.store': { paramsTuple: [ParamValue]; params: {'vendorUuid': ParamValue} }
     'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
@@ -102,6 +103,9 @@ export type ScannedRoutes = {
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_cases.approve': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.block': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.restrict': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_rules.update': { paramsTuple: [ParamValue]; params: {'ruleId': ParamValue} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.paypal_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.easypost_webhooks': { paramsTuple?: []; params?: {} }
@@ -140,6 +144,7 @@ export type ScannedRoutes = {
     'admin.admin_conversations.index': { paramsTuple?: []; params?: {} }
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'event_stream': { paramsTuple?: []; params?: {} }
@@ -175,6 +180,7 @@ export type ScannedRoutes = {
     'admin.admin_conversations.index': { paramsTuple?: []; params?: {} }
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'subscribe': { paramsTuple?: []; params?: {} }
@@ -196,6 +202,7 @@ export type ScannedRoutes = {
     'projects.projects.capture_email': { paramsTuple: [ParamValue]; params: {'projectUuid': ParamValue} }
     'messaging.conversations.store_message': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversations.mark_read': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'messaging.message_reports.store': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'messageUuid': ParamValue} }
     'messaging.inquiries.store': { paramsTuple: [ParamValue]; params: {'vendorUuid': ParamValue} }
     'vendor.vendor_shipments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_shipments.void': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'shipmentUuid': ParamValue} }
@@ -221,6 +228,7 @@ export type ScannedRoutes = {
     'admin.admin_vendors.reinstate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.approve': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.block': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.restrict': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.paypal_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.easypost_webhooks': { paramsTuple?: []; params?: {} }
@@ -242,6 +250,7 @@ export type ScannedRoutes = {
     'vendor.vendor_onboarding.update_profile': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.update_vendor': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.review_capability': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'technology': ParamValue} }
+    'admin.admin_moderation_rules.update': { paramsTuple: [ParamValue]; params: {'ruleId': ParamValue} }
   }
   DELETE: {
     'profile.addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }

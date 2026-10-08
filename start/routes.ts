@@ -205,6 +205,12 @@ router
           .post('conversations/:uuid/messages', [controllers.Conversations, 'storeMessage'])
           .use(messagingThrottle)
         router.post('conversations/:uuid/read', [controllers.Conversations, 'markRead'])
+        router
+          .post('conversations/:uuid/messages/:messageUuid/report', [
+            controllers.MessageReports,
+            'store',
+          ])
+          .use(messagingThrottle)
 
         // A customer starting a conversation with a vendor (verified email
         // required - see conversation_service.ts#createInquiry).
@@ -329,6 +335,13 @@ router
         router.get('moderation/cases', [controllers.AdminModerationCases, 'index'])
         router.post('moderation/cases/:uuid/approve', [controllers.AdminModerationCases, 'approve'])
         router.post('moderation/cases/:uuid/block', [controllers.AdminModerationCases, 'block'])
+        router.post('moderation/cases/:uuid/restrict', [
+          controllers.AdminModerationCases,
+          'restrict',
+        ])
+        // Rule modes (off/shadow/enforce) and thresholds at runtime.
+        router.get('moderation/rules', [controllers.AdminModerationRules, 'index'])
+        router.patch('moderation/rules/:ruleId', [controllers.AdminModerationRules, 'update'])
       })
       .prefix('admin')
       .as('admin')

@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Report Message'
+method: POST
+url: '{{base_url}}/conversations/{{conversation_uuid}}/messages/{{message_uuid}}/report'
+order: 7000
+description: 'Reports a message the caller received. reason: contact_sharing, payment, spam_ad, scam, harassment, prohibited_item, other. Opens (or joins) one moderation case per message. 201 new, 200 if this participant already reported it, 422 for your own or a no-longer-visible message.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "reason": "contact_sharing",
+      "note": "Asked me to continue on WhatsApp"
+    }

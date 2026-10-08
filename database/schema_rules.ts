@@ -257,6 +257,22 @@ export default {
         },
       },
     },
+    ['moderation_actions']: {
+      columns: {
+        ['action']: {
+          tsType:
+            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change'",
+        },
+      },
+    },
+    ['message_reports']: {
+      columns: {
+        ['reason']: {
+          tsType:
+            "'contact_sharing' | 'payment' | 'spam_ad' | 'scam' | 'harassment' | 'prohibited_item' | 'other'",
+        },
+      },
+    },
     ['moderation_cases']: {
       columns: {
         ['source']: {

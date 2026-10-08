@@ -374,6 +374,27 @@ export class MaterialSchema extends BaseModel {
   declare uuid: string
 }
 
+export class MessageReportSchema extends BaseModel {
+  static $columns = ['caseId', 'createdAt', 'id', 'messageId', 'note', 'reason', 'reporterParticipantId', 'uuid'] as const
+  $columns = MessageReportSchema.$columns
+  @column()
+  declare caseId: number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare messageId: number
+  @column()
+  declare note: string | null
+  @column()
+  declare reason: 'contact_sharing' | 'payment' | 'spam_ad' | 'scam' | 'harassment' | 'prohibited_item' | 'other'
+  @column()
+  declare reporterParticipantId: number
+  @column()
+  declare uuid: string
+}
+
 export class MessageSchema extends BaseModel {
   static $columns = ['blockReasonCode', 'body', 'channel', 'clientMessageId', 'contentHash', 'conversationId', 'createdAt', 'deliveredAt', 'id', 'kind', 'refId', 'refType', 'removedAt', 'senderCustomerId', 'senderParticipantId', 'senderVendorId', 'seq', 'status', 'updatedAt', 'userFacingReason', 'uuid'] as const
   $columns = MessageSchema.$columns
@@ -438,6 +459,29 @@ export class MessagingRiskProfileSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare vendorId: number | null
+}
+
+export class ModerationActionSchema extends BaseModel {
+  static $columns = ['action', 'actorUserId', 'caseId', 'createdAt', 'id', 'metadata', 'reason', 'targetId', 'targetType'] as const
+  $columns = ModerationActionSchema.$columns
+  @column()
+  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change'
+  @column()
+  declare actorUserId: number | null
+  @column()
+  declare caseId: number | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare metadata: any | null
+  @column()
+  declare reason: string | null
+  @column()
+  declare targetId: string
+  @column()
+  declare targetType: string
 }
 
 export class ModerationCaseSchema extends BaseModel {

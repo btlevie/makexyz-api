@@ -16,6 +16,7 @@ import type InvitationTransformer from '#transformers/invitation_transformer'
 import type MaterialCatalogTransformer from '#transformers/material_catalog_transformer'
 import type MessageTransformer from '#transformers/message_transformer'
 import type ModerationCaseTransformer from '#transformers/moderation_case_transformer'
+import type ModerationRuleTransformer from '#transformers/moderation_rule_transformer'
 import type OrderTransformer from '#transformers/order_transformer'
 import type ProductionTimeOptionTransformer from '#transformers/production_time_option_transformer'
 import type ProjectFileTransformer from '#transformers/project_file_transformer'
@@ -75,6 +76,10 @@ export namespace Data {
   export type ModerationCase = InferData<ModerationCaseTransformer>
   export namespace ModerationCase {
     export type Variants = InferVariants<ModerationCaseTransformer>
+  }
+  export type ModerationRule = InferData<ModerationRuleTransformer>
+  export namespace ModerationRule {
+    export type Variants = InferVariants<ModerationRuleTransformer>
   }
   export type Order = InferData<OrderTransformer>
   export namespace Order {

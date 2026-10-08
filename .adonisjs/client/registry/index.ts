@@ -264,6 +264,12 @@ const routes = {
     tokens: [{"old":"/v1/conversations/:uuid/read","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/read","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/read","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/read","type":0,"val":"read","end":""}],
     types: placeholder as Registry['messaging.conversations.mark_read']['types'],
   },
+  'messaging.message_reports.store': {
+    methods: ["POST"],
+    pattern: '/v1/conversations/:uuid/messages/:messageUuid/report',
+    tokens: [{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"messages","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":1,"val":"messageUuid","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"report","end":""}],
+    types: placeholder as Registry['messaging.message_reports.store']['types'],
+  },
   'messaging.inquiries.store': {
     methods: ["POST"],
     pattern: '/v1/vendors/:vendorUuid/inquiries',
@@ -593,6 +599,24 @@ const routes = {
     pattern: '/v1/admin/moderation/cases/:uuid/block',
     tokens: [{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"cases","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":1,"val":"uuid","end":""},{"old":"/v1/admin/moderation/cases/:uuid/block","type":0,"val":"block","end":""}],
     types: placeholder as Registry['admin.admin_moderation_cases.block']['types'],
+  },
+  'admin.admin_moderation_cases.restrict': {
+    methods: ["POST"],
+    pattern: '/v1/admin/moderation/cases/:uuid/restrict',
+    tokens: [{"old":"/v1/admin/moderation/cases/:uuid/restrict","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/cases/:uuid/restrict","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/cases/:uuid/restrict","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/cases/:uuid/restrict","type":0,"val":"cases","end":""},{"old":"/v1/admin/moderation/cases/:uuid/restrict","type":1,"val":"uuid","end":""},{"old":"/v1/admin/moderation/cases/:uuid/restrict","type":0,"val":"restrict","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_cases.restrict']['types'],
+  },
+  'admin.admin_moderation_rules.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/moderation/rules',
+    tokens: [{"old":"/v1/admin/moderation/rules","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/rules","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/rules","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/rules","type":0,"val":"rules","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_rules.index']['types'],
+  },
+  'admin.admin_moderation_rules.update': {
+    methods: ["PATCH"],
+    pattern: '/v1/admin/moderation/rules/:ruleId',
+    tokens: [{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"rules","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":1,"val":"ruleId","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_rules.update']['types'],
   },
   'webhooks.stripe_webhooks': {
     methods: ["POST"],

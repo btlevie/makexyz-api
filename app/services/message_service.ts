@@ -12,7 +12,6 @@
  *   block    -> blocked           (only the sender sees it, with the reason)
  * A restricted sender's messages always go to pending_review.
  */
-import { createHash } from 'node:crypto'
 import string from '@adonisjs/core/helpers/string'
 import logger from '@adonisjs/core/services/logger'
 import db from '@adonisjs/lucid/services/db'
@@ -25,6 +24,7 @@ import Message, { DELIVERED_STATUSES } from '#models/message'
 import ModerationCase from '#models/moderation_case'
 import ModerationEvaluation from '#models/moderation_evaluation'
 import ModerationRuleHit from '#models/moderation_rule_hit'
+import Order from '#models/order'
 import { assertCanPost } from '#services/conversation_service'
 import { effectiveTrustTier } from '#services/messaging_risk_service'
 import { scheduleNotifications } from '#services/message_notification_service'
@@ -33,7 +33,7 @@ import {
   PIPELINE_VERSION,
   type ModerationOutcome,
 } from '#services/moderation/pipeline'
-import type { Decision } from '#services/moderation/types'
+import type { ConversationContext, Decision, HistoryLookups } from '#services/moderation/types'
 
 /** Review-queue priority: lower sorts first. Someone waiting on a held message comes first. */
 const HELD_MESSAGE_PRIORITY = 10
@@ -64,8 +64,55 @@ export function conversationChannel(conversation: Conversation): string {
   return `conversations/${conversation.uuid}`
 }
 
-export function contentHash(normalizedText: string): string {
-  return createHash('sha256').update(normalizedText).digest('hex')
+/**
+ * Shown to the sender when the blocking rule gives no specific reason - spam,
+ * scam and malicious-link rules deliberately don't explain themselves.
+ */
+export const GENERIC_BLOCK_REASON = "This message couldn't be delivered."
+
+/** A blocked prohibited-item message still goes to staff. */
+const PROHIBITED_ITEM_PRIORITY = 30
+
+/**
+ * The behavioral facts the duplicate-spam rule needs, over the last 24 hours:
+ * how many other conversations this sender sent the same text to, and how
+ * many other senders sent it.
+ */
+async function historyFor(
+  participant: ConversationParticipant,
+  conversationId: number,
+  hash: string
+): Promise<HistoryLookups> {
+  const since = DateTime.now().minus({ hours: 24 }).toSQL()!
+  const sameText = await Message.query()
+    .where('contentHash', hash)
+    .where('createdAt', '>', since)
+    .whereNot('conversationId', conversationId)
+    .whereNotNull('senderParticipantId')
+    .select('conversationId', 'senderCustomerId', 'senderVendorId')
+
+  const mine = (row: Message) =>
+    (participant.customerId !== null && row.senderCustomerId === participant.customerId) ||
+    (participant.vendorId !== null && row.senderVendorId === participant.vendorId)
+  const otherConversations = new Set(sameText.filter(mine).map((row) => row.conversationId))
+  const otherSenders = new Set(
+    sameText
+      .filter((row) => !mine(row))
+      .map((row) => `${row.senderCustomerId ?? ''}:${row.senderVendorId ?? ''}`)
+  )
+  return {
+    sameTextOtherConversations: otherConversations.size,
+    sameTextOtherSenders: otherSenders.size,
+  }
+}
+
+async function conversationContext(conversation: Conversation): Promise<ConversationContext> {
+  const order = conversation.orderId ? await Order.find(conversation.orderId) : null
+  return {
+    kind: conversation.kind,
+    isFirstMessage: conversation.kind === 'inquiry' && conversation.lastSeq === 0,
+    orderStatus: order?.status ?? null,
+  }
 }
 
 function statusFor(decision: Decision, restricted: boolean): Message['status'] {
@@ -169,7 +216,9 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
     text: body,
     senderRole: participant.role,
     channel: 'web',
-    conversationKind: conversation.kind,
+    conversation: await conversationContext(conversation),
+    trustTier: tier,
+    history: (hash) => historyFor(participant, conversation.id, hash),
   })
   const status = statusFor(outcome.decision, restricted)
   const now = DateTime.now()
@@ -199,8 +248,9 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
           clientMessageId,
           status,
           blockReasonCode: status === 'delivered' ? null : outcome.reasonCode,
-          userFacingReason: status === 'blocked' ? outcome.userFacingReason : null,
-          contentHash: contentHash(outcome.views.normalized),
+          userFacingReason:
+            status === 'blocked' ? (outcome.userFacingReason ?? GENERIC_BLOCK_REASON) : null,
+          contentHash: outcome.contentHash,
           deliveredAt: DELIVERED_STATUSES.includes(status) ? now : null,
         },
         { client: trx }
@@ -208,6 +258,21 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
       await locked.save()
       await recordEvaluation(created, outcome, trx)
 
+      if (status === 'blocked' && outcome.caseSource) {
+        await ModerationCase.create(
+          {
+            uuid: string.uuid(),
+            messageId: created.id,
+            customerId: participant.customerId,
+            vendorId: participant.vendorId,
+            source: outcome.caseSource,
+            priority: PROHIBITED_ITEM_PRIORITY,
+            status: 'open',
+            missedByAutomation: false,
+          },
+          { client: trx }
+        )
+      }
       if (status === 'pending_review' || status === 'delivered_flagged') {
         await ModerationCase.create(
           {

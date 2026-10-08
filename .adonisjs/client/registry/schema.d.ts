@@ -523,6 +523,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversations_controller').default['markRead']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'messaging.message_reports.store': {
+    methods: ["POST"]
+    pattern: '/v1/conversations/:uuid/messages/:messageUuid/report'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').reportMessageValidator)>>
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; messageUuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').reportMessageValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/message_reports_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/message_reports_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'messaging.inquiries.store': {
     methods: ["POST"]
     pattern: '/v1/vendors/:vendorUuid/inquiries'
@@ -839,10 +851,10 @@ export interface Registry {
     methods: ["POST"]
     pattern: '/v1/vendor/conversations/:uuid/decline'
     types: {
-      body: ExtractBody<InferInput<(typeof import('#validators/messaging').closeConversationValidator)>>
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').declineInquiryValidator)>>
       paramsTuple: [ParamValue]
       params: { uuid: ParamValue }
-      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').closeConversationValidator)>>
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').declineInquiryValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_conversations_controller').default['decline']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_conversations_controller').default['decline']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
@@ -1181,6 +1193,42 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['block']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['block']>>>
+    }
+  }
+  'admin.admin_moderation_cases.restrict': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/cases/:uuid/restrict'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').restrictSubjectValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').restrictSubjectValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['restrict']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['restrict']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_rules.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/rules'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_rules_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_rules_controller').default['index']>>>
+    }
+  }
+  'admin.admin_moderation_rules.update': {
+    methods: ["PATCH"]
+    pattern: '/v1/admin/moderation/rules/:ruleId'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').updateRuleValidator)>>
+      paramsTuple: [ParamValue]
+      params: { ruleId: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').updateRuleValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_rules_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_rules_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'webhooks.stripe_webhooks': {

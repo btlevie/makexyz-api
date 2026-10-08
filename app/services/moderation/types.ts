@@ -42,6 +42,13 @@ export interface TextViews {
   normalized: string
   deobfuscated: string
   deobfuscatedLoose: string
+  /**
+   * For word-list matching only: leetspeak undone ("d1sc0rd" -> "discord")
+   * and spaced-out letters joined ("t e l e g r a m"). Real digits are gone.
+   */
+  compact: string
+  /** Number words as digits ("five five five") with separators between digit groups removed. */
+  numeric: string
 }
 
 export type ViewName = keyof TextViews
@@ -72,11 +79,67 @@ export interface ExtractedUrl {
   allowlisted: boolean
 }
 
+/** `@name` - a social handle shape (never part of an email address). */
+export interface ExtractedHandle {
+  handle: string
+}
+
+export interface ExtractedCryptoAddress {
+  kind: 'btc' | 'eth' | 'tron'
+  address: string
+}
+
+export interface ExtractedBankDetail {
+  kind: 'iban' | 'routing_number' | 'swift_bic'
+  value: string
+}
+
+/** A 10-15 digit run that isn't a valid phone number, an order number or a dimension. */
+export interface ExtractedDigitRun {
+  digits: string
+}
+
+export interface ProfanitySignal {
+  /** How many profane terms (the obscenity library's English dataset). */
+  count: number
+  /** Whether one sits within a few words of "you"/"your" - aimed at the reader. */
+  directed: boolean
+  terms: string[]
+}
+
 /** Everything the extractors found - persisted on the evaluation. */
 export interface Signals {
   emails: ExtractedEmail[]
   phones: ExtractedPhone[]
   urls: ExtractedUrl[]
+  handles: ExtractedHandle[]
+  cryptoAddresses: ExtractedCryptoAddress[]
+  bankDetails: ExtractedBankDetail[]
+  digitRuns: ExtractedDigitRun[]
+  profanity: ProfanitySignal
+}
+
+/**
+ * Where the message is going. Rules use it for direction- and phase-aware
+ * thresholds (vendor -> customer is the strictest direction).
+ */
+export interface ConversationContext {
+  kind: ConversationKind
+  /** The first message of an inquiry - the cold-pitch and duplicate-RFQ rules care. */
+  isFirstMessage: boolean
+  /** The order's status for order threads (and inquiries that became orders), else null. */
+  orderStatus: string | null
+}
+
+/**
+ * Behavioral facts looked up before the rules run (rules themselves never do
+ * I/O). Counted over the last 24 hours, excluding the current conversation.
+ */
+export interface HistoryLookups {
+  /** Other conversations this sender sent the exact same (normalized) text to. */
+  sameTextOtherConversations: number
+  /** Distinct other senders who sent the exact same text. */
+  sameTextOtherSenders: number
 }
 
 export interface RuleContext {
@@ -84,7 +147,8 @@ export interface RuleContext {
   signals: Signals
   senderRole: SenderRole
   channel: Channel
-  conversationKind: ConversationKind
+  conversation: ConversationContext
+  history: HistoryLookups
 }
 
 export interface RuleResult {
@@ -99,6 +163,8 @@ export interface RuleResult {
    * spam/scam/malicious-link rules - naming them helps people probe them.
    */
   userMessage?: string
+  /** Open a moderation case when this result blocks the message (e.g. prohibited items). */
+  caseSource?: 'prohibited_item'
 }
 
 /**

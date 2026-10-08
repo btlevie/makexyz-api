@@ -1,18 +1,26 @@
 /**
- * The human review queue (Step 1: the minimal version - see
- * docs/plans/messaging_moderation.md, "Human moderation"). A moderator
- * either approves a case's message (a held message is delivered, keeping its
- * original place in the thread) or blocks it (held -> blocked; already
- * delivered -> removed, shown to the recipient as a tombstone).
+ * The human review queue (see docs/plans/messaging_moderation.md, "Human
+ * moderation"). A moderator can:
+ * - approve a case's message (a held message is delivered, keeping its
+ *   original place in the thread);
+ * - block it (held -> blocked; already delivered -> removed, shown to the
+ *   recipient as a tombstone);
+ * - restrict or suspend the sender's messaging, or lift that.
+ * Every decision is recorded in moderation_actions.
  */
 import logger from '@adonisjs/core/services/logger'
+import db from '@adonisjs/lucid/services/db'
 import transmit from '@adonisjs/transmit/services/main'
 import { DateTime } from 'luxon'
 import Conversation from '#models/conversation'
+import Customer from '#models/customer'
 import Message from '#models/message'
 import type ModerationCase from '#models/moderation_case'
+import MessagingRiskProfile from '#models/messaging_risk_profile'
 import type User from '#models/user'
+import Vendor from '#models/vendor'
 import { conversationChannel, deliverHeldMessage } from '#services/message_service'
+import { recordModerationAction } from '#services/moderation_action_service'
 
 export const MODERATOR_BLOCK_REASON =
   "This message wasn't delivered because it doesn't follow MakeXYZ's messaging rules."
@@ -21,6 +29,13 @@ export class CaseAlreadyResolvedError extends Error {
   constructor() {
     super('This case has already been resolved')
     this.name = 'CaseAlreadyResolvedError'
+  }
+}
+
+export class CaseHasNoSubjectError extends Error {
+  constructor() {
+    super('This case has no customer or vendor to restrict')
+    this.name = 'CaseHasNoSubjectError'
   }
 }
 
@@ -52,6 +67,16 @@ export async function approveCase(moderationCase: ModerationCase, moderator: Use
 
   resolve(moderationCase, moderator, 'approved', note)
   await moderationCase.save()
+  if (message) {
+    await recordModerationAction({
+      actorUserId: moderator.id,
+      caseId: moderationCase.id,
+      action: 'approve_message',
+      targetType: 'message',
+      targetId: message.uuid,
+      reason: note,
+    })
+  }
   return moderationCase
 }
 
@@ -99,5 +124,70 @@ export async function blockCase(moderationCase: ModerationCase, moderator: User,
 
   resolve(moderationCase, moderator, resolution, note)
   await moderationCase.save()
+  if (message && resolution !== 'no_action') {
+    await recordModerationAction({
+      actorUserId: moderator.id,
+      caseId: moderationCase.id,
+      action: resolution === 'removed' ? 'remove_message' : 'block_message',
+      targetType: 'message',
+      targetId: message.uuid,
+      reason: note,
+    })
+  }
   return moderationCase
+}
+
+/**
+ * Sets the case subject's messaging tier: 'restricted' (every message goes
+ * to review), 'suspended' (can't send, except in a live order thread, where
+ * it's treated as restricted), or 'standard' to lift a restriction. Messaging
+ * only - never touches ordering, quoting or fulfilment. Doesn't resolve the
+ * case, so the moderator can still approve or block its message.
+ */
+export async function restrictCaseSubject(
+  moderationCase: ModerationCase,
+  moderator: User,
+  input: { tier: 'restricted' | 'suspended' | 'standard'; days?: number; note?: string }
+): Promise<MessagingRiskProfile> {
+  const principal = moderationCase.vendorId
+    ? { vendorId: moderationCase.vendorId }
+    : moderationCase.customerId
+      ? { customerId: moderationCase.customerId }
+      : null
+  if (!principal) {
+    throw new CaseHasNoSubjectError()
+  }
+
+  const expiresAt =
+    input.tier === 'standard' || !input.days ? null : DateTime.now().plus({ days: input.days })
+  const target = principal.vendorId
+    ? await Vendor.findOrFail(principal.vendorId)
+    : await Customer.findOrFail(principal.customerId!)
+  const targetUuid = target.uuid
+
+  return db.transaction(async (trx) => {
+    const profile = await MessagingRiskProfile.updateOrCreate(
+      principal,
+      { trustTier: input.tier, restrictionExpiresAt: expiresAt },
+      { client: trx }
+    )
+    await recordModerationAction(
+      {
+        actorUserId: moderator.id,
+        caseId: moderationCase.id,
+        action:
+          input.tier === 'standard'
+            ? 'lift_restriction'
+            : input.tier === 'suspended'
+              ? 'suspend_user'
+              : 'restrict_user',
+        targetType: principal.vendorId ? 'vendor' : 'customer',
+        targetId: targetUuid,
+        reason: input.note,
+        metadata: { tier: input.tier, expiresAt: expiresAt?.toISO() ?? null },
+      },
+      trx
+    )
+    return profile
+  })
 }

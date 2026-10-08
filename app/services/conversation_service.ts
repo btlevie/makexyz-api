@@ -17,6 +17,7 @@ import Conversation from '#models/conversation'
 import ConversationBlock from '#models/conversation_block'
 import ConversationParticipant from '#models/conversation_participant'
 import Customer from '#models/customer'
+import Message from '#models/message'
 import ModerationCase from '#models/moderation_case'
 import Order from '#models/order'
 import type User from '#models/user'
@@ -349,7 +350,11 @@ async function closeConversation(
 }
 
 /** The vendor passes on an inquiry. The customer sees a system message. */
-export async function declineInquiry(conversation: Conversation, reason?: string) {
+export async function declineInquiry(
+  conversation: Conversation,
+  reason?: string,
+  reasonCode?: 'not_a_fit' | 'no_capacity' | 'prohibited_item' | 'other'
+) {
   if (conversation.kind !== 'inquiry' || conversation.status !== 'open') {
     throw new ConversationClosedError('Only an open inquiry can be declined')
   }
@@ -357,6 +362,31 @@ export async function declineInquiry(conversation: Conversation, reason?: string
     conversation.useTransaction(trx)
     conversation.firstVendorResponseAt ??= DateTime.now()
     await closeConversation(conversation, 'declined', trx)
+
+    // A vendor turning work down as prohibited is the check the text rules
+    // can't do (they never see the model's geometry) - staff get a case on
+    // the customer's opening message.
+    if (reasonCode === 'prohibited_item') {
+      const opener = await Message.query({ client: trx })
+        .where('conversationId', conversation.id)
+        .whereNotNull('senderCustomerId')
+        .orderBy('seq', 'asc')
+        .first()
+      await ModerationCase.create(
+        {
+          uuid: string.uuid(),
+          messageId: opener?.id ?? null,
+          customerId: conversation.customerId,
+          vendorId: null,
+          source: 'prohibited_item',
+          priority: 20,
+          status: 'open',
+          patternNote: reason ?? null,
+          missedByAutomation: true,
+        },
+        { client: trx }
+      )
+    }
   })
   await postSystemMessage(
     conversation,

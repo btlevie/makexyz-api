@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Update Moderation Rule'
+method: PATCH
+url: '{{base_url}}/admin/moderation/rules/{{rule_id}}'
+order: 7000
+description: 'Changes a rule''s mode and/or config overrides (only keys the rule defines, same types as its defaults - 422 otherwise). Bumps the config version and is logged to moderation_actions. Typical use: promote a rule from shadow to enforce once its hits look precise.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "mode": "enforce",
+      "reason": "Precise in shadow for 3 weeks"
+    }

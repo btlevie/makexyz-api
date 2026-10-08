@@ -86,6 +86,9 @@ export interface ApiDefinition {
       storeMessage: typeof routes['messaging.conversations.store_message']
       markRead: typeof routes['messaging.conversations.mark_read']
     }
+    messageReports: {
+      store: typeof routes['messaging.message_reports.store']
+    }
     inquiries: {
       store: typeof routes['messaging.inquiries.store']
     }
@@ -174,6 +177,11 @@ export interface ApiDefinition {
       index: typeof routes['admin.admin_moderation_cases.index']
       approve: typeof routes['admin.admin_moderation_cases.approve']
       block: typeof routes['admin.admin_moderation_cases.block']
+      restrict: typeof routes['admin.admin_moderation_cases.restrict']
+    }
+    adminModerationRules: {
+      index: typeof routes['admin.admin_moderation_rules.index']
+      update: typeof routes['admin.admin_moderation_rules.update']
     }
   }
   webhooks: {

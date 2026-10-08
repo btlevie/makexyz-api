@@ -1,0 +1,17 @@
+$kind: http-request
+name: 'Restrict Case Subject'
+method: POST
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/restrict'
+order: 8000
+description: 'Sets the case subject''s messaging tier: restricted (every message reviewed), suspended (cannot send except in a live order thread) or standard (lifts it). Optional days sets an expiry. Messaging only - never affects ordering or fulfilment. Leaves the case open.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "tier": "restricted",
+      "days": 7,
+      "note": "Repeated contact-sharing attempts"
+    }
