@@ -342,6 +342,11 @@ router
         // Rule modes (off/shadow/enforce) and thresholds at runtime.
         router.get('moderation/rules', [controllers.AdminModerationRules, 'index'])
         router.patch('moderation/rules/:ruleId', [controllers.AdminModerationRules, 'update'])
+        // Prohibited-item word lists: built-ins plus admin slang and overrides.
+        router.get('moderation/terms', [controllers.AdminModerationTerms, 'index'])
+        router.post('moderation/terms', [controllers.AdminModerationTerms, 'store'])
+        router.post('moderation/terms/preview', [controllers.AdminModerationTerms, 'preview'])
+        router.patch('moderation/terms/:uuid', [controllers.AdminModerationTerms, 'update'])
       })
       .prefix('admin')
       .as('admin')

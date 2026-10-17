@@ -618,6 +618,30 @@ const routes = {
     tokens: [{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":0,"val":"rules","end":""},{"old":"/v1/admin/moderation/rules/:ruleId","type":1,"val":"ruleId","end":""}],
     types: placeholder as Registry['admin.admin_moderation_rules.update']['types'],
   },
+  'admin.admin_moderation_terms.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/moderation/terms',
+    tokens: [{"old":"/v1/admin/moderation/terms","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/terms","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/terms","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/terms","type":0,"val":"terms","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_terms.index']['types'],
+  },
+  'admin.admin_moderation_terms.store': {
+    methods: ["POST"],
+    pattern: '/v1/admin/moderation/terms',
+    tokens: [{"old":"/v1/admin/moderation/terms","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/terms","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/terms","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/terms","type":0,"val":"terms","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_terms.store']['types'],
+  },
+  'admin.admin_moderation_terms.preview': {
+    methods: ["POST"],
+    pattern: '/v1/admin/moderation/terms/preview',
+    tokens: [{"old":"/v1/admin/moderation/terms/preview","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/terms/preview","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/terms/preview","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/terms/preview","type":0,"val":"terms","end":""},{"old":"/v1/admin/moderation/terms/preview","type":0,"val":"preview","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_terms.preview']['types'],
+  },
+  'admin.admin_moderation_terms.update': {
+    methods: ["PATCH"],
+    pattern: '/v1/admin/moderation/terms/:uuid',
+    tokens: [{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"terms","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['admin.admin_moderation_terms.update']['types'],
+  },
   'webhooks.stripe_webhooks': {
     methods: ["POST"],
     pattern: '/v1/webhooks/stripe',

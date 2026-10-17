@@ -631,6 +631,16 @@ At launch, only near-certain rules enforce:
 
 The rest (chat-app handles, payment-intent, advertising, spam, threats, harassment and more) run in shadow until live data shows they're precise enough to promote.
 
+The prohibited-item word lists live in code as the baseline. `moderation_terms` (unique on `category` + `term`) holds admin changes on top of them. A row for a term not in the code list adds it. A row for a built-in term overrides it: changes its action, disables it, or annotates it. Rows are never deleted, only disabled.
+
+Each term has an action and a status:
+* **action:** `block`, `review` (the default for new slang) or `weight`;
+* **status:** `active`, `shadow` (matches are recorded with no effect) or `disabled`.
+
+The `context_allow` category adds harmless-context words (like "airsoft"), which lower a prohibited-item block to review. Terms are stored normalized, and messages are matched through the same deobfuscation as the rules, so admins enter the plain spelling.
+
+Admins list terms with 30-day hit counts, preview a term against recent messages, and add or change terms at `/v1/admin/moderation/terms`. Every change is logged in `moderation_actions` (`term_added`, `term_updated`, `term_disabled`).
+
 `message_reports` records participants reporting messages they received; several reports on a message share one case. `moderation_actions` is the append-only log of every human decision (approve, block, remove, restrict/suspend) and rule change. `messaging_risk_profiles` holds a sender's messaging trust tier: `restricted` sends everything to review, and `suspended` blocks sending except in a thread with a live order, where it's treated as `restricted`. Tiers affect messaging only, never ordering or fulfilment.
 
 **Lifecycle.** An inquiry becomes `read_only` after 60 days without messages (the customer can reopen it by posting within 90 days), or when the vendor declines or blocks. An order thread stops accepting messages as soon as its order is refunded, cancelled, reassigned, or delivered more than 14 days ago. The hourly `CloseExpiredConversations` job records that as `read_only`.

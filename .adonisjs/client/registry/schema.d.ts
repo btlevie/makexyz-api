@@ -1231,6 +1231,54 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_rules_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'admin.admin_moderation_terms.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/terms'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').listTermsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_terms.store': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/terms'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').addTermValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').addTermValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_terms.preview': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/terms/preview'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').previewTermValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').previewTermValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['preview']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['preview']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_terms.update': {
+    methods: ["PATCH"]
+    pattern: '/v1/admin/moderation/terms/:uuid'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').updateTermValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').updateTermValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'webhooks.stripe_webhooks': {
     methods: ["POST"]
     pattern: '/v1/webhooks/stripe'

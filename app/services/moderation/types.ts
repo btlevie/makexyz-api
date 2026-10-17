@@ -1,3 +1,5 @@
+import type { ProhibitedCategory } from '#services/moderation/prohibited_terms'
+
 /**
  * Shared types for the message moderation pipeline. See
  * docs/plans/messaging_moderation.md (sections 2-3) for the design: extractors
@@ -57,6 +59,11 @@ export type ViewName = keyof TextViews
 export interface Evidence {
   view: ViewName
   match: string
+  /** Prohibited-item terms: which list entry matched (built-in, or an admin row's uuid). */
+  termSource?: 'builtin' | 'admin'
+  termUuid?: string | null
+  /** A shadow term - recorded, never acted on. */
+  termStatus?: 'shadow'
 }
 
 export interface ExtractedEmail {
@@ -183,5 +190,10 @@ export interface ModerationRule<C extends Record<string, unknown> = Record<strin
   defaultConfig: C
   /** Limit the rule to certain senders; omitted means everyone but staff. */
   senderRoles?: SenderRole[]
+  /**
+   * Set on the prohibited-item rules: the rule registry injects this
+   * category's effective (built-in + admin) terms into the rule's config.
+   */
+  termCategory?: ProhibitedCategory
   evaluate(ctx: RuleContext, config: C): RuleResult | null
 }

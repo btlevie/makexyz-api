@@ -65,6 +65,39 @@ export const updateRuleValidator = vine.create({
   reason: vine.string().trim().maxLength(1000).optional(),
 })
 
+const TERM_CATEGORIES = [
+  'firearm',
+  'weapon',
+  'drugs',
+  'counterfeit_fraud',
+  'context_allow',
+] as const
+
+export const listTermsValidator = vine.create({
+  category: vine.enum(TERM_CATEGORIES).optional(),
+  status: vine.enum(['active', 'shadow', 'disabled']).optional(),
+  q: vine.string().trim().maxLength(60).optional(),
+})
+
+export const addTermValidator = vine.create({
+  category: vine.enum(TERM_CATEGORIES),
+  term: vine.string().trim().minLength(2).maxLength(60),
+  action: vine.enum(['block', 'review', 'weight']).optional(),
+  status: vine.enum(['active', 'shadow', 'disabled']).optional(),
+  note: vine.string().trim().maxLength(1000).optional(),
+})
+
+export const updateTermValidator = vine.create({
+  action: vine.enum(['block', 'review', 'weight']).optional(),
+  status: vine.enum(['active', 'shadow', 'disabled']).optional(),
+  note: vine.string().trim().maxLength(1000).optional(),
+})
+
+export const previewTermValidator = vine.create({
+  category: vine.enum(TERM_CATEGORIES),
+  term: vine.string().trim().minLength(2).maxLength(60),
+})
+
 export const restrictSubjectValidator = vine.create({
   tier: vine.enum(['restricted', 'suspended', 'standard']),
   days: vine.number().withoutDecimals().range([1, 365]).optional(),

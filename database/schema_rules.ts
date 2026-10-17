@@ -261,7 +261,20 @@ export default {
       columns: {
         ['action']: {
           tsType:
-            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change'",
+            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled'",
+        },
+      },
+    },
+    ['moderation_terms']: {
+      columns: {
+        ['category']: {
+          tsType: "'firearm' | 'weapon' | 'drugs' | 'counterfeit_fraud' | 'context_allow'",
+        },
+        ['action']: {
+          tsType: "'block' | 'review' | 'weight'",
+        },
+        ['status']: {
+          tsType: "'active' | 'shadow' | 'disabled'",
         },
       },
     },

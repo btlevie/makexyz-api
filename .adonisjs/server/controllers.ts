@@ -10,6 +10,7 @@ export const controllers = {
   AdminInvitations: () => import('#controllers/admin_invitations_controller'),
   AdminModerationCases: () => import('#controllers/admin_moderation_cases_controller'),
   AdminModerationRules: () => import('#controllers/admin_moderation_rules_controller'),
+  AdminModerationTerms: () => import('#controllers/admin_moderation_terms_controller'),
   AdminQuotes: () => import('#controllers/admin_quotes_controller'),
   AdminVendorPayouts: () => import('#controllers/admin_vendor_payouts_controller'),
   AdminVendors: () => import('#controllers/admin_vendors_controller'),

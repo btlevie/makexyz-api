@@ -1,0 +1,17 @@
+$kind: http-request
+name: 'Add Moderation Term'
+method: POST
+url: '{{base_url}}/admin/moderation/terms'
+order: 10000
+description: 'Adds a term, or overrides a built-in one (e.g. status "disabled" to switch off a false positive). The term is normalized (lowercased, whitespace collapsed); 2-60 characters with at least one letter. Action defaults to the built-in''s action, otherwise "review" (hold for a moderator); status defaults to active. context_allow terms take no action. 409 (with the existing uuid) if a row already exists for the category and term - use PATCH. Logged to moderation_actions.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category": "drugs",
+      "term": "zaza",
+      "note": "Slang for high-grade cannabis"
+    }

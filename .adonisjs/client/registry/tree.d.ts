@@ -183,6 +183,12 @@ export interface ApiDefinition {
       index: typeof routes['admin.admin_moderation_rules.index']
       update: typeof routes['admin.admin_moderation_rules.update']
     }
+    adminModerationTerms: {
+      index: typeof routes['admin.admin_moderation_terms.index']
+      store: typeof routes['admin.admin_moderation_terms.store']
+      preview: typeof routes['admin.admin_moderation_terms.preview']
+      update: typeof routes['admin.admin_moderation_terms.update']
+    }
   }
   webhooks: {
     stripeWebhooks: typeof routes['webhooks.stripe_webhooks']

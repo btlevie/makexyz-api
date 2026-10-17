@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Update Moderation Term'
+method: PATCH
+url: '{{base_url}}/admin/moderation/terms/{{term_uuid}}'
+order: 11000
+description: 'Changes a term row''s action, status and/or note. Typical use: upgrade a review term to block once its hits look precise, or set status "shadow" to watch a term without affecting delivery. Logged to moderation_actions (term_disabled when the status becomes disabled).'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "action": "block"
+    }

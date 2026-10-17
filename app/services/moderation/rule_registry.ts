@@ -3,9 +3,13 @@
  * if one exists, otherwise the rule's own defaults. Cached briefly so the
  * send path doesn't hit the table on every message; admin changes take effect
  * within CACHE_TTL_MS (or immediately via clearRuleConfigCache).
+ *
+ * Prohibited-item rules also get their effective word lists here (see
+ * term_registry.ts).
  */
 import ModerationRuleConfig from '#models/moderation_rule_config'
 import { RULES } from '#services/moderation/rules/index'
+import { getEffectiveTerms } from '#services/moderation/term_registry'
 import type { ModerationRule, RuleMode } from '#services/moderation/types'
 
 const CACHE_TTL_MS = 60_000
@@ -26,6 +30,34 @@ export function clearRuleConfigCache() {
 
 /** Every rule that isn't switched off, with its effective mode and config. */
 export async function getActiveRules(): Promise<ResolvedRule[]> {
+  return withTerms(await getConfiguredRules())
+}
+
+/**
+ * Hands each prohibited-item rule its category's effective word list. Done
+ * on every call, outside the config cache, so a term change applies as soon
+ * as the term cache is cleared - not when this cache next expires.
+ */
+async function withTerms(rules: ResolvedRule[]): Promise<ResolvedRule[]> {
+  if (!rules.some(({ rule }) => rule.termCategory)) {
+    return rules
+  }
+  const terms = await getEffectiveTerms()
+  return rules.map((resolved) =>
+    resolved.rule.termCategory
+      ? {
+          ...resolved,
+          config: {
+            ...resolved.config,
+            terms: terms.categories[resolved.rule.termCategory],
+            contextAllow: terms.contextAllow,
+          },
+        }
+      : resolved
+  )
+}
+
+async function getConfiguredRules(): Promise<ResolvedRule[]> {
   if (cache && cache.expiresAt > Date.now()) {
     return cache.rules
   }

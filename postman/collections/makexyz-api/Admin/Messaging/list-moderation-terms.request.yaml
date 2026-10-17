@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Moderation Terms'
+method: GET
+url: '{{base_url}}/admin/moderation/terms?category=drugs'
+order: 9000
+description: 'The effective prohibited-item word lists: built-in terms merged with admin additions and overrides. Each has its source (builtin/admin), whether it is overridden, action (block, review, weight), status (active, shadow, disabled), note and hits in the last 30 days. Optional filters: category (firearm, weapon, drugs, counterfeit_fraud, context_allow), status, q (substring).'

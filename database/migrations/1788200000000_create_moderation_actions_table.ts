@@ -31,6 +31,10 @@ export default class extends BaseSchema {
           'suspend_user',
           'lift_restriction',
           'rule_config_change',
+          // Prohibited-item term list changes (moderation_terms).
+          'term_added',
+          'term_updated',
+          'term_disabled',
         ])
         .notNullable()
       // What was acted on: 'message' + uuid, 'customer'/'vendor' + uuid,

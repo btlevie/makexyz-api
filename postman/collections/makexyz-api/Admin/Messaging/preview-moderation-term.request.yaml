@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Preview Moderation Term'
+method: POST
+url: '{{base_url}}/admin/moderation/terms/preview'
+order: 12000
+description: 'Changes nothing. Shows how many text messages from the last 30 days (latest 5,000 scanned) a term would match, up to 10 samples with a snippet around the match, and warnings when the term is very short or an everyday manufacturing word.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "category": "drugs",
+      "term": "zaza"
+    }

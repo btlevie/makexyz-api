@@ -106,6 +106,10 @@ export type ScannedRoutes = {
     'admin.admin_moderation_cases.restrict': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_rules.update': { paramsTuple: [ParamValue]; params: {'ruleId': ParamValue} }
+    'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_terms.store': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_terms.preview': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_terms.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.paypal_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.easypost_webhooks': { paramsTuple?: []; params?: {} }
@@ -145,6 +149,7 @@ export type ScannedRoutes = {
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
   }
   HEAD: {
     'event_stream': { paramsTuple?: []; params?: {} }
@@ -181,6 +186,7 @@ export type ScannedRoutes = {
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
   }
   POST: {
     'subscribe': { paramsTuple?: []; params?: {} }
@@ -229,6 +235,8 @@ export type ScannedRoutes = {
     'admin.admin_moderation_cases.approve': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.block': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.restrict': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_terms.store': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_terms.preview': { paramsTuple?: []; params?: {} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.paypal_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.easypost_webhooks': { paramsTuple?: []; params?: {} }
@@ -251,6 +259,7 @@ export type ScannedRoutes = {
     'admin.admin_vendor_payouts.update_vendor': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.review_capability': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'technology': ParamValue} }
     'admin.admin_moderation_rules.update': { paramsTuple: [ParamValue]; params: {'ruleId': ParamValue} }
+    'admin.admin_moderation_terms.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }
   DELETE: {
     'profile.addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }

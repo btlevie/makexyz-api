@@ -465,7 +465,7 @@ export class ModerationActionSchema extends BaseModel {
   static $columns = ['action', 'actorUserId', 'caseId', 'createdAt', 'id', 'metadata', 'reason', 'targetId', 'targetType'] as const
   $columns = ModerationActionSchema.$columns
   @column()
-  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change'
+  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled'
   @column()
   declare actorUserId: number | null
   @column()
@@ -598,6 +598,33 @@ export class ModerationRuleHitSchema extends BaseModel {
   declare shadow: boolean
   @column()
   declare weight: number
+}
+
+export class ModerationTermSchema extends BaseModel {
+  static $columns = ['action', 'category', 'createdAt', 'createdById', 'id', 'note', 'status', 'term', 'updatedAt', 'updatedById', 'uuid'] as const
+  $columns = ModerationTermSchema.$columns
+  @column()
+  declare action: 'block' | 'review' | 'weight' | null
+  @column()
+  declare category: 'firearm' | 'weapon' | 'drugs' | 'counterfeit_fraud' | 'context_allow'
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare createdById: number | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare note: string | null
+  @column()
+  declare status: 'active' | 'shadow' | 'disabled'
+  @column()
+  declare term: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare updatedById: number | null
+  @column()
+  declare uuid: string
 }
 
 export class OrderFeeSchema extends BaseModel {
