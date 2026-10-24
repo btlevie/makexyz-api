@@ -135,6 +135,12 @@ export const adminListConversationsValidator = vine.create({
   status: vine.enum(['open', 'read_only', 'archived']).optional(),
 })
 
+export const adminListProfilesValidator = vine.create({
+  tier: vine.enum(['new', 'standard', 'trusted', 'restricted', 'suspended']).optional(),
+  // Only senders under a temporary automatic hold right now.
+  held: vine.boolean().optional(),
+})
+
 export const adminListCasesValidator = vine.create({
   status: vine.enum(['open', 'claimed', 'resolved']).optional(),
 })

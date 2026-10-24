@@ -31,20 +31,16 @@ import ModerationEvaluation from '#models/moderation_evaluation'
 import ModerationRuleHit from '#models/moderation_rule_hit'
 import Order from '#models/order'
 import AnalyzeMessage from '#jobs/analyze_message'
+import { behaviorLookups } from '#services/behavior_signal_service'
 import { assertCanPost } from '#services/conversation_service'
-import { effectiveTrustTier } from '#services/messaging_risk_service'
+import { effectiveTrustTier, noteBlockedAttempt } from '#services/messaging_risk_service'
 import { scheduleNotifications } from '#services/message_notification_service'
 import {
   moderateMessage,
   PIPELINE_VERSION,
   type ModerationOutcome,
 } from '#services/moderation/pipeline'
-import type {
-  AttachmentSignal,
-  ConversationContext,
-  Decision,
-  HistoryLookups,
-} from '#services/moderation/types'
+import type { AttachmentSignal, ConversationContext, Decision } from '#services/moderation/types'
 import { recordDomainsSeen } from '#services/url_analysis_service'
 
 /** Review-queue priority: lower sorts first. Someone waiting on a held message comes first. */
@@ -86,39 +82,6 @@ export const GENERIC_BLOCK_REASON = "This message couldn't be delivered."
 
 /** A blocked prohibited-item message still goes to staff. */
 const PROHIBITED_ITEM_PRIORITY = 30
-
-/**
- * The behavioral facts the duplicate-spam rule needs, over the last 24 hours:
- * how many other conversations this sender sent the same text to, and how
- * many other senders sent it.
- */
-export async function historyFor(
-  participant: ConversationParticipant,
-  conversationId: number,
-  hash: string
-): Promise<HistoryLookups> {
-  const since = DateTime.now().minus({ hours: 24 }).toSQL()!
-  const sameText = await Message.query()
-    .where('contentHash', hash)
-    .where('createdAt', '>', since)
-    .whereNot('conversationId', conversationId)
-    .whereNotNull('senderParticipantId')
-    .select('conversationId', 'senderCustomerId', 'senderVendorId')
-
-  const mine = (row: Message) =>
-    (participant.customerId !== null && row.senderCustomerId === participant.customerId) ||
-    (participant.vendorId !== null && row.senderVendorId === participant.vendorId)
-  const otherConversations = new Set(sameText.filter(mine).map((row) => row.conversationId))
-  const otherSenders = new Set(
-    sameText
-      .filter((row) => !mine(row))
-      .map((row) => `${row.senderCustomerId ?? ''}:${row.senderVendorId ?? ''}`)
-  )
-  return {
-    sameTextOtherConversations: otherConversations.size,
-    sameTextOtherSenders: otherSenders.size,
-  }
-}
 
 export async function conversationContext(
   conversation: Conversation
@@ -235,6 +198,7 @@ export async function recordMessageUrls(
         urlHash: url.hash,
         normalizedUrl: url.url,
         domain: url.hostname,
+        registrableDomain: url.registrableDomain,
         match: url.match,
         source: url.source,
         token: string.uuid(),
@@ -316,7 +280,7 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
     channel: 'web',
     conversation: await conversationContext(conversation),
     trustTier: tier,
-    history: (hash) => historyFor(participant, conversation.id, hash),
+    history: (keys) => behaviorLookups(participant, conversation.id, keys),
     ...attachmentInputs(attachments),
   })
   const status = statusFor(outcome.decision, restricted)
@@ -392,6 +356,9 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
   }
   if (message.status === 'held') {
     await queueAnalysis(message)
+  }
+  if (message.status === 'blocked') {
+    await noteBlockedAttempt(message)
   }
   return { message, created: true }
 }

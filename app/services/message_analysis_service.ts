@@ -26,14 +26,15 @@ import {
   conversationContext,
   deliverHeldMessage,
   GENERIC_BLOCK_REASON,
-  historyFor,
   openMessageCase,
   queueAnalysis,
   recordEvaluation,
   recordMessageUrls,
   statusFor,
 } from '#services/message_service'
-import { effectiveTrustTier } from '#services/messaging_risk_service'
+import { behaviorLookups } from '#services/behavior_signal_service'
+import { effectiveTrustTier, noteBlockedAttempt } from '#services/messaging_risk_service'
+import type { HistoryKeys } from '#services/moderation/types'
 import { moderateMessage, type ModerationOutcome } from '#services/moderation/pipeline'
 import { analyzeUrl } from '#services/url_analysis_service'
 
@@ -88,6 +89,9 @@ async function applyOutcome(
     return locked
   })
 
+  if (message && status === 'blocked') {
+    await noteBlockedAttempt(message)
+  }
   if (message && (status === 'delivered' || status === 'delivered_flagged')) {
     await deliverHeldMessage(message, status)
   }
@@ -128,7 +132,7 @@ export async function analyzeHeldMessage(messageId: number, options: AnalyzeHeld
     channel: message.channel === 'email' ? ('email' as const) : ('web' as const),
     conversation: await conversationContext(conversation),
     trustTier: tier,
-    history: (hash: string) => historyFor(sender, conversation.id, hash),
+    history: (keys: HistoryKeys) => behaviorLookups(sender, conversation.id, keys),
     ...attachmentInputs(attachments),
   }
 

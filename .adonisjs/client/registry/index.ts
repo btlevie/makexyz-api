@@ -678,6 +678,12 @@ const routes = {
     tokens: [{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"domains","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":1,"val":"domain","end":""}],
     types: placeholder as Registry['admin.admin_url_domains.update']['types'],
   },
+  'admin.admin_messaging_profiles.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/moderation/profiles',
+    tokens: [{"old":"/v1/admin/moderation/profiles","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/profiles","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/profiles","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/profiles","type":0,"val":"profiles","end":""}],
+    types: placeholder as Registry['admin.admin_messaging_profiles.index']['types'],
+  },
   'admin.admin_attachments.show': {
     methods: ["GET","HEAD"],
     pattern: '/v1/admin/attachments/:uuid',

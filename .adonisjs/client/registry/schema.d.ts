@@ -1351,6 +1351,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_url_domains_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'admin.admin_messaging_profiles.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/profiles'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').adminListProfilesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_messaging_profiles_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_messaging_profiles_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'admin.admin_attachments.show': {
     methods: ["GET","HEAD"]
     pattern: '/v1/admin/attachments/:uuid'

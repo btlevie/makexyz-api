@@ -437,7 +437,7 @@ export class MessageReportSchema extends BaseModel {
 }
 
 export class MessageUrlSchema extends BaseModel {
-  static $columns = ['createdAt', 'domain', 'id', 'match', 'messageId', 'normalizedUrl', 'source', 'token', 'urlHash'] as const
+  static $columns = ['createdAt', 'domain', 'id', 'match', 'messageId', 'normalizedUrl', 'registrableDomain', 'source', 'token', 'urlHash'] as const
   $columns = MessageUrlSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
@@ -451,6 +451,8 @@ export class MessageUrlSchema extends BaseModel {
   declare messageId: number
   @column()
   declare normalizedUrl: string
+  @column()
+  declare registrableDomain: string | null
   @column()
   declare source: 'text' | 'attachment'
   @column()
@@ -507,20 +509,42 @@ export class MessageSchema extends BaseModel {
 }
 
 export class MessagingRiskProfileSchema extends BaseModel {
-  static $columns = ['createdAt', 'customerId', 'id', 'restrictionExpiresAt', 'trustTier', 'updatedAt', 'vendorId'] as const
+  static $columns = ['autoRestrictedAt', 'computedAt', 'confirmedViolations', 'createdAt', 'customerId', 'deliveredMessages', 'holdReason', 'holdUntil', 'hourlyMean', 'hourlyStddev', 'id', 'reportsReceived', 'restrictionExpiresAt', 'tierSource', 'trustTier', 'updatedAt', 'vendorBlocks', 'vendorId'] as const
   $columns = MessagingRiskProfileSchema.$columns
+  @column.dateTime()
+  declare autoRestrictedAt: DateTime | null
+  @column.dateTime()
+  declare computedAt: DateTime | null
+  @column()
+  declare confirmedViolations: number
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare customerId: number | null
+  @column()
+  declare deliveredMessages: number
+  @column()
+  declare holdReason: string | null
+  @column.dateTime()
+  declare holdUntil: DateTime | null
+  @column()
+  declare hourlyMean: number
+  @column()
+  declare hourlyStddev: number
   @column({ isPrimary: true })
   declare id: number
+  @column()
+  declare reportsReceived: number
   @column.dateTime()
   declare restrictionExpiresAt: DateTime | null
+  @column()
+  declare tierSource: 'auto' | 'manual'
   @column()
   declare trustTier: 'new' | 'standard' | 'trusted' | 'restricted' | 'suspended'
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare vendorBlocks: number
   @column()
   declare vendorId: number | null
 }
@@ -549,7 +573,7 @@ export class ModerationActionSchema extends BaseModel {
 }
 
 export class ModerationCaseSchema extends BaseModel {
-  static $columns = ['abuseCategory', 'assignedToId', 'claimedAt', 'createdAt', 'customerId', 'id', 'messageId', 'missedByAutomation', 'patternNote', 'priority', 'resolution', 'resolvedAt', 'resolvedById', 'source', 'status', 'updatedAt', 'uuid', 'vendorId'] as const
+  static $columns = ['abuseCategory', 'assignedToId', 'claimedAt', 'createdAt', 'customerId', 'dedupKey', 'details', 'id', 'messageId', 'missedByAutomation', 'patternNote', 'priority', 'resolution', 'resolvedAt', 'resolvedById', 'source', 'status', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = ModerationCaseSchema.$columns
   @column()
   declare abuseCategory: string | null
@@ -561,6 +585,10 @@ export class ModerationCaseSchema extends BaseModel {
   declare createdAt: DateTime | null
   @column()
   declare customerId: number | null
+  @column()
+  declare dedupKey: string | null
+  @column()
+  declare details: any | null
   @column({ isPrimary: true })
   declare id: number
   @column()

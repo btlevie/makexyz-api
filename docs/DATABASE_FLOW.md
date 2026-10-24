@@ -680,6 +680,26 @@ Text found inside a file, such as a QR code or a PDF link, is moderated with the
 
 `message_reports` records participants reporting messages they received; several reports on a message share one case. `moderation_actions` is the append-only log of every human decision (approve, block, remove, restrict/suspend) and rule change. `messaging_risk_profiles` holds a sender's messaging trust tier: `restricted` sends everything to review, and `suspended` blocks sending except in a thread with a live order, where it's treated as `restricted`. Tiers affect messaging only, never ordering or fulfilment.
 
+**Behavior.** Tiers are computed hourly (`RecomputeRiskProfiles`) and right after a moderator's decision:
+* `new`: an account under 7 days old or with fewer than 5 delivered messages;
+* `trusted`: 60+ days, 50+ delivered messages, and no confirmed violations or reports in 30 days;
+* `standard`: everyone else.
+
+Two confirmed violations in 30 days restrict a sender automatically for 30 days. A violation is "confirmed" when a moderator upheld a block or removal; automatic blocks never count. A moderator's restriction or suspension (`tier_source = manual`) is left alone until it expires, and suspension is only ever manual.
+
+A temporary hold (`hold_until`, 24 hours) sends everything to review and opens a `behavioral` case. It applies after more than 3 blocked messages in an hour, or when two vendors block the same customer within 30 days. It expires on its own.
+
+The profile also caches counters for the send-time rules: delivered messages, plus confirmed violations, reports received and vendor blocks over 30 days. It also holds the sender's hourly baseline: a burst far above it opens a case.
+
+At send time the rules also see:
+* volume per hour and day;
+* how many vendors a customer contacted this week;
+* blocks in the last hour;
+* near-duplicate text sent to other conversations (word-pair resemblance);
+* how many other senders linked the same domain today.
+
+Each day, `DetectBehaviorPatterns` opens cases for new accounts converging on one unlisted domain, and for vendors reported far more than their peers. `SampleAuditMessages` queues a small random sample of unflagged delivered messages, so moderators can find what the rules miss. Behavioral cases carry `details`, and `dedup_key` keeps them to one open case per pattern. Admins see profiles at `/v1/admin/moderation/profiles`.
+
 **Lifecycle.** An inquiry becomes `read_only` after 60 days without messages (the customer can reopen it by posting within 90 days), or when the vendor declines or blocks. An order thread stops accepting messages as soon as its order is refunded, cancelled, reassigned, or delivered more than 14 days ago. The hourly `CloseExpiredConversations` job records that as `read_only`.
 
 **Notifications.** A delivered message schedules one debounced email per recipient, about 3 minutes later, covering everything they haven't read or been emailed about (`conversation_participants.last_notified_seq`). Message text is only included when every message in the email is delivered, unflagged and from an established sender.

@@ -24,6 +24,7 @@ import type User from '#models/user'
 import type Vendor from '#models/vendor'
 import { isEmailVerified } from '#services/email_verification_service'
 import { postSystemMessage } from '#services/message_service'
+import { noteVendorBlock } from '#services/messaging_risk_service'
 
 /** An inquiry with no messages for this long becomes read-only. */
 export const INQUIRY_IDLE_DAYS = 60
@@ -446,6 +447,8 @@ export async function blockInquiryCustomer(
       await closeConversation(conversation, 'blocked', trx)
     }
   })
+  // Several vendors blocking the same customer holds them for review.
+  await noteVendorBlock(customerId)
 }
 
 /**

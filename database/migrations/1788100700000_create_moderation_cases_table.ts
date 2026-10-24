@@ -59,6 +59,13 @@ export default class extends BaseSchema {
       table.string('abuse_category', 60).nullable()
       table.text('pattern_note').nullable()
       table.boolean('missed_by_automation').notNullable().defaultTo(false)
+      // What a behavioral case is about, for the moderator: the blocked
+      // messages behind an auto-hold, the accounts in a cluster, the volume
+      // spike. Null for message cases.
+      table.json('details').nullable()
+      // One open case per pattern: a detector skips opening a case whose key
+      // already has an unresolved one (e.g. 'cluster:domain:example.top').
+      table.string('dedup_key', 160).nullable()
       table
         .integer('resolved_by_id')
         .unsigned()
@@ -73,6 +80,7 @@ export default class extends BaseSchema {
 
       table.index(['status', 'priority', 'created_at'])
       table.index(['message_id'])
+      table.index(['dedup_key', 'status'])
     })
   }
 

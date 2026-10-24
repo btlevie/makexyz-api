@@ -230,6 +230,9 @@ export default {
         ['trust_tier']: {
           tsType: "'new' | 'standard' | 'trusted' | 'restricted' | 'suspended'",
         },
+        ['tier_source']: {
+          tsType: "'auto' | 'manual'",
+        },
       },
     },
     ['moderation_rule_configs']: {

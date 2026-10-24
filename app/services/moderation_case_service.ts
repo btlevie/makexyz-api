@@ -23,6 +23,7 @@ import Vendor from '#models/vendor'
 import { conversationChannel, deliverHeldMessage } from '#services/message_service'
 import { recordModerationAction } from '#services/moderation_action_service'
 import { approveAttachments } from '#services/attachment_service'
+import { principalOf, refreshRiskProfile } from '#services/messaging_risk_service'
 
 export const MODERATOR_BLOCK_REASON =
   "This message wasn't delivered because it doesn't follow MakeXYZ's messaging rules."
@@ -137,6 +138,8 @@ export async function blockCase(moderationCase: ModerationCase, moderator: User,
       targetId: message.uuid,
       reason: note,
     })
+    // A confirmed violation: the sender may now cross the automatic restriction threshold.
+    await refreshRiskProfile(principalOf(message))
   }
   return moderationCase
 }
@@ -169,10 +172,18 @@ export async function restrictCaseSubject(
     : await Customer.findOrFail(principal.customerId!)
   const targetUuid = target.uuid
 
-  return db.transaction(async (trx) => {
+  const lifting = input.tier === 'standard'
+  const updated = await db.transaction(async (trx) => {
+    // Lifting hands the tier back to the automatic rules - without letting
+    // the violations already reviewed restrict the sender again at once.
     const profile = await MessagingRiskProfile.updateOrCreate(
       principal,
-      { trustTier: input.tier, restrictionExpiresAt: expiresAt },
+      {
+        trustTier: input.tier,
+        restrictionExpiresAt: expiresAt,
+        tierSource: lifting ? 'auto' : 'manual',
+        ...(lifting ? { holdUntil: null, holdReason: null, autoRestrictedAt: DateTime.now() } : {}),
+      },
       { client: trx }
     )
     await recordModerationAction(
@@ -194,4 +205,8 @@ export async function restrictCaseSubject(
     )
     return profile
   })
+  if (lifting) {
+    return (await refreshRiskProfile(principal)) ?? updated
+  }
+  return updated
 }

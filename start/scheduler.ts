@@ -26,6 +26,9 @@ import ProcessVendorPayouts from '#jobs/process_vendor_payouts'
 import CloseExpiredConversations from '#jobs/close_expired_conversations'
 import RescanRecentUrls from '#jobs/rescan_recent_urls'
 import SweepHeldMessages from '#jobs/sweep_held_messages'
+import RecomputeRiskProfiles from '#jobs/recompute_risk_profiles'
+import DetectBehaviorPatterns from '#jobs/detect_behavior_patterns'
+import SampleAuditMessages from '#jobs/sample_audit_messages'
 
 /**
  * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
@@ -87,3 +90,14 @@ RescanRecentUrls.schedule({}).id('rescan-recent-urls').cron('45 */6 * * *').run(
  * under a row lock.
  */
 SweepHeldMessages.schedule({}).id('sweep-held-messages').cron('*/10 * * * *').run()
+
+/**
+ * Hourly: messaging risk profiles - counters, automatic trust tiers and the
+ * volume baseline (messaging_risk_service.ts). Overlap-safe: each refresh
+ * recomputes from scratch and behavioral cases are deduplicated.
+ */
+RecomputeRiskProfiles.schedule({}).id('recompute-risk-profiles').cron('50 * * * *').run()
+
+// Daily, after the night's other jobs: cross-account patterns, then the audit sample.
+DetectBehaviorPatterns.schedule({}).id('detect-behavior-patterns').cron('30 5 * * *').run()
+SampleAuditMessages.schedule({}).id('sample-audit-messages').cron('0 6 * * *').run()

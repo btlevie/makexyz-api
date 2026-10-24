@@ -18,6 +18,8 @@ export default class extends BaseSchema {
       table.string('url_hash', 64).notNullable()
       table.text('normalized_url').notNullable()
       table.string('domain', 253).notNullable()
+      // eTLD+1 of `domain` (null for IP hosts) - what spread and clustering count by.
+      table.string('registrable_domain', 253).nullable()
       // The text as written, so clients can swap it for the interstitial link.
       table.text('match').notNullable()
       // 'text': in the message body. 'attachment': a QR code or PDF link.
@@ -30,6 +32,8 @@ export default class extends BaseSchema {
 
       table.index(['url_hash'])
       table.index(['message_id'])
+      // How many senders shared a domain recently (url.domain_spread, clustering).
+      table.index(['registrable_domain', 'created_at'])
     })
   }
 

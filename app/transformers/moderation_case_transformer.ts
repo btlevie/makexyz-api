@@ -16,6 +16,9 @@ export default class ModerationCaseTransformer extends BaseTransformer<Moderatio
       status: moderationCase.status,
       resolution: moderationCase.resolution,
       patternNote: moderationCase.patternNote,
+      // Behavioral cases: what the pattern is (the blocked messages behind an
+      // auto-hold, the accounts in a cluster, a volume spike).
+      details: moderationCase.details,
       conversationUuid: (moderationCase.$extras.conversationUuid ?? null) as string | null,
       message: moderationCase.message
         ? await AdminMessageTransformer.transform(moderationCase.message)

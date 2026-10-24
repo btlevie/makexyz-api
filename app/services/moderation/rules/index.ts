@@ -9,8 +9,9 @@
  * near-certain rules enforce - contact details, crypto/bank details, the
  * link-safety rules (Step 3: unknown links are held for automated analysis,
  * malicious ones blocked), attachment scanning, and unambiguous prohibited
- * items. Everything else runs in shadow until live data shows it's precise
- * enough to promote.
+ * items, and the fixed-threshold behavior rules (volume, reach, repeated
+ * blocks). Everything else runs in shadow until live data shows it's
+ * precise enough to promote.
  */
 import type { ModerationRule } from '#services/moderation/types'
 import abuseHarassmentCandidate from '#services/moderation/rules/abuse_harassment_candidate'
@@ -18,6 +19,10 @@ import abuseThreatLexicon from '#services/moderation/rules/abuse_threat_lexicon'
 import attachmentPending from '#services/moderation/rules/attachment_pending'
 import attachmentRejected from '#services/moderation/rules/attachment_rejected'
 import attachmentUnverified from '#services/moderation/rules/attachment_unverified'
+import behaviorFanout from '#services/moderation/rules/behavior_fanout'
+import behaviorRepeatAttempts from '#services/moderation/rules/behavior_repeat_attempts'
+import behaviorSenderReputation from '#services/moderation/rules/behavior_sender_reputation'
+import behaviorVelocity from '#services/moderation/rules/behavior_velocity'
 import adPromoLanguage from '#services/moderation/rules/ad_promo_language'
 import adUnrelatedUrl from '#services/moderation/rules/ad_unrelated_url'
 import contactEmail from '#services/moderation/rules/contact_email'
@@ -42,7 +47,9 @@ import prohibitedDrugs from '#services/moderation/rules/prohibited_drugs'
 import prohibitedFirearm from '#services/moderation/rules/prohibited_firearm'
 import prohibitedWeapon from '#services/moderation/rules/prohibited_weapon'
 import spamDuplicateCrossConversation from '#services/moderation/rules/spam_duplicate_cross_conversation'
+import spamNearDuplicate from '#services/moderation/rules/spam_near_duplicate'
 import urlDangerousFile from '#services/moderation/rules/url_dangerous_file'
+import urlDomainSpread from '#services/moderation/rules/url_domain_spread'
 import urlIpLiteral from '#services/moderation/rules/url_ip_literal'
 import urlReputationUnknown from '#services/moderation/rules/url_reputation_unknown'
 import urlSuspiciousShape from '#services/moderation/rules/url_suspicious_shape'
@@ -80,6 +87,7 @@ export const RULES: ModerationRule<any>[] = [
   urlUserContentFromVendor,
   urlIpLiteral,
   urlSuspiciousShape,
+  urlDomainSpread,
   // Attachments
   attachmentRejected,
   attachmentPending,
@@ -88,9 +96,15 @@ export const RULES: ModerationRule<any>[] = [
   adPromoLanguage,
   adUnrelatedUrl,
   spamDuplicateCrossConversation,
+  spamNearDuplicate,
   inquiryColdPitch,
   contextPostFulfilment,
   contextOffTopicCommercial,
+  // Sender behavior (Step 4: volume, reach, repeated blocks, reputation)
+  behaviorVelocity,
+  behaviorFanout,
+  behaviorRepeatAttempts,
+  behaviorSenderReputation,
   // Abuse and the rest
   abuseThreatLexicon,
   abuseHarassmentCandidate,

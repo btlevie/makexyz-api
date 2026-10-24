@@ -16,6 +16,7 @@ import type InvitationTransformer from '#transformers/invitation_transformer'
 import type MaterialCatalogTransformer from '#transformers/material_catalog_transformer'
 import type MessageAttachmentTransformer from '#transformers/message_attachment_transformer'
 import type MessageTransformer from '#transformers/message_transformer'
+import type MessagingRiskProfileTransformer from '#transformers/messaging_risk_profile_transformer'
 import type ModerationCaseTransformer from '#transformers/moderation_case_transformer'
 import type ModerationRuleTransformer from '#transformers/moderation_rule_transformer'
 import type ModerationTermTransformer from '#transformers/moderation_term_transformer'
@@ -79,6 +80,10 @@ export namespace Data {
   export type Message = InferData<MessageTransformer>
   export namespace Message {
     export type Variants = InferVariants<MessageTransformer>
+  }
+  export type MessagingRiskProfile = InferData<MessagingRiskProfileTransformer>
+  export namespace MessagingRiskProfile {
+    export type Variants = InferVariants<MessagingRiskProfileTransformer>
   }
   export type ModerationCase = InferData<ModerationCaseTransformer>
   export namespace ModerationCase {

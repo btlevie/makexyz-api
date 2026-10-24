@@ -24,6 +24,7 @@ import type {
   ConversationContext,
   Decision,
   Evidence,
+  HistoryKeys,
   HistoryLookups,
   RuleAction,
   RuleResult,
@@ -35,7 +36,23 @@ import type {
 /** Bumped when the normalizer or extractors change, so old evaluations stay explainable. */
 export const PIPELINE_VERSION = '3'
 
-const NO_HISTORY: HistoryLookups = { sameTextOtherConversations: 0, sameTextOtherSenders: 0 }
+/** No behavioral history - a sender seen for the first time (and replays/tests). */
+export const NO_HISTORY: HistoryLookups = {
+  sameTextOtherConversations: 0,
+  sameTextOtherSenders: 0,
+  nearDuplicateOtherConversations: 0,
+  messagesLastHour: 0,
+  messagesLastDay: 0,
+  conversationsLastDay: 0,
+  vendorsContactedWeek: 0,
+  blockedLastHour: 0,
+  domainSenders: {},
+  accountAgeDays: null,
+  deliveredMessages: 0,
+  reportsReceived30d: 0,
+  vendorBlocks30d: 0,
+  confirmedViolations30d: 0,
+}
 
 export interface ModerationInput {
   text: string
@@ -43,8 +60,8 @@ export interface ModerationInput {
   channel: Channel
   conversation: ConversationContext
   trustTier?: TrustTier
-  /** Behavioral lookups keyed by the normalized text's hash (see message_service.ts). */
-  history?: (contentHash: string) => Promise<HistoryLookups>
+  /** Behavioral lookups for this sender (behavior_signal_service.ts). */
+  history?: (keys: HistoryKeys) => Promise<HistoryLookups>
   /** Files sent with the message. Their names are moderated with the text. */
   attachments?: AttachmentSignal[]
   /**
@@ -112,7 +129,16 @@ export async function moderateMessage(input: ModerationInput): Promise<Moderatio
     url.scan = scans.get(url.hash) ?? null
   }
   const contentHash = hashNormalized(views.normalized)
-  const history = input.history ? await input.history(contentHash) : NO_HISTORY
+  const domains = [
+    ...new Set(
+      signals.urls
+        .map((url) => url.registrableDomain)
+        .filter((domain): domain is string => domain !== null)
+    ),
+  ]
+  const history = input.history
+    ? await input.history({ contentHash, normalized: views.normalized, domains })
+    : NO_HISTORY
 
   const context = {
     views,

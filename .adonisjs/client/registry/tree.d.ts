@@ -201,6 +201,9 @@ export interface ApiDefinition {
       index: typeof routes['admin.admin_url_domains.index']
       update: typeof routes['admin.admin_url_domains.update']
     }
+    adminMessagingProfiles: {
+      index: typeof routes['admin.admin_messaging_profiles.index']
+    }
     adminAttachments: {
       show: typeof routes['admin.admin_attachments.show']
     }

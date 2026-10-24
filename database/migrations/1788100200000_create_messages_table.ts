@@ -82,6 +82,9 @@ export default class extends BaseSchema {
       table.index(['content_hash', 'created_at'])
       table.index(['sender_customer_id', 'status', 'created_at'])
       table.index(['sender_vendor_id', 'status', 'created_at'])
+      // Per-sender volume over a window, whatever the status (behavioral lookups).
+      table.index(['sender_customer_id', 'created_at'])
+      table.index(['sender_vendor_id', 'created_at'])
     })
   }
 

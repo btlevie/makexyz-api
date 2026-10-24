@@ -11,6 +11,15 @@ export default class ModerationCase extends ModerationCaseSchema {
   @column({ consume: (value: unknown) => Boolean(value) })
   declare missedByAutomation: boolean
 
+  /** Postgres returns a parsed object for JSON columns, SQLite (tests) a string - same as ModerationEvaluation. */
+  @column({
+    prepare: (value: unknown) =>
+      value === null || value === undefined ? value : JSON.stringify(value),
+    consume: (value: unknown) =>
+      typeof value === 'string' ? (value === '' ? null : JSON.parse(value)) : (value ?? null),
+  })
+  declare details: Record<string, unknown> | null
+
   @belongsTo(() => Message)
   declare message: BelongsTo<typeof Message>
 

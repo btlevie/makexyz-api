@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Messaging Risk Profiles'
+method: GET
+url: '{{base_url}}/admin/moderation/profiles?held=true'
+order: 16000
+description: 'Senders'' messaging risk profiles: trust tier (new, standard, trusted, restricted, suspended) and whether a moderator or the automatic rules set it, restriction expiry, any temporary hold (reason, until), and the 30-day counters behind them (delivered, confirmed violations, reports, vendor blocks). Filters: tier, held (only senders under a temporary hold now). Read-only - change a tier through a case (Restrict Case Subject).'

@@ -376,6 +376,8 @@ router
         // Link domain lists: allow / block / user content, built-ins plus overrides.
         router.get('moderation/domains', [controllers.AdminUrlDomains, 'index'])
         router.put('moderation/domains/:domain', [controllers.AdminUrlDomains, 'update'])
+        // Senders' messaging risk profiles: tiers, temporary holds, counters.
+        router.get('moderation/profiles', [controllers.AdminMessagingProfiles, 'index'])
         // Download an attachment under review (never a rejected one).
         router.get('attachments/:uuid', [controllers.AdminAttachments, 'show'])
       })

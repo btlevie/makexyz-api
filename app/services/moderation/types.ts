@@ -194,6 +194,34 @@ export interface HistoryLookups {
   sameTextOtherConversations: number
   /** Distinct other senders who sent the exact same text. */
   sameTextOtherSenders: number
+  /** Other conversations this sender sent nearly the same text to (last 7 days, near_duplicate.ts). */
+  nearDuplicateOtherConversations: number
+  /** The sender's messages (any status) in the last hour / day. */
+  messagesLastHour: number
+  messagesLastDay: number
+  /** Distinct conversations the sender posted in over the last day. */
+  conversationsLastDay: number
+  /** Customers: distinct vendors they've messaged in inquiries over the last 7 days. */
+  vendorsContactedWeek: number
+  /** The sender's messages blocked in the last hour - probing for what gets through. */
+  blockedLastHour: number
+  /** Registrable domain of each link -> how many other senders linked to it in the last day. */
+  domainSenders: Record<string, number>
+  /** From the sender's risk profile (messaging_risk_service.ts), recomputed hourly. */
+  accountAgeDays: number | null
+  deliveredMessages: number
+  reportsReceived30d: number
+  /** Customers: distinct vendors who blocked them in the last 30 days. */
+  vendorBlocks30d: number
+  confirmedViolations30d: number
+}
+
+/** What the behavioral lookups are keyed by, computed by the pipeline. */
+export interface HistoryKeys {
+  contentHash: string
+  normalized: string
+  /** Registrable domains of the message's links. */
+  domains: string[]
 }
 
 export interface RuleContext {

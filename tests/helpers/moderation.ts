@@ -1,5 +1,6 @@
 import { buildViews } from '#services/moderation/normalizer'
 import { extractSignals } from '#services/moderation/extractors'
+import { NO_HISTORY } from '#services/moderation/pipeline'
 import type {
   ConversationContext,
   HistoryLookups,
@@ -30,7 +31,7 @@ export function contextFor(text: string, overrides: ContextOverrides = {}): Rule
       orderStatus: null,
       ...overrides.conversation,
     },
-    history: { sameTextOtherConversations: 0, sameTextOtherSenders: 0, ...overrides.history },
+    history: { ...NO_HISTORY, ...overrides.history },
     trustTier: overrides.trustTier ?? 'standard',
   }
 }
