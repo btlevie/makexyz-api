@@ -535,6 +535,42 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/message_reports_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'messaging.conversation_attachments.store': {
+    methods: ["POST"]
+    pattern: '/v1/conversations/:uuid/attachments'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').createAttachmentValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').createAttachmentValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversation_attachments_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversation_attachments_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'messaging.conversation_attachments.complete': {
+    methods: ["POST"]
+    pattern: '/v1/conversations/:uuid/attachments/:attachmentUuid/complete'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; attachmentUuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversation_attachments_controller').default['complete']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversation_attachments_controller').default['complete']>>>
+    }
+  }
+  'messaging.conversation_attachments.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/conversations/:uuid/attachments/:attachmentUuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; attachmentUuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/conversation_attachments_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/conversation_attachments_controller').default['show']>>>
+    }
+  }
   'messaging.inquiries.store': {
     methods: ["POST"]
     pattern: '/v1/vendors/:vendorUuid/inquiries'
@@ -545,6 +581,18 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/messaging').createInquiryValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/inquiries_controller').default['store']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/inquiries_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'links.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/links/:token'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { token: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/links_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/links_controller').default['show']>>>
     }
   }
   'shipping_options.index': {
@@ -1277,6 +1325,42 @@ export interface Registry {
       query: ExtractQuery<InferInput<(typeof import('#validators/messaging').updateTermValidator)>>
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['update']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_terms_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_url_domains.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/domains'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').listDomainsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_url_domains_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_url_domains_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_url_domains.update': {
+    methods: ["PUT"]
+    pattern: '/v1/admin/moderation/domains/:domain'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').updateDomainValidator)>>
+      paramsTuple: [ParamValue]
+      params: { domain: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').updateDomainValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_url_domains_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_url_domains_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_attachments.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/attachments/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_attachments_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_attachments_controller').default['show']>>>
     }
   }
   'webhooks.stripe_webhooks': {

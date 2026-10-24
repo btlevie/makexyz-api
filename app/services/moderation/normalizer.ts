@@ -5,7 +5,7 @@ import type { TextViews } from '#services/moderation/types'
  * Zero-width and bidi control characters - invisible, and a classic way to
  * split "gmail.com" so a naive pattern misses it.
  */
-const INVISIBLE_CHARACTERS = /[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]/g
+export const INVISIBLE_CHARACTERS = /[\u00ad\u200b-\u200f\u202a-\u202e\u2060-\u2064\ufeff]/g
 
 /** `[.]`, `(.)`, `{.}`, `[dot]`, `(dot)`, `{dot}` - with optional spaces inside. */
 const BRACKETED_DOT = /\s*[[({]\s*(?:\.|dot)\s*[\])}]\s*/g

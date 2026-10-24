@@ -374,6 +374,47 @@ export class MaterialSchema extends BaseModel {
   declare uuid: string
 }
 
+export class MessageAttachmentSchema extends BaseModel {
+  static $columns = ['contentType', 'conversationId', 'createdAt', 'extname', 'fileName', 'id', 'messageId', 'quarantineKey', 'rejectReason', 'scanDetails', 'scannedAt', 'sizeBytes', 'status', 'storageKey', 'updatedAt', 'uploadedAt', 'uploadedByParticipantId', 'uuid'] as const
+  $columns = MessageAttachmentSchema.$columns
+  @column()
+  declare contentType: string | null
+  @column()
+  declare conversationId: number
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare extname: string
+  @column()
+  declare fileName: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare messageId: number | null
+  @column()
+  declare quarantineKey: string
+  @column()
+  declare rejectReason: string | null
+  @column()
+  declare scanDetails: any | null
+  @column.dateTime()
+  declare scannedAt: DateTime | null
+  @column()
+  declare sizeBytes: number
+  @column()
+  declare status: 'pending_upload' | 'uploaded' | 'clean' | 'rejected' | 'review'
+  @column()
+  declare storageKey: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column.dateTime()
+  declare uploadedAt: DateTime | null
+  @column()
+  declare uploadedByParticipantId: number
+  @column()
+  declare uuid: string
+}
+
 export class MessageReportSchema extends BaseModel {
   static $columns = ['caseId', 'createdAt', 'id', 'messageId', 'note', 'reason', 'reporterParticipantId', 'uuid'] as const
   $columns = MessageReportSchema.$columns
@@ -393,6 +434,29 @@ export class MessageReportSchema extends BaseModel {
   declare reporterParticipantId: number
   @column()
   declare uuid: string
+}
+
+export class MessageUrlSchema extends BaseModel {
+  static $columns = ['createdAt', 'domain', 'id', 'match', 'messageId', 'normalizedUrl', 'source', 'token', 'urlHash'] as const
+  $columns = MessageUrlSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare domain: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare match: string
+  @column()
+  declare messageId: number
+  @column()
+  declare normalizedUrl: string
+  @column()
+  declare source: 'text' | 'attachment'
+  @column()
+  declare token: string
+  @column()
+  declare urlHash: string
 }
 
 export class MessageSchema extends BaseModel {
@@ -465,7 +529,7 @@ export class ModerationActionSchema extends BaseModel {
   static $columns = ['action', 'actorUserId', 'caseId', 'createdAt', 'id', 'metadata', 'reason', 'targetId', 'targetType'] as const
   $columns = ModerationActionSchema.$columns
   @column()
-  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled'
+  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated'
   @column()
   declare actorUserId: number | null
   @column()
@@ -531,7 +595,7 @@ export class ModerationEvaluationSchema extends BaseModel {
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
-  declare decision: 'allow' | 'flag' | 'escalate' | 'review' | 'block'
+  declare decision: 'allow' | 'flag' | 'escalate' | 'review' | 'hold' | 'block'
   @column()
   declare durationMs: number
   @column({ isPrimary: true })
@@ -577,7 +641,7 @@ export class ModerationRuleHitSchema extends BaseModel {
   static $columns = ['action', 'configVersion', 'createdAt', 'evaluationId', 'evidence', 'id', 'messageId', 'ruleId', 'ruleVersion', 'shadow', 'weight'] as const
   $columns = ModerationRuleHitSchema.$columns
   @column()
-  declare action: 'block' | 'review' | 'escalate' | 'flag' | 'allow_override' | 'continue' | 'redact'
+  declare action: 'block' | 'hold' | 'review' | 'escalate' | 'flag' | 'allow_override' | 'continue' | 'redact'
   @column()
   declare configVersion: number
   @column.dateTime({ autoCreate: true })
@@ -1299,6 +1363,68 @@ export class ShippingLabelSchema extends BaseModel {
   declare uuid: string
   @column.dateTime()
   declare voidedAt: DateTime | null
+}
+
+export class UrlDomainSchema extends BaseModel {
+  static $columns = ['createdAt', 'domain', 'firstSeenAt', 'id', 'lastSeenAt', 'listStatus', 'note', 'rdapCheckedAt', 'registeredAt', 'seenCount', 'updatedAt', 'updatedById'] as const
+  $columns = UrlDomainSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare domain: string
+  @column.dateTime()
+  declare firstSeenAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column.dateTime()
+  declare lastSeenAt: DateTime | null
+  @column()
+  declare listStatus: 'allow' | 'block' | 'user_content' | 'none' | null
+  @column()
+  declare note: string | null
+  @column.dateTime()
+  declare rdapCheckedAt: DateTime | null
+  @column.dateTime()
+  declare registeredAt: DateTime | null
+  @column()
+  declare seenCount: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare updatedById: number | null
+}
+
+export class UrlScanSchema extends BaseModel {
+  static $columns = ['checkedAt', 'createdAt', 'details', 'domain', 'expiresAt', 'finalDomain', 'finalUrl', 'id', 'normalizedUrl', 'redirectChain', 'threatTypes', 'updatedAt', 'urlHash', 'verdict'] as const
+  $columns = UrlScanSchema.$columns
+  @column.dateTime()
+  declare checkedAt: DateTime
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare details: any | null
+  @column()
+  declare domain: string
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column()
+  declare finalDomain: string | null
+  @column()
+  declare finalUrl: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare normalizedUrl: string
+  @column()
+  declare redirectChain: any | null
+  @column()
+  declare threatTypes: any | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare urlHash: string
+  @column()
+  declare verdict: 'safe' | 'malicious' | 'unknown'
 }
 
 export class UserSchema extends BaseModel {

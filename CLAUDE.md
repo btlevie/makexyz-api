@@ -60,6 +60,7 @@ This is the single most important pattern in the codebase and is **not** standar
 
 - File uploads go through `@adonisjs/drive` (S3-backed, see `config/drive.ts`); the only configured disk is `s3` (`DRIVE_DISK=s3`, private visibility). Storage keys are built as `${S3_FILE_STORAGE_KEY}/${projectUuid}/${fileUuid}.${extname}` — follow this convention for new project-scoped uploads rather than inventing a new key scheme.
 - Allowed upload extensions for project files are enumerated in `app/validators/project_file.ts` (`ALLOWED_EXTENSIONS`) — this is a 3D-manufacturing file whitelist (STL, OBJ, STEP, etc.), not a generic upload allowlist.
+- Message attachments are the one untrusted-upload path. The browser PUTs to a presigned URL under `${S3_FILE_STORAGE_KEY}/quarantine/conversations/...`, and a file is only served from `${S3_FILE_STORAGE_KEY}/conversations/...` after scanning (`app/services/attachment_service.ts`, `ATTACHMENT_EXTENSIONS` in `attachment_inspection.ts`). Never serve or presign anything under `quarantine/`.
 
 ## Mail
 

@@ -11,7 +11,13 @@ import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import transmit from '@adonisjs/transmit/services/main'
 import { controllers } from '#generated/controllers'
-import { emailVerificationThrottle, instantQuoteThrottle, messagingThrottle } from '#start/limiter'
+import {
+  attachmentThrottle,
+  emailVerificationThrottle,
+  instantQuoteThrottle,
+  linkThrottle,
+  messagingThrottle,
+} from '#start/limiter'
 
 router.get('/', () => {
   return { hello: 'world' }
@@ -212,6 +218,21 @@ router
           ])
           .use(messagingThrottle)
 
+        // Attachments: presigned upload into quarantine, confirm, then send
+        // with attachmentUuids; downloadable once scanned clean (see
+        // attachment_service.ts).
+        router
+          .post('conversations/:uuid/attachments', [controllers.ConversationAttachments, 'store'])
+          .use(attachmentThrottle)
+        router.post('conversations/:uuid/attachments/:attachmentUuid/complete', [
+          controllers.ConversationAttachments,
+          'complete',
+        ])
+        router.get('conversations/:uuid/attachments/:attachmentUuid', [
+          controllers.ConversationAttachments,
+          'show',
+        ])
+
         // A customer starting a conversation with a vendor (verified email
         // required - see conversation_service.ts#createInquiry).
         router
@@ -220,6 +241,11 @@ router
       })
       .as('messaging')
       .use(middleware.auth())
+
+    // Public: the link interstitial's click-time check. Message links are
+    // only handed out as tokens (see LinksController), including in emails
+    // to people who may not be signed in.
+    router.get('links/:token', [controllers.Links, 'show']).use(linkThrottle)
 
     // Public: the configure step's shipping-method picker - the methods and
     // fees offered to ?country=XX. Not project-scoped (shipping depends only
@@ -347,6 +373,11 @@ router
         router.post('moderation/terms', [controllers.AdminModerationTerms, 'store'])
         router.post('moderation/terms/preview', [controllers.AdminModerationTerms, 'preview'])
         router.patch('moderation/terms/:uuid', [controllers.AdminModerationTerms, 'update'])
+        // Link domain lists: allow / block / user content, built-ins plus overrides.
+        router.get('moderation/domains', [controllers.AdminUrlDomains, 'index'])
+        router.put('moderation/domains/:domain', [controllers.AdminUrlDomains, 'update'])
+        // Download an attachment under review (never a rejected one).
+        router.get('attachments/:uuid', [controllers.AdminAttachments, 'show'])
       })
       .prefix('admin')
       .as('admin')

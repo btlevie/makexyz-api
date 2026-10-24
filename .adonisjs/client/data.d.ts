@@ -14,6 +14,7 @@ import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
 import type InvitationTransformer from '#transformers/invitation_transformer'
 import type MaterialCatalogTransformer from '#transformers/material_catalog_transformer'
+import type MessageAttachmentTransformer from '#transformers/message_attachment_transformer'
 import type MessageTransformer from '#transformers/message_transformer'
 import type ModerationCaseTransformer from '#transformers/moderation_case_transformer'
 import type ModerationRuleTransformer from '#transformers/moderation_rule_transformer'
@@ -26,6 +27,7 @@ import type QuoteTransformer from '#transformers/quote_transformer'
 import type ServiceableCountryTransformer from '#transformers/serviceable_country_transformer'
 import type ShipmentTransformer from '#transformers/shipment_transformer'
 import type ShippingOptionTransformer from '#transformers/shipping_option_transformer'
+import type UrlDomainTransformer from '#transformers/url_domain_transformer'
 import type UserTransformer from '#transformers/user_transformer'
 import type VendorOnboardingTransformer from '#transformers/vendor_onboarding_transformer'
 import type VendorPayoutMethodTransformer from '#transformers/vendor_payout_method_transformer'
@@ -69,6 +71,10 @@ export namespace Data {
   export type MaterialCatalog = InferData<MaterialCatalogTransformer>
   export namespace MaterialCatalog {
     export type Variants = InferVariants<MaterialCatalogTransformer>
+  }
+  export type MessageAttachment = InferData<MessageAttachmentTransformer>
+  export namespace MessageAttachment {
+    export type Variants = InferVariants<MessageAttachmentTransformer>
   }
   export type Message = InferData<MessageTransformer>
   export namespace Message {
@@ -117,6 +123,10 @@ export namespace Data {
   export type ShippingOption = InferData<ShippingOptionTransformer>
   export namespace ShippingOption {
     export type Variants = InferVariants<ShippingOptionTransformer>
+  }
+  export type UrlDomain = InferData<UrlDomainTransformer>
+  export namespace UrlDomain {
+    export type Variants = InferVariants<UrlDomainTransformer>
   }
   export type User = InferData<UserTransformer>
   export namespace User {

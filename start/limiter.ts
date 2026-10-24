@@ -48,6 +48,26 @@ export const messagingThrottle = limiter.define('messaging', (ctx) => {
     .usingKey(`user_${ctx.auth.user?.id ?? ctx.request.ip()}`)
 })
 
+/**
+ * The public link interstitial, per IP. A click can trigger a live
+ * reputation check (Web Risk, redirect following) when the cached verdict has
+ * expired, so it's capped like any other call that costs an outbound request.
+ */
+export const linkThrottle = limiter.define('links', (ctx) => {
+  return limiter.allowRequests(60).every('1 minute').usingKey(`ip_${ctx.request.ip()}`)
+})
+
+/**
+ * Attachment uploads, per account: each issues a presigned S3 upload and
+ * queues a scan.
+ */
+export const attachmentThrottle = limiter.define('attachments', (ctx) => {
+  return limiter
+    .allowRequests(30)
+    .every('10 minutes')
+    .usingKey(`user_${ctx.auth.user?.id ?? ctx.request.ip()}`)
+})
+
 export const instantQuoteThrottle = limiter.define('instantQuote', () => {
   return limiter
     .allowRequests(env.get('INSTANT_QUOTE_RATE_LIMIT_REQUESTS', 10))

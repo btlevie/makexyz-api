@@ -9,6 +9,7 @@ import { signupAs } from '#tests/helpers/vendors'
 import {
   activeVendor,
   messagePayload,
+  analyzeWithoutReputation,
   startInquiry,
   verifiedCustomer,
   dataOf,
@@ -45,7 +46,9 @@ test.group('Messaging: moderation queue', (group) => {
       vendor.vendor,
       'Drawings are at https://drawings.example.net/part-7'
     )
-    assert.equal(dataOf(started).message.status, 'pending_review')
+    // Held for link analysis; with no reputation available it goes to a person.
+    assert.equal(dataOf(started).message.status, 'held')
+    await analyzeWithoutReputation(dataOf(started).message.uuid)
     const uuid = dataOf(started).conversation.uuid
     const hidden = await client.get(`/v1/conversations/${uuid}`).withSession(vendor.session)
     hidden.assertStatus(404)
@@ -55,7 +58,11 @@ test.group('Messaging: moderation queue', (group) => {
     const [item] = dataOf(queue)
     assert.equal(item.source, 'auto_hold')
     assert.equal(item.conversationUuid, uuid)
-    assert.equal(item.message.ruleHits[0].ruleId, 'url.any_non_allowlisted_holds')
+    assert.include(
+      item.message.ruleHits.map((hit: any) => hit.ruleId),
+      'url.reputation_unknown'
+    )
+    assert.equal(item.message.links[0].scan.verdict, 'unknown')
 
     const approve = await client
       .post(`/v1/admin/moderation/cases/${item.uuid}/approve`)
@@ -83,6 +90,7 @@ test.group('Messaging: moderation queue', (group) => {
       .withSession(vendor.session)
       .json(messagePayload('Order direct at cheap-prints.example.org'))
     void customer
+    await analyzeWithoutReputation(dataOf(held).uuid)
 
     const moderationCase = await ModerationCase.query().where('source', 'auto_hold').firstOrFail()
     const block = await client
@@ -139,7 +147,13 @@ test.group('Messaging: moderation queue', (group) => {
     const customer = await verifiedCustomer(client)
     const vendor = await activeVendor(client)
     const admin = await signupAs(client, 'admin')
-    await startInquiry(client, customer.session, vendor.vendor, 'See https://x.example.net')
+    const started = await startInquiry(
+      client,
+      customer.session,
+      vendor.vendor,
+      'See https://x.example.net'
+    )
+    await analyzeWithoutReputation(dataOf(started).message.uuid)
     const moderationCase = await ModerationCase.firstOrFail()
 
     await client

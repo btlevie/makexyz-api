@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Check Link (interstitial)'
+method: GET
+url: '{{base_url}}/links/{{link_token}}'
+order: 11000
+description: 'Public. The "you are leaving MakeXYZ" interstitial''s click-time check for a message link (tokens come from a message''s links[].token). Re-checks the domain lists and the link''s reputation (refreshing an expired verdict) and returns verdict safe | caution (unknown reputation or very new domain) | blocked (url omitted). 404 for a removed/blocked message. Throttled per IP.'

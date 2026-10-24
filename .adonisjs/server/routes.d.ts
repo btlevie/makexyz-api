@@ -48,7 +48,11 @@ export type ScannedRoutes = {
     'messaging.conversations.store_message': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversations.mark_read': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.message_reports.store': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'messageUuid': ParamValue} }
+    'messaging.conversation_attachments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'messaging.conversation_attachments.complete': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
+    'messaging.conversation_attachments.show': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
     'messaging.inquiries.store': { paramsTuple: [ParamValue]; params: {'vendorUuid': ParamValue} }
+    'links.show': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
     'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
@@ -110,6 +114,9 @@ export type ScannedRoutes = {
     'admin.admin_moderation_terms.store': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_terms.preview': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_terms.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_url_domains.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_url_domains.update': { paramsTuple: [ParamValue]; params: {'domain': ParamValue} }
+    'admin.admin_attachments.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.paypal_webhooks': { paramsTuple?: []; params?: {} }
     'webhooks.easypost_webhooks': { paramsTuple?: []; params?: {} }
@@ -129,6 +136,8 @@ export type ScannedRoutes = {
     'messaging.conversations.index': { paramsTuple?: []; params?: {} }
     'messaging.conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversations.messages': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'messaging.conversation_attachments.show': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
+    'links.show': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
     'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
@@ -150,6 +159,8 @@ export type ScannedRoutes = {
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_url_domains.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_attachments.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }
   HEAD: {
     'event_stream': { paramsTuple?: []; params?: {} }
@@ -166,6 +177,8 @@ export type ScannedRoutes = {
     'messaging.conversations.index': { paramsTuple?: []; params?: {} }
     'messaging.conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversations.messages': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'messaging.conversation_attachments.show': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
+    'links.show': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
     'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
@@ -187,6 +200,8 @@ export type ScannedRoutes = {
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_url_domains.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_attachments.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }
   POST: {
     'subscribe': { paramsTuple?: []; params?: {} }
@@ -209,6 +224,8 @@ export type ScannedRoutes = {
     'messaging.conversations.store_message': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversations.mark_read': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.message_reports.store': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'messageUuid': ParamValue} }
+    'messaging.conversation_attachments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'messaging.conversation_attachments.complete': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
     'messaging.inquiries.store': { paramsTuple: [ParamValue]; params: {'vendorUuid': ParamValue} }
     'vendor.vendor_shipments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_shipments.void': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'shipmentUuid': ParamValue} }
@@ -269,6 +286,7 @@ export type ScannedRoutes = {
     'vendor.vendor_onboarding.set_capabilities': { paramsTuple?: []; params?: {} }
     'vendor.vendor_onboarding.upload_tax': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.update_rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_url_domains.update': { paramsTuple: [ParamValue]; params: {'domain': ParamValue} }
   }
 }
 declare module '@adonisjs/core/types/http' {

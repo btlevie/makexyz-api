@@ -3,7 +3,7 @@ name: 'Send Message'
 method: POST
 url: '{{base_url}}/conversations/{{conversation_uuid}}/messages'
 order: 5000
-description: 'Sends a message. Moderated before anyone else sees it: status is delivered, delivered_flagged, pending_review or blocked (with reason). Retrying with the same clientMessageId returns the original (200). 409 if the conversation no longer takes messages, 403 if the sender''s messaging is suspended.'
+description: 'Sends a message. Moderated before anyone else sees it: status is delivered, delivered_flagged, held (links or attachments under automated analysis - usually seconds; poll the messages list), pending_review or blocked (with reason). body may be empty when attachmentUuids (up to 5, uploaded via Create Attachment Upload) are given. Retrying with the same clientMessageId returns the original (200). 409 if the conversation no longer takes messages, 403 if the sender''s messaging is suspended, 422/409 for attachments that are not ready or failed checks.'
 headers:
   - key: Content-Type
     value: application/json
@@ -12,5 +12,6 @@ body:
   content: |-
     {
       "body": "Can you do it in black PETG?",
-      "clientMessageId": "{{$guid}}"
+      "clientMessageId": "{{$guid}}",
+      "attachmentUuids": []
     }

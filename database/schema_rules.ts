@@ -245,7 +245,7 @@ export default {
           tsType: "'sync' | 'async' | 'rescan'",
         },
         ['decision']: {
-          tsType: "'allow' | 'flag' | 'escalate' | 'review' | 'block'",
+          tsType: "'allow' | 'flag' | 'escalate' | 'review' | 'hold' | 'block'",
         },
       },
     },
@@ -253,7 +253,7 @@ export default {
       columns: {
         ['action']: {
           tsType:
-            "'block' | 'review' | 'escalate' | 'flag' | 'allow_override' | 'continue' | 'redact'",
+            "'block' | 'hold' | 'review' | 'escalate' | 'flag' | 'allow_override' | 'continue' | 'redact'",
         },
       },
     },
@@ -261,7 +261,7 @@ export default {
       columns: {
         ['action']: {
           tsType:
-            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled'",
+            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated'",
         },
       },
     },
@@ -297,6 +297,34 @@ export default {
         },
         ['resolution']: {
           tsType: "'approved' | 'blocked' | 'removed' | 'no_action'",
+        },
+      },
+    },
+    ['url_domains']: {
+      columns: {
+        ['list_status']: {
+          tsType: "'allow' | 'block' | 'user_content' | 'none'",
+        },
+      },
+    },
+    ['url_scans']: {
+      columns: {
+        ['verdict']: {
+          tsType: "'safe' | 'malicious' | 'unknown'",
+        },
+      },
+    },
+    ['message_urls']: {
+      columns: {
+        ['source']: {
+          tsType: "'text' | 'attachment'",
+        },
+      },
+    },
+    ['message_attachments']: {
+      columns: {
+        ['status']: {
+          tsType: "'pending_upload' | 'uploaded' | 'clean' | 'rejected' | 'review'",
         },
       },
     },

@@ -28,6 +28,7 @@ export default class extends BaseSchema {
       table
         .enum('action', [
           'block',
+          'hold',
           'review',
           'escalate',
           'flag',

@@ -2,9 +2,12 @@
  * Turns the rules that fired into one decision.
  *
  * Explicit decisions come from rules; the risk score only routes. Precedence
- * is block > review > escalate > flag > allow. Weak signals (`continue`)
- * never block on their own - their summed weight can only raise a message to
- * flag/escalate/review. Shadow hits are recorded but never counted.
+ * is block > hold > review > escalate > flag > allow. Hold outranks review:
+ * a message waiting on link or attachment analysis is judged again once that
+ * finishes, so a person reviewing it later sees the results. Weak signals
+ * (`continue`) never block on their own - their summed weight can only raise
+ * a message to flag/escalate/review. Shadow hits are recorded but never
+ * counted.
  */
 import type { Decision, RuleAction, RuleResult } from '#services/moderation/types'
 import type { TrustTier } from '#services/messaging_risk_service'
@@ -30,11 +33,13 @@ const DECISION_RANK: Record<Decision, number> = {
   flag: 1,
   escalate: 2,
   review: 3,
-  block: 4,
+  hold: 4,
+  block: 5,
 }
 
 const ACTION_DECISION: Partial<Record<RuleAction, Decision>> = {
   block: 'block',
+  hold: 'hold',
   review: 'review',
   escalate: 'escalate',
   flag: 'flag',

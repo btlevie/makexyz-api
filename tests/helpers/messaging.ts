@@ -1,10 +1,13 @@
 import string from '@adonisjs/core/helpers/string'
 import { DateTime } from 'luxon'
 import Customer from '#models/customer'
+import Message from '#models/message'
 import Order from '#models/order'
 import Project from '#models/project'
 import User from '#models/user'
 import Vendor from '#models/vendor'
+import { analyzeHeldMessage } from '#services/message_analysis_service'
+import { fakeWebRisk } from '#services/url_analysis_service'
 import { activeVendorAttributes, signupAs } from '#tests/helpers/vendors'
 
 /** A signed-in customer whose email is already verified - able to message vendors. */
@@ -96,4 +99,19 @@ export function dataOf(response: { body(): unknown }): any {
 /** A sent mail's plain-text body. */
 export function mailText(sent: { message: { toJSON(): { message: { text?: unknown } } } }): string {
   return String(sent.message.toJSON().message.text ?? '')
+}
+
+/**
+ * Runs the async pass on a held message with link reputation unavailable, so
+ * a held link goes to a person (url.reputation_unknown) - the quickest way to
+ * put a message in the review queue.
+ */
+export async function analyzeWithoutReputation(messageUuid: string) {
+  fakeWebRisk.available = false
+  try {
+    const message = await Message.findByOrFail('uuid', messageUuid)
+    await analyzeHeldMessage(message.id)
+  } finally {
+    fakeWebRisk.available = true
+  }
 }

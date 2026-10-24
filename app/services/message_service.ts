@@ -7,7 +7,10 @@
  * Outcome -> message status:
  *   allow    -> delivered
  *   flag     -> delivered_flagged (visible now, queued for a later look)
- *   escalate -> pending_review    (no automated deep analysis yet - a person decides)
+ *   hold     -> held              (waiting on link/attachment analysis -
+ *                                  AnalyzeMessage judges it again, see
+ *                                  message_analysis_service.ts)
+ *   escalate -> pending_review    (no LLM pass yet - a person decides)
  *   review   -> pending_review
  *   block    -> blocked           (only the sender sees it, with the reason)
  * A restricted sender's messages always go to pending_review.
@@ -21,10 +24,13 @@ import { DateTime } from 'luxon'
 import Conversation from '#models/conversation'
 import ConversationParticipant from '#models/conversation_participant'
 import Message, { DELIVERED_STATUSES } from '#models/message'
+import MessageAttachment from '#models/message_attachment'
+import MessageUrl from '#models/message_url'
 import ModerationCase from '#models/moderation_case'
 import ModerationEvaluation from '#models/moderation_evaluation'
 import ModerationRuleHit from '#models/moderation_rule_hit'
 import Order from '#models/order'
+import AnalyzeMessage from '#jobs/analyze_message'
 import { assertCanPost } from '#services/conversation_service'
 import { effectiveTrustTier } from '#services/messaging_risk_service'
 import { scheduleNotifications } from '#services/message_notification_service'
@@ -33,7 +39,13 @@ import {
   PIPELINE_VERSION,
   type ModerationOutcome,
 } from '#services/moderation/pipeline'
-import type { ConversationContext, Decision, HistoryLookups } from '#services/moderation/types'
+import type {
+  AttachmentSignal,
+  ConversationContext,
+  Decision,
+  HistoryLookups,
+} from '#services/moderation/types'
+import { recordDomainsSeen } from '#services/url_analysis_service'
 
 /** Review-queue priority: lower sorts first. Someone waiting on a held message comes first. */
 const HELD_MESSAGE_PRIORITY = 10
@@ -51,6 +63,8 @@ export interface SubmitMessageInput {
   participant: ConversationParticipant
   body: string
   clientMessageId: string
+  /** The sender's uploaded attachments (attachment_service.ts#attachmentsForSend). */
+  attachments?: MessageAttachment[]
 }
 
 export interface SubmitMessageResult {
@@ -78,7 +92,7 @@ const PROHIBITED_ITEM_PRIORITY = 30
  * how many other conversations this sender sent the same text to, and how
  * many other senders sent it.
  */
-async function historyFor(
+export async function historyFor(
   participant: ConversationParticipant,
   conversationId: number,
   hash: string
@@ -106,7 +120,9 @@ async function historyFor(
   }
 }
 
-async function conversationContext(conversation: Conversation): Promise<ConversationContext> {
+export async function conversationContext(
+  conversation: Conversation
+): Promise<ConversationContext> {
   const order = conversation.orderId ? await Order.find(conversation.orderId) : null
   return {
     kind: conversation.kind,
@@ -115,9 +131,10 @@ async function conversationContext(conversation: Conversation): Promise<Conversa
   }
 }
 
-function statusFor(decision: Decision, restricted: boolean): Message['status'] {
+export function statusFor(decision: Decision, restricted: boolean): Message['status'] {
   if (decision === 'block') return 'blocked'
   if (decision === 'review' || decision === 'escalate' || restricted) return 'pending_review'
+  if (decision === 'hold') return 'held'
   if (decision === 'flag') return 'delivered_flagged'
   return 'delivered'
 }
@@ -148,15 +165,36 @@ async function lockAndReserveSeq(conversationId: number, trx: TransactionClientC
   return locked
 }
 
-async function recordEvaluation(
+/** What the pipeline needs to know about a message's attachments. */
+export function attachmentInputs(attachments: MessageAttachment[]): {
+  attachments: AttachmentSignal[]
+  attachmentText: string[]
+} {
+  return {
+    attachments: attachments.map((file) => ({
+      uuid: file.uuid,
+      fileName: file.fileName,
+      extname: file.extname,
+      status: file.status,
+      rejectReason: file.rejectReason,
+    })),
+    attachmentText: attachments.flatMap((file) => {
+      const text = file.scanDetails?.extractedText
+      return Array.isArray(text) ? (text as string[]) : []
+    }),
+  }
+}
+
+export async function recordEvaluation(
   message: Message,
   outcome: ModerationOutcome,
-  trx: TransactionClientContract
+  trx: TransactionClientContract,
+  stage: ModerationEvaluation['stage'] = 'sync'
 ) {
   const evaluation = await ModerationEvaluation.create(
     {
       messageId: message.id,
-      stage: 'sync',
+      stage,
       pipelineVersion: PIPELINE_VERSION,
       decision: outcome.decision,
       riskScore: outcome.riskScore,
@@ -172,6 +210,65 @@ async function recordEvaluation(
       { client: trx }
     )
   }
+}
+
+/**
+ * Records the message's links, one row per normalized URL, each with its own
+ * interstitial token. Links found on a later pass (a QR code decoded after
+ * sending) are added then; existing rows are left alone.
+ */
+export async function recordMessageUrls(
+  message: Message,
+  outcome: ModerationOutcome,
+  trx: TransactionClientContract
+) {
+  if (outcome.signals.urls.length === 0) return
+  const existing = await MessageUrl.query({ client: trx })
+    .where('messageId', message.id)
+    .select('urlHash')
+  const known = new Set(existing.map((row) => row.urlHash))
+  const fresh = outcome.signals.urls.filter((url) => !known.has(url.hash))
+  if (fresh.length > 0) {
+    await MessageUrl.createMany(
+      fresh.map((url) => ({
+        messageId: message.id,
+        urlHash: url.hash,
+        normalizedUrl: url.url,
+        domain: url.hostname,
+        match: url.match,
+        source: url.source,
+        token: string.uuid(),
+      })),
+      { client: trx }
+    )
+  }
+}
+
+/** Opens the review-queue case for a message held for a person, flagged, or a prohibited item. */
+export async function openMessageCase(
+  message: Message,
+  source: 'auto_hold' | 'auto_flag' | 'prohibited_item',
+  trx: TransactionClientContract
+) {
+  const priority =
+    source === 'auto_hold'
+      ? HELD_MESSAGE_PRIORITY
+      : source === 'auto_flag'
+        ? FLAGGED_MESSAGE_PRIORITY
+        : PROHIBITED_ITEM_PRIORITY
+  await ModerationCase.create(
+    {
+      uuid: string.uuid(),
+      messageId: message.id,
+      customerId: message.senderCustomerId,
+      vendorId: message.senderVendorId,
+      source,
+      priority,
+      status: 'open',
+      missedByAutomation: false,
+    },
+    { client: trx }
+  )
 }
 
 /** Applies the "a message was delivered" bookkeeping to a locked conversation row. */
@@ -195,6 +292,7 @@ function markDelivered(
  */
 export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMessageResult> {
   const { conversation, participant, body, clientMessageId } = input
+  const attachments = input.attachments ?? []
 
   const existing = await findExisting(participant, clientMessageId)
   if (existing) {
@@ -219,6 +317,7 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
     conversation: await conversationContext(conversation),
     trustTier: tier,
     history: (hash) => historyFor(participant, conversation.id, hash),
+    ...attachmentInputs(attachments),
   })
   const status = statusFor(outcome.decision, restricted)
   const now = DateTime.now()
@@ -257,37 +356,22 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
       )
       await locked.save()
       await recordEvaluation(created, outcome, trx)
+      await recordMessageUrls(created, outcome, trx)
+      if (attachments.length > 0) {
+        await MessageAttachment.query({ client: trx })
+          .whereIn(
+            'id',
+            attachments.map((file) => file.id)
+          )
+          .whereNull('messageId')
+          .update({ message_id: created.id })
+      }
 
       if (status === 'blocked' && outcome.caseSource) {
-        await ModerationCase.create(
-          {
-            uuid: string.uuid(),
-            messageId: created.id,
-            customerId: participant.customerId,
-            vendorId: participant.vendorId,
-            source: outcome.caseSource,
-            priority: PROHIBITED_ITEM_PRIORITY,
-            status: 'open',
-            missedByAutomation: false,
-          },
-          { client: trx }
-        )
+        await openMessageCase(created, outcome.caseSource, trx)
       }
       if (status === 'pending_review' || status === 'delivered_flagged') {
-        await ModerationCase.create(
-          {
-            uuid: string.uuid(),
-            messageId: created.id,
-            customerId: participant.customerId,
-            vendorId: participant.vendorId,
-            source: status === 'pending_review' ? 'auto_hold' : 'auto_flag',
-            priority:
-              status === 'pending_review' ? HELD_MESSAGE_PRIORITY : FLAGGED_MESSAGE_PRIORITY,
-            status: 'open',
-            missedByAutomation: false,
-          },
-          { client: trx }
-        )
+        await openMessageCase(created, status === 'pending_review' ? 'auto_hold' : 'auto_flag', trx)
       }
 
       conversation.merge(locked.$attributes)
@@ -302,17 +386,37 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
     throw error
   }
 
+  await recordDomainsSeen(outcome.signals.urls.map((url) => url.hostname))
   if (DELIVERED_STATUSES.includes(message.status)) {
     await afterDelivery(conversation, message)
+  }
+  if (message.status === 'held') {
+    await queueAnalysis(message)
   }
   return { message, created: true }
 }
 
+/** Queues the async pass for a held message - deduplicated, so one pass at a time. */
+export async function queueAnalysis(message: Message, final = false) {
+  try {
+    await AnalyzeMessage.dispatch({ messageId: message.id, final })
+      .dedup({ id: `analyze-${message.id}`, ttl: '10s' })
+      .run()
+  } catch (error) {
+    // SweepHeldMessages picks the message up if this dispatch is lost.
+    logger.error({ messageUuid: message.uuid, error: String(error) }, 'Failed to queue analysis')
+  }
+}
+
 /**
- * Delivers a message that was held for review (moderation_case_service.ts).
- * It keeps its original seq, so it appears where it was sent.
+ * Delivers a message that was held - for a person (moderation_case_service.ts)
+ * or for automated analysis (message_analysis_service.ts). It keeps its
+ * original seq, so it appears where it was sent.
  */
-export async function deliverHeldMessage(message: Message): Promise<Message> {
+export async function deliverHeldMessage(
+  message: Message,
+  status: 'delivered' | 'delivered_flagged' = 'delivered'
+): Promise<Message> {
   const now = DateTime.now()
   const conversation = await db.transaction(async (trx) => {
     const locked = await Conversation.query({ client: trx })
@@ -326,7 +430,11 @@ export async function deliverHeldMessage(message: Message): Promise<Message> {
     await locked.save()
 
     message.useTransaction(trx)
-    message.merge({ status: 'delivered', deliveredAt: now, blockReasonCode: null })
+    message.merge({
+      status,
+      deliveredAt: now,
+      blockReasonCode: status === 'delivered' ? null : message.blockReasonCode,
+    })
     await message.save()
     return locked
   })

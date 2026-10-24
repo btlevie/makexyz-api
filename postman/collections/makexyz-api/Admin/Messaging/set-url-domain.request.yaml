@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Set Link Domain List'
+method: PUT
+url: '{{base_url}}/admin/moderation/domains/{{domain}}'
+order: 14000
+description: 'Puts a domain (or a more specific host - the most specific entry wins) on a list: allow (lifts the unknown-link hold), block (always blocked, also at click time), user_content (file hosting, always checked per URL) or none (explicitly on no list, overriding a built-in). listStatus null removes the override. Logged to moderation_actions as domain_list_updated. 422 for something that is not a domain.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "listStatus": "allow",
+      "note": "Resin supplier datasheets"
+    }

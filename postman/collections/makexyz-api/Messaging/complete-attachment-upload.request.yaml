@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Complete Attachment Upload'
+method: POST
+url: '{{base_url}}/conversations/{{conversation_uuid}}/attachments/{{attachment_uuid}}/complete'
+order: 9000
+description: 'Step 3: confirms the PUT finished. Checks the object exists and matches the declared size (422 and rejected otherwise; 409 if not uploaded yet), then queues the scan: malware verdict (GuardDuty), content checks (type must match the extension; images re-encoded; PDFs with scripts/embedded files rejected) and promotion. Status goes uploaded -> clean | rejected | review.'

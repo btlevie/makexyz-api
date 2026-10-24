@@ -616,17 +616,21 @@ Customers and vendors talk in `conversations`. The full design, including the mo
 
 ```text
 delivered | delivered_flagged   visible to the other side
+held                             waiting on automated link/attachment analysis (usually seconds)
 pending_review                   held for a person (queued in moderation_cases)
 blocked                          only the sender sees it, with the reason
 removed                          taken down after delivery; recipients see a tombstone
 ```
+
+A `held` message is judged again by the same rules once its links and attachments have been checked (`AnalyzeMessage`, see `message_analysis_service.ts`). It then becomes delivered, flagged, `pending_review` or blocked. Nothing stays held: `SweepHeldMessages` gives anything held over 20 minutes a final pass, and whatever is still undecided goes to a person.
 
 Each moderation pass is stored in `moderation_evaluations` (the extracted signals and every `rule@version` that ran), with one `moderation_rule_hits` row per rule that fired. Rules run in `off`, `shadow` or `enforce` mode, and `moderation_rule_configs` overrides a rule's code defaults. Admins change both at runtime (`/v1/admin/moderation/rules`).
 
 At launch, only near-certain rules enforce:
 * contact details (email, phone);
 * crypto wallet addresses and bank details (checksum-validated);
-* holding links outside a small allowlist;
+* link safety (below);
+* attachment checks (below);
 * unambiguous prohibited items (firearm parts, other weapons, drug paraphernalia, counterfeits and fraud devices). These are blocked with a policy reason and open a `prohibited_item` case.
 
 The rest (chat-app handles, payment-intent, advertising, spam, threats, harassment and more) run in shadow until live data shows they're precise enough to promote.
@@ -640,6 +644,39 @@ Each term has an action and a status:
 The `context_allow` category adds harmless-context words (like "airsoft"), which lower a prohibited-item block to review. Terms are stored normalized, and messages are matched through the same deobfuscation as the rules, so admins enter the plain spelling.
 
 Admins list terms with 30-day hit counts, preview a term against recent messages, and add or change terms at `/v1/admin/moderation/terms`. Every change is logged in `moderation_actions` (`term_added`, `term_updated`, `term_disabled`).
+
+**Links.** Every link is normalized, so one URL written different ways shares one cache entry, and it's checked at send time without any network call:
+* private or metadata IPs, credentials in the URL, and look-alike domains (`paypa1.com`, Cyrillic homographs) are blocked;
+* links to programs or archives are blocked, with a reason telling the sender to attach the file instead.
+
+Each link is recorded in `message_urls`. Links on the allow list are delivered at once.
+
+Any other link holds the message until it has been analysed, unless `url_scans` already has a fresh verdict for it. Each URL is analysed once per cache lifetime, however many messages contain it:
+* redirects are followed, for shorteners and unknown domains, by a fetcher that refuses private addresses;
+* Google Web Risk checks the original and final URL;
+* RDAP gives the domain's age.
+
+Verdicts are cached for 30 days if malicious, 24 hours if safe, and 6 hours if unknown. A malicious link blocks the message. Without a reputation, or for a domain under 30 days old, the message goes to a person. A domain under 7 days old blocks outright when the sender is a vendor or a new account.
+
+Allow, block and user-content (file hosting) lists are built in and overridable in `url_domains`, which also counts sightings per registrable domain and stores RDAP ages. Admins manage them at `/v1/admin/moderation/domains`, and each change is logged as `domain_list_updated`.
+
+Links are never handed out raw. Clients get a token per link, and the frontend interstitial (`LINKS_URL/<token>`) calls `GET /v1/links/:token`, which re-checks the link at click time. Notification emails carry only these interstitial links.
+
+Every 6 hours, `RescanRecentUrls` re-checks links sent in the last 30 days whose verdict has expired. Any that turned malicious are removed from every message containing them, and each opens a `url_rescan` case.
+
+**Attachments** (`message_attachments`):
+1. The browser uploads straight to S3 with a presigned PUT into `${S3_FILE_STORAGE_KEY}/quarantine/conversations/<conversation>/`. The size is signed into the URL.
+2. The upload is confirmed (`POST .../attachments/:uuid/complete`).
+3. `ScanAttachment` checks the file:
+   * it waits for GuardDuty Malware Protection's result tag;
+   * the bytes must match the extension, and executables and archives are rejected;
+   * images are re-encoded, which strips metadata, and their QR codes are decoded;
+   * PDFs with JavaScript, launch actions or embedded files are rejected, and their link targets are extracted.
+4. A clean file is promoted to `${S3_FILE_STORAGE_KEY}/conversations/...`. Downloads are short-lived signed URLs, only for clean files in delivered messages.
+
+Allowed types are images (png/jpg/webp), PDF and the 3D/CAD formats. Archives are not allowed.
+
+Text found inside a file, such as a QR code or a PDF link, is moderated with the message, as are file names. A message whose files are still being checked is `held`. A rejected file blocks its message. With no scanner verdict (`ATTACHMENT_SCANNER=disabled`, or no result within 15 minutes) the file goes to a person, and approving the message releases the file.
 
 `message_reports` records participants reporting messages they received; several reports on a message share one case. `moderation_actions` is the append-only log of every human decision (approve, block, remove, restrict/suspend) and rule change. `messaging_risk_profiles` holds a sender's messaging trust tier: `restricted` sends everything to review, and `suspended` blocks sending except in a thread with a live order, where it's treated as `restricted`. Tiers affect messaging only, never ordering or fulfilment.
 

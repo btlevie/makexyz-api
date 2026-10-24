@@ -16,6 +16,7 @@ import {
 } from '#services/conversation_access_service'
 import { assertCanPost, ConversationClosedError } from '#services/conversation_service'
 import { MessagingSuspendedError, submitMessage } from '#services/message_service'
+import { AttachmentError, attachmentsForSend } from '#services/attachment_service'
 
 const DEFAULT_PAGE_SIZE = 50
 /** Listing cap - conversations only exist per inquiry/order, so this is generous. */
@@ -86,6 +87,8 @@ export default class ConversationsController {
       .orderBy('seq', 'asc')
       .limit(limit ?? DEFAULT_PAGE_SIZE)
       .preload('sender')
+      .preload('urls')
+      .preload('attachments')
 
     for (const message of messages) {
       message.$extras.mine = message.senderParticipantId === participant.id
@@ -95,8 +98,9 @@ export default class ConversationsController {
 
   /**
    * Sends a message. It's moderated before anyone else can see it - the
-   * response says whether it was delivered, is under review, or was blocked
-   * (and why). 201 for a new message, 200 when the same clientMessageId was
+   * response says whether it was delivered, is being checked ('held': links
+   * or attachments under automated analysis, usually seconds), is under
+   * review, or was blocked (and why). 201 for a new message, 200 when the same clientMessageId was
    * already sent (a retry).
    */
   async storeMessage(ctx: HttpContext) {
@@ -105,16 +109,28 @@ export default class ConversationsController {
     if (!access || !access.participant) {
       return response.notFound({ error: 'Conversation not found' })
     }
-    const { body, clientMessageId } = await request.validateUsing(sendMessageValidator)
+    const { body, clientMessageId, attachmentUuids } =
+      await request.validateUsing(sendMessageValidator)
+    if (!body && !attachmentUuids?.length) {
+      return response.unprocessableEntity({ error: 'A message needs text or an attachment' })
+    }
 
     try {
+      const attachments = await attachmentsForSend(
+        access.conversation,
+        access.participant,
+        attachmentUuids ?? []
+      )
       const { message, created } = await submitMessage({
         conversation: access.conversation,
         participant: access.participant,
-        body,
+        body: body ?? '',
         clientMessageId,
+        attachments,
       })
       await message.load('sender')
+      await message.load('urls')
+      await message.load('attachments')
       message.$extras.mine = true
       response.status(created ? 201 : 200)
       return await serialize(MessageTransformer.transform(message))
@@ -124,6 +140,9 @@ export default class ConversationsController {
       }
       if (error instanceof MessagingSuspendedError) {
         return response.forbidden({ error: error.message })
+      }
+      if (error instanceof AttachmentError) {
+        return response.status(error.status).send({ error: error.message })
       }
       throw error
     }

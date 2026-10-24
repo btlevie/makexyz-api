@@ -24,6 +24,8 @@ import EscalateOrderRouting from '#jobs/escalate_order_routing'
 import ExpireCheckoutSessions from '#jobs/expire_checkout_sessions'
 import ProcessVendorPayouts from '#jobs/process_vendor_payouts'
 import CloseExpiredConversations from '#jobs/close_expired_conversations'
+import RescanRecentUrls from '#jobs/rescan_recent_urls'
+import SweepHeldMessages from '#jobs/sweep_held_messages'
 
 /**
  * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
@@ -69,3 +71,19 @@ ProcessVendorPayouts.schedule({}).id('process-vendor-payouts').cron('20 * * * *'
  * refused the moment it finishes - so hourly is plenty.
  */
 CloseExpiredConversations.schedule({}).id('close-expired-conversations').cron('35 * * * *').run()
+
+/**
+ * Every 6 hours: re-checks links sent in the last 30 days whose cached
+ * verdict expired, and takes down messages whose link turned malicious (see
+ * message_analysis_service.ts). Overlap-safe: a rescan only re-analyses and
+ * removes, both idempotent.
+ */
+RescanRecentUrls.schedule({}).id('rescan-recent-urls').cron('45 */6 * * *').run()
+
+/**
+ * Every 10 minutes: a message held for automated analysis too long gets a
+ * final pass, after which anything undecided goes to a person - so a lost job
+ * never leaves a message held. Overlap-safe: the pass re-checks the status
+ * under a row lock.
+ */
+SweepHeldMessages.schedule({}).id('sweep-held-messages').cron('*/10 * * * *').run()

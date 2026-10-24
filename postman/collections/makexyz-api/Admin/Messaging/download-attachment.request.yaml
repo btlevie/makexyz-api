@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Download Attachment (moderator)'
+method: GET
+url: '{{base_url}}/admin/attachments/{{attachment_uuid}}'
+order: 15000
+description: 'A download link for an attachment under review, with its scan details. Rejected files (malware, active PDFs) are never handed out (409). Approving the case''s message releases a reviewed file to the recipient.'

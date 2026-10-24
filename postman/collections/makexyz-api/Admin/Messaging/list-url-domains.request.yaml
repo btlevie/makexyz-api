@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Link Domains'
+method: GET
+url: '{{base_url}}/admin/moderation/domains?list=allow'
+order: 13000
+description: 'Link domain lists as effectively applied: built-ins (allow-listed manufacturing/carrier sites, user-content file hosts) merged with admin overrides, plus every domain seen in messages with its sighting count (per registrable domain) and RDAP registration date. Optional filters: list (allow, block, user_content, none) and q (substring). Most recently seen first, up to 200.'

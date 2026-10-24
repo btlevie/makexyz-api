@@ -1,4 +1,7 @@
 import type { ProhibitedCategory } from '#services/moderation/prohibited_terms'
+import type { DomainListStatus } from '#services/moderation/url/domain_lists'
+import type { UrlFlag } from '#services/moderation/url/static_checks'
+import type { TrustTier } from '#services/messaging_risk_service'
 
 /**
  * Shared types for the message moderation pipeline. See
@@ -7,15 +10,21 @@ import type { ProhibitedCategory } from '#services/moderation/prohibited_terms'
  * explicit decisions, and a combiner picks the outcome.
  */
 
-/** What the pipeline decided for a message, strongest last. */
-export type Decision = 'allow' | 'flag' | 'escalate' | 'review' | 'block'
+/**
+ * What the pipeline decided for a message, strongest last. `hold` waits for
+ * automated analysis (link reputation, attachment scans) before deciding.
+ */
+export type Decision = 'allow' | 'flag' | 'escalate' | 'review' | 'hold' | 'block'
 
 /**
  * What a single rule asks for. `continue` contributes weight to the risk
- * score only; `allow_override` and `redact` are reserved for later rules.
+ * score only; `hold` waits for the async analysis (AnalyzeMessage) and the
+ * message is judged again with its results; `allow_override` and `redact`
+ * are reserved for later rules.
  */
 export type RuleAction =
   | 'block'
+  | 'hold'
   | 'review'
   | 'escalate'
   | 'flag'
@@ -78,12 +87,40 @@ export interface ExtractedPhone {
   match: string
 }
 
+/** A url_scans row as the rules see it - the async analysis of one link. */
+export interface UrlScanSummary {
+  verdict: 'safe' | 'malicious' | 'unknown'
+  threatTypes: string[]
+  /** Where redirects ended, when they went somewhere else. */
+  finalHostname: string | null
+  /** The final host's list (a shortener to Drive is user content). */
+  finalList: DomainListStatus | null
+  /** From RDAP, for the final domain; null when unknown or allow-listed. */
+  domainAgeDays: number | null
+  /** Why: 'web_risk', 'redirect_private_ip', 'web_risk_unavailable'... */
+  reasons: string[]
+}
+
 export interface ExtractedUrl {
+  /** As written in the text. */
   match: string
+  /** Normalized (see url/normalize.ts) - what's looked up and linked to. */
+  url: string
+  /** sha256 of `url` - the url_scans key. */
+  hash: string
   hostname: string
   /** eTLD+1 (e.g. example.co.uk), or null for IPs/unknown suffixes. */
   registrableDomain: string | null
+  /** The effective domain list the host is on (url/domain_registry.ts). */
+  list: DomainListStatus
+  /** Shorthand for list === 'allow'. */
   allowlisted: boolean
+  /** Shape checks (url/static_checks.ts) - no network involved. */
+  flags: UrlFlag[]
+  /** In the message text, or decoded from an attachment (QR code, PDF link). */
+  source: 'text' | 'attachment'
+  /** The cached async analysis, if there's a fresh one. Null = not analysed yet. */
+  scan: UrlScanSummary | null
 }
 
 /** `@name` - a social handle shape (never part of an email address). */
@@ -114,6 +151,15 @@ export interface ProfanitySignal {
   terms: string[]
 }
 
+/** A file sent with the message, as far as its checks have got. */
+export interface AttachmentSignal {
+  uuid: string
+  fileName: string
+  extname: string
+  status: 'pending_upload' | 'uploaded' | 'clean' | 'rejected' | 'review'
+  rejectReason: string | null
+}
+
 /** Everything the extractors found - persisted on the evaluation. */
 export interface Signals {
   emails: ExtractedEmail[]
@@ -124,6 +170,7 @@ export interface Signals {
   bankDetails: ExtractedBankDetail[]
   digitRuns: ExtractedDigitRun[]
   profanity: ProfanitySignal
+  attachments: AttachmentSignal[]
 }
 
 /**
@@ -156,6 +203,8 @@ export interface RuleContext {
   channel: Channel
   conversation: ConversationContext
   history: HistoryLookups
+  /** The sender's messaging trust tier (messaging_risk_service.ts). */
+  trustTier: TrustTier
 }
 
 export interface RuleResult {

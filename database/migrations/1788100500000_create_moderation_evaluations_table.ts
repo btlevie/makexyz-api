@@ -17,7 +17,7 @@ export default class extends BaseSchema {
       // then any later async analysis or rescan.
       table.enum('stage', ['sync', 'async', 'rescan']).notNullable()
       table.string('pipeline_version', 40).notNullable()
-      table.enum('decision', ['allow', 'flag', 'escalate', 'review', 'block']).notNullable()
+      table.enum('decision', ['allow', 'flag', 'escalate', 'review', 'hold', 'block']).notNullable()
       table.float('risk_score').notNullable().defaultTo(0)
       // What the extractors found (emails, phones, URLs with their domains) -
       // what the rules saw, kept for explainability and rule replay.

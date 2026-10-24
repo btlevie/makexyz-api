@@ -239,6 +239,22 @@ export default await Env.create(new URL('../', import.meta.url), {
   |----------------------------------------------------------
   | MESSAGES_URL is the frontend page for a conversation - notification
   | emails link to `${MESSAGES_URL}/<conversation uuid>`.
+  |
+  | LINKS_URL is the frontend's "you're leaving MakeXYZ" interstitial: links
+  | in messages are never handed out raw, only as `${LINKS_URL}/<token>`,
+  | which re-checks the link through GET /v1/links/:token at click time.
+  |
+  | WEB_RISK_API_KEY is a Google Cloud API key restricted to the Web Risk
+  | API. Without it no link gets a reputation, so every link outside the
+  | allow list waits for a person (url.reputation_unknown).
+  |
+  | ATTACHMENT_SCANNER: 'guardduty' reads GuardDuty Malware Protection for
+  | S3's result tag on each upload (enable it on the bucket for the
+  | `${S3_FILE_STORAGE_KEY}/quarantine/` prefix). 'disabled' (the default,
+  | for local dev) sends every attachment to a person instead.
   */
   MESSAGES_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  LINKS_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
+  WEB_RISK_API_KEY: Env.schema.string.optional(),
+  ATTACHMENT_SCANNER: Env.schema.enum.optional(['guardduty', 'disabled'] as const),
 })

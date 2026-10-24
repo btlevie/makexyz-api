@@ -1,8 +1,10 @@
 import { MessageSchema } from '#database/schema'
-import { belongsTo } from '@adonisjs/lucid/orm'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { belongsTo, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Conversation from '#models/conversation'
 import ConversationParticipant from '#models/conversation_participant'
+import MessageAttachment from '#models/message_attachment'
+import MessageUrl from '#models/message_url'
 
 /** Statuses the recipient can see (removed shows as a tombstone). */
 export const RECIPIENT_VISIBLE_STATUSES: Message['status'][] = [
@@ -20,4 +22,10 @@ export default class Message extends MessageSchema {
 
   @belongsTo(() => ConversationParticipant, { foreignKey: 'senderParticipantId' })
   declare sender: BelongsTo<typeof ConversationParticipant>
+
+  @hasMany(() => MessageAttachment)
+  declare attachments: HasMany<typeof MessageAttachment>
+
+  @hasMany(() => MessageUrl)
+  declare urls: HasMany<typeof MessageUrl>
 }

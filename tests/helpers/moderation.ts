@@ -7,11 +7,13 @@ import type {
   RuleContext,
   SenderRole,
 } from '#services/moderation/types'
+import type { TrustTier } from '#services/messaging_risk_service'
 
 export interface ContextOverrides {
   senderRole?: SenderRole
   conversation?: Partial<ConversationContext>
   history?: Partial<HistoryLookups>
+  trustTier?: TrustTier
 }
 
 /** A rule context for `text`, defaulting to a vendor replying in an ongoing inquiry. */
@@ -29,6 +31,7 @@ export function contextFor(text: string, overrides: ContextOverrides = {}): Rule
       ...overrides.conversation,
     },
     history: { sameTextOtherConversations: 0, sameTextOtherSenders: 0, ...overrides.history },
+    trustTier: overrides.trustTier ?? 'standard',
   }
 }
 

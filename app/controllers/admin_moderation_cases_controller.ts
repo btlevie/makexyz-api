@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
+import { loadReviewDetails } from '#services/message_review_details'
 import Conversation from '#models/conversation'
 import ModerationCase from '#models/moderation_case'
-import ModerationRuleHit from '#models/moderation_rule_hit'
 import ModerationCaseTransformer from '#transformers/moderation_case_transformer'
 import {
   adminListCasesValidator,
@@ -113,7 +113,10 @@ export default class AdminModerationCasesController {
     return await serialize(ModerationCaseTransformer.transform(moderationCase))
   }
 
-  /** The conversation uuid and each message's rule hits, for the moderator's view. */
+  /**
+   * The conversation uuid and each message's rule hits, links (with their
+   * reputation) and attachments, for the moderator's view.
+   */
   private async attachContext(cases: ModerationCase[]) {
     const messages = cases.map((moderationCase) => moderationCase.message).filter(Boolean)
     if (messages.length === 0) {
@@ -123,25 +126,13 @@ export default class AdminModerationCasesController {
       'id',
       messages.map((message) => message.conversationId)
     )
-    const hits = await ModerationRuleHit.query().whereIn(
-      'messageId',
-      messages.map((message) => message.id)
-    )
+    await loadReviewDetails(messages)
     for (const moderationCase of cases) {
       const message = moderationCase.message
       if (!message) continue
       moderationCase.$extras.conversationUuid =
         conversations.find((conversation) => conversation.id === message.conversationId)?.uuid ??
         null
-      message.$extras.ruleHits = hits
-        .filter((hit) => hit.messageId === message.id)
-        .map((hit) => ({
-          ruleId: hit.ruleId,
-          ruleVersion: hit.ruleVersion,
-          action: hit.action,
-          shadow: hit.shadow,
-          evidence: hit.evidence,
-        }))
     }
   }
 }

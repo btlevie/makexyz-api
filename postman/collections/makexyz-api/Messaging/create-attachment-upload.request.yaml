@@ -1,0 +1,16 @@
+$kind: http-request
+name: 'Create Attachment Upload'
+method: POST
+url: '{{base_url}}/conversations/{{conversation_uuid}}/attachments'
+order: 8000
+description: 'Step 1 of sending a file: returns the attachment and a presigned S3 PUT (upload.url) into a quarantine prefix. PUT the file there with exactly sizeBytes bytes (Content-Length is signed), then call Complete Attachment Upload. Allowed: png, jpg, jpeg, webp, pdf, stl, obj, dxf, off, ply, 3ds, wrl, step, stp, igs, iges (no archives); up to 50 MB. 422 for other types/sizes, 409 with too many unsent attachments.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "fileName": "bracket.step",
+      "sizeBytes": 20480
+    }

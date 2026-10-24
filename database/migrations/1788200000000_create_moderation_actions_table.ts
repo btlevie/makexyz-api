@@ -35,6 +35,8 @@ export default class extends BaseSchema {
           'term_added',
           'term_updated',
           'term_disabled',
+          // URL allow/block/user-content list changes (url_domains).
+          'domain_list_updated',
         ])
         .notNullable()
       // What was acted on: 'message' + uuid, 'customer'/'vendor' + uuid,

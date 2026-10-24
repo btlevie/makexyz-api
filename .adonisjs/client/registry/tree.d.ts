@@ -89,9 +89,17 @@ export interface ApiDefinition {
     messageReports: {
       store: typeof routes['messaging.message_reports.store']
     }
+    conversationAttachments: {
+      store: typeof routes['messaging.conversation_attachments.store']
+      complete: typeof routes['messaging.conversation_attachments.complete']
+      show: typeof routes['messaging.conversation_attachments.show']
+    }
     inquiries: {
       store: typeof routes['messaging.inquiries.store']
     }
+  }
+  links: {
+    show: typeof routes['links.show']
   }
   shippingOptions: {
     index: typeof routes['shipping_options.index']
@@ -188,6 +196,13 @@ export interface ApiDefinition {
       store: typeof routes['admin.admin_moderation_terms.store']
       preview: typeof routes['admin.admin_moderation_terms.preview']
       update: typeof routes['admin.admin_moderation_terms.update']
+    }
+    adminUrlDomains: {
+      index: typeof routes['admin.admin_url_domains.index']
+      update: typeof routes['admin.admin_url_domains.update']
+    }
+    adminAttachments: {
+      show: typeof routes['admin.admin_attachments.show']
     }
   }
   webhooks: {

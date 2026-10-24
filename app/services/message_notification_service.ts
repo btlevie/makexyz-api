@@ -15,6 +15,7 @@ import Conversation from '#models/conversation'
 import ConversationParticipant from '#models/conversation_participant'
 import Customer from '#models/customer'
 import Message from '#models/message'
+import MessageUrl from '#models/message_url'
 import User from '#models/user'
 import Vendor from '#models/vendor'
 import { effectiveTrustTier } from '#services/messaging_risk_service'
@@ -102,9 +103,30 @@ async function previewsFor(
     const sender = message.senderParticipantId
       ? await ConversationParticipant.find(message.senderParticipantId)
       : null
-    previews.push({ from: sender?.displayName ?? 'MakeXYZ', body: message.body })
+    previews.push({ from: sender?.displayName ?? 'MakeXYZ', body: await withSafeLinks(message) })
   }
   return previews
+}
+
+/**
+ * The body with every link swapped for its interstitial (LINKS_URL/<token>),
+ * so an email never carries a raw URL - a link taken down later can't be
+ * followed from someone's inbox. With no interstitial configured, links are
+ * replaced by a placeholder rather than sent raw.
+ */
+async function withSafeLinks(message: Message): Promise<string> {
+  const links = await MessageUrl.query().where('messageId', message.id)
+  if (links.length === 0) return message.body
+  const base = env.get('LINKS_URL')
+  let body = message.body
+  // Longest first, so a link that contains another is replaced whole. Matches
+  // come from the lowercased text view, hence case-insensitive.
+  for (const link of links.sort((a, b) => b.match.length - a.match.length)) {
+    const replacement = base ? `${base}/${link.token}` : '[link - view it on MakeXYZ]'
+    const pattern = new RegExp(link.match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+    body = body.replace(pattern, () => replacement)
+  }
+  return body
 }
 
 function conversationUrl(conversation: Conversation): string | null {

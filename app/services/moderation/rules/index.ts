@@ -7,12 +7,17 @@
  *
  * Launch posture (docs/plans/messaging_moderation.md, Step 2): only the
  * near-certain rules enforce - contact details, crypto/bank details, the
- * unknown-link hold, and unambiguous prohibited items. Everything else runs
- * in shadow until live data shows it's precise enough to promote.
+ * link-safety rules (Step 3: unknown links are held for automated analysis,
+ * malicious ones blocked), attachment scanning, and unambiguous prohibited
+ * items. Everything else runs in shadow until live data shows it's precise
+ * enough to promote.
  */
 import type { ModerationRule } from '#services/moderation/types'
 import abuseHarassmentCandidate from '#services/moderation/rules/abuse_harassment_candidate'
 import abuseThreatLexicon from '#services/moderation/rules/abuse_threat_lexicon'
+import attachmentPending from '#services/moderation/rules/attachment_pending'
+import attachmentRejected from '#services/moderation/rules/attachment_rejected'
+import attachmentUnverified from '#services/moderation/rules/attachment_unverified'
 import adPromoLanguage from '#services/moderation/rules/ad_promo_language'
 import adUnrelatedUrl from '#services/moderation/rules/ad_unrelated_url'
 import contactEmail from '#services/moderation/rules/contact_email'
@@ -37,7 +42,14 @@ import prohibitedDrugs from '#services/moderation/rules/prohibited_drugs'
 import prohibitedFirearm from '#services/moderation/rules/prohibited_firearm'
 import prohibitedWeapon from '#services/moderation/rules/prohibited_weapon'
 import spamDuplicateCrossConversation from '#services/moderation/rules/spam_duplicate_cross_conversation'
-import urlNonAllowlisted from '#services/moderation/rules/url_non_allowlisted'
+import urlDangerousFile from '#services/moderation/rules/url_dangerous_file'
+import urlIpLiteral from '#services/moderation/rules/url_ip_literal'
+import urlReputationUnknown from '#services/moderation/rules/url_reputation_unknown'
+import urlSuspiciousShape from '#services/moderation/rules/url_suspicious_shape'
+import urlUnsafe from '#services/moderation/rules/url_unsafe'
+import urlUnverified from '#services/moderation/rules/url_unverified'
+import urlUserContentFromVendor from '#services/moderation/rules/url_user_content_from_vendor'
+import urlYoungDomain from '#services/moderation/rules/url_young_domain'
 
 export const RULES: ModerationRule<any>[] = [
   // Contact details and moving off-platform
@@ -59,8 +71,20 @@ export const RULES: ModerationRule<any>[] = [
   prohibitedWeapon,
   prohibitedDrugs,
   prohibitedCounterfeitFraud,
-  // Links, advertising and spam
-  urlNonAllowlisted,
+  // Links
+  urlUnsafe,
+  urlDangerousFile,
+  urlUnverified,
+  urlReputationUnknown,
+  urlYoungDomain,
+  urlUserContentFromVendor,
+  urlIpLiteral,
+  urlSuspiciousShape,
+  // Attachments
+  attachmentRejected,
+  attachmentPending,
+  attachmentUnverified,
+  // Advertising and spam
   adPromoLanguage,
   adUnrelatedUrl,
   spamDuplicateCrossConversation,

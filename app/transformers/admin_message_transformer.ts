@@ -2,9 +2,10 @@ import { BaseTransformer } from '@adonisjs/core/transformers'
 import type Message from '#models/message'
 
 /**
- * A message as an admin sees it: every status, the internal reason code and
- * the rules that fired (when `ruleHits` is preloaded on $extras by the
- * controller), so a moderator can see why it was held, blocked or let through.
+ * A message as an admin sees it: every status, the internal reason code, the
+ * rules that fired, its links with their reputation and its attachments with
+ * what the checks found (all set on $extras by message_review_details.ts), so
+ * a moderator can see why it was held, blocked or let through.
  */
 export default class AdminMessageTransformer extends BaseTransformer<Message> {
   toObject() {
@@ -26,6 +27,19 @@ export default class AdminMessageTransformer extends BaseTransformer<Message> {
         action: string
         shadow: boolean
         evidence: unknown
+      }[],
+      links: (message.$extras.links ?? []) as {
+        url: string
+        domain: string
+        source: string
+        scan: Record<string, unknown> | null
+      }[],
+      attachments: (message.$extras.attachments ?? []) as {
+        uuid: string
+        fileName: string
+        status: string
+        rejectReason: string | null
+        scanDetails: unknown
       }[],
       createdAt: message.createdAt,
       deliveredAt: message.deliveredAt,

@@ -12,8 +12,14 @@ import { buildViews } from '#services/moderation/normalizer'
 import { extractSignals } from '#services/moderation/extractors'
 import { combine, type FiredRule } from '#services/moderation/combiner'
 import { getActiveRules } from '#services/moderation/rule_registry'
+import {
+  getEffectiveDomainLists,
+  type EffectiveDomainLists,
+} from '#services/moderation/url/domain_registry'
+import { lookupScans } from '#services/moderation/url/scan_lookup'
 import type { TrustTier } from '#services/messaging_risk_service'
 import type {
+  AttachmentSignal,
   Channel,
   ConversationContext,
   Decision,
@@ -27,7 +33,7 @@ import type {
 } from '#services/moderation/types'
 
 /** Bumped when the normalizer or extractors change, so old evaluations stay explainable. */
-export const PIPELINE_VERSION = '2'
+export const PIPELINE_VERSION = '3'
 
 const NO_HISTORY: HistoryLookups = { sameTextOtherConversations: 0, sameTextOtherSenders: 0 }
 
@@ -39,6 +45,16 @@ export interface ModerationInput {
   trustTier?: TrustTier
   /** Behavioral lookups keyed by the normalized text's hash (see message_service.ts). */
   history?: (contentHash: string) => Promise<HistoryLookups>
+  /** Files sent with the message. Their names are moderated with the text. */
+  attachments?: AttachmentSignal[]
+  /**
+   * Text found inside attachments - decoded QR codes, PDF link targets.
+   * Moderated with the message, so a QR code with a phone number is still
+   * contact sharing and its links go through the URL rules.
+   */
+  attachmentText?: string[]
+  /** Defaults to the effective lists (built-ins + url_domains). */
+  domainLists?: EffectiveDomainLists
 }
 
 export interface HitRecord {
@@ -74,8 +90,27 @@ export function hashNormalized(normalized: string): string {
 
 export async function moderateMessage(input: ModerationInput): Promise<ModerationOutcome> {
   const startedAt = performance.now()
-  const views = buildViews(input.text)
-  const signals = extractSignals(views)
+  const attachments = input.attachments ?? []
+  const attachmentText = input.attachmentText ?? []
+  // File names are moderated as text: "call me 555 0123.pdf" is still contact sharing.
+  const views = buildViews(
+    [input.text, ...attachments.map((file) => file.fileName), ...attachmentText].join('\n')
+  )
+  const lists = input.domainLists ?? (await getEffectiveDomainLists())
+  const signals = extractSignals(views, lists)
+  signals.attachments = attachments
+  if (attachmentText.length > 0) {
+    const body = buildViews(input.text)
+    for (const url of signals.urls) {
+      const inBody =
+        body.deobfuscated.includes(url.match) || body.raw.toLowerCase().includes(url.match)
+      url.source = inBody ? 'text' : 'attachment'
+    }
+  }
+  const scans = await lookupScans(signals.urls, lists)
+  for (const url of signals.urls) {
+    url.scan = scans.get(url.hash) ?? null
+  }
   const contentHash = hashNormalized(views.normalized)
   const history = input.history ? await input.history(contentHash) : NO_HISTORY
 
@@ -86,6 +121,7 @@ export async function moderateMessage(input: ModerationInput): Promise<Moderatio
     channel: input.channel,
     conversation: input.conversation,
     history,
+    trustTier: input.trustTier ?? 'standard',
   }
 
   const activeRules = await getActiveRules()

@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Get Attachment'
+method: GET
+url: '{{base_url}}/conversations/{{conversation_uuid}}/attachments/{{attachment_uuid}}'
+order: 10000
+description: 'The attachment''s status and, once clean, a 5-minute download link (forces download). The uploader can always see it; others only once it is clean and its message was delivered (404 otherwise).'

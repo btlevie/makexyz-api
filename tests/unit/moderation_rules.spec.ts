@@ -2,7 +2,7 @@ import { test } from '@japa/runner'
 import { combine } from '#services/moderation/combiner'
 import contactEmail from '#services/moderation/rules/contact_email'
 import contactPhone from '#services/moderation/rules/contact_phone'
-import urlNonAllowlisted from '#services/moderation/rules/url_non_allowlisted'
+import urlUnverified from '#services/moderation/rules/url_unverified'
 import { run } from '#tests/helpers/moderation'
 
 test.group('Moderation rule: contact.email', () => {
@@ -78,8 +78,8 @@ test.group('Moderation rule: contact.phone', () => {
     })
 })
 
-test.group('Moderation rule: url.any_non_allowlisted_holds', () => {
-  test('holds a link to an unknown domain: {$self}')
+test.group('Moderation rule: url.unverified', () => {
+  test('holds a link to an unknown domain for analysis: {$self}')
     .with([
       'See https://my-print-shop.example.net/deals',
       'check myshop.xyz for more',
@@ -87,8 +87,8 @@ test.group('Moderation rule: url.any_non_allowlisted_holds', () => {
       'www.some-random-store.com',
     ])
     .run(({ assert }, text) => {
-      const result = run(urlNonAllowlisted, text)
-      assert.equal(result?.action, 'review')
+      const result = run(urlUnverified, text)
+      assert.equal(result?.action, 'hold')
       assert.equal(result?.reasonCode, 'url.unverified')
     })
 
@@ -99,7 +99,7 @@ test.group('Moderation rule: url.any_non_allowlisted_holds', () => {
       'thingiverse.com/thing:4242',
     ])
     .run(({ assert }, text) => {
-      assert.isNull(run(urlNonAllowlisted, text))
+      assert.isNull(run(urlUnverified, text))
     })
 
   test('ignores text without links: {$self}')
@@ -110,13 +110,13 @@ test.group('Moderation rule: url.any_non_allowlisted_holds', () => {
       'Tolerance ±0.05 mm on the M3 holes',
     ])
     .run(({ assert }, text) => {
-      assert.isNull(run(urlNonAllowlisted, text))
+      assert.isNull(run(urlUnverified, text))
     })
 
   test('a file-extension TLD still counts with a path or www: {$self}')
     .with(['grab it at files.zip/download', 'www.cheap-parts.zip'])
     .run(({ assert }, text) => {
-      assert.equal(run(urlNonAllowlisted, text)?.action, 'review')
+      assert.equal(run(urlUnverified, text)?.action, 'hold')
     })
 })
 
@@ -128,6 +128,16 @@ test.group('Moderation combiner', () => {
     ])
     assert.equal(combined.decision, 'block')
     assert.equal(combined.decidedBy?.ruleId, 'b')
+  })
+
+  test('hold outranks review but not block', ({ assert }) => {
+    const hit = (ruleId: string, action: 'review' | 'hold' | 'block') => ({
+      ruleId,
+      result: { action, reasonCode: ruleId, evidence: [] },
+      shadow: false,
+    })
+    assert.equal(combine([hit('a', 'review'), hit('b', 'hold')]).decision, 'hold')
+    assert.equal(combine([hit('a', 'hold'), hit('b', 'block')]).decision, 'block')
   })
 
   test('shadow hits never affect the decision', ({ assert }) => {

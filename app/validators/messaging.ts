@@ -15,9 +15,20 @@ function clientMessageId() {
   return vine.string().uuid()
 }
 
+/**
+ * The body may be empty when files are attached (the controller requires one
+ * or the other). Attachments are uploaded first and referenced by uuid.
+ */
 export const sendMessageValidator = vine.create({
-  body: messageBody(),
+  body: vine.string().trim().maxLength(MAX_MESSAGE_LENGTH).optional(),
   clientMessageId: clientMessageId(),
+  attachmentUuids: vine.array(vine.string().uuid()).maxLength(5).distinct().optional(),
+})
+
+export const createAttachmentValidator = vine.create({
+  fileName: vine.string().trim().minLength(1).maxLength(255),
+  // Checked again against the uploaded object; signed into the upload URL.
+  sizeBytes: vine.number().withoutDecimals().min(1),
 })
 
 export const createInquiryValidator = vine.create({
@@ -96,6 +107,17 @@ export const updateTermValidator = vine.create({
 export const previewTermValidator = vine.create({
   category: vine.enum(TERM_CATEGORIES),
   term: vine.string().trim().minLength(2).maxLength(60),
+})
+
+export const listDomainsValidator = vine.create({
+  list: vine.enum(['allow', 'block', 'user_content', 'none']).optional(),
+  q: vine.string().trim().maxLength(253).optional(),
+})
+
+export const updateDomainValidator = vine.create({
+  // null removes the override, so the built-in lists apply again.
+  listStatus: vine.enum(['allow', 'block', 'user_content', 'none']).nullable(),
+  note: vine.string().trim().maxLength(1000).optional(),
 })
 
 export const restrictSubjectValidator = vine.create({

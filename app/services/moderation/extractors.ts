@@ -10,8 +10,15 @@
 import { LinkifyIt } from 'linkify-it'
 import { findPhoneNumbersInText } from 'libphonenumber-js/max'
 import { englishDataset, englishRecommendedTransformers, RegExpMatcher } from 'obscenity'
-import { getDomain, parse } from 'tldts'
-import { isAllowlistedDomain } from '#services/moderation/allowlist'
+import { parse } from 'tldts'
+import { INVISIBLE_CHARACTERS } from '#services/moderation/normalizer'
+import {
+  BUILTIN_LISTS,
+  listStatusFor,
+  type EffectiveDomainLists,
+} from '#services/moderation/url/domain_registry'
+import { normalizeUrl } from '#services/moderation/url/normalize'
+import { staticFlags } from '#services/moderation/url/static_checks'
 import {
   isValidAbaRouting,
   isValidBase58Check,
@@ -83,15 +90,6 @@ export function extractPhones(views: TextViews): ExtractedPhone[] {
 
 const linkify = new LinkifyIt({ fuzzyLink: true, fuzzyEmail: false, fuzzyIP: true })
 
-/** Hostname of a linkify match, IDN-encoded (punycode) by the URL parser. */
-function hostnameOf(url: string): string | null {
-  try {
-    return new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(url) ? url : `http://${url}`).hostname
-  } catch {
-    return null
-  }
-}
-
 /**
  * Bare domains ("myshop.xyz"), checked against the full public suffix list.
  * linkify's fuzzy matching only knows a short TLD list, so newer or cheap
@@ -107,36 +105,76 @@ const BARE_DOMAIN_PATTERN =
  */
 const FILE_EXTENSION_TLDS = new Set(['zip', 'mov', 'app', 'py', 'sh', 'md', 'rs', 'pl'])
 
-/** URLs, including scheme-less ones ("example.shop/deal") and defanged ones. */
-export function extractUrls(views: TextViews): ExtractedUrl[] {
+/**
+ * One extracted link: normalized, put on its domain list, shape-checked.
+ * `scan` is filled in later by the pipeline from url_scans.
+ */
+export function assessUrl(
+  match: string,
+  rawUrl: string,
+  lists: EffectiveDomainLists,
+  source: ExtractedUrl['source'] = 'text'
+): ExtractedUrl | null {
+  const normalized = normalizeUrl(rawUrl)
+  if (!normalized) {
+    return null
+  }
+  const list = listStatusFor(normalized.hostname, lists).status
+  return {
+    match,
+    url: normalized.url,
+    hash: normalized.hash,
+    hostname: normalized.hostname,
+    registrableDomain: normalized.registrableDomain,
+    list,
+    allowlisted: list === 'allow',
+    flags: staticFlags(normalized, lists.allowDomains),
+    source,
+    scan: null,
+  }
+}
+
+/** The text with only NFKC and invisible-character removal - look-alikes left as written. */
+function unfolded(views: TextViews): string {
+  return views.raw.normalize('NFKC').replace(INVISIBLE_CHARACTERS, '').toLowerCase()
+}
+
+/**
+ * URLs, including scheme-less ones ("example.shop/deal") and defanged ones.
+ * The text views fold look-alike characters to Latin, which is right for
+ * reading words but would turn the homograph "makexуz.com" (Cyrillic у) into
+ * the real makexyz.com - so links are also read from the unfolded text, and
+ * any internationalized host found there is kept as written.
+ */
+export function extractUrls(
+  views: TextViews,
+  lists: EffectiveDomainLists = BUILTIN_LISTS
+): ExtractedUrl[] {
   const found = new Map<string, ExtractedUrl>()
-  const add = (key: string, match: string, hostname: string) => {
-    const registrableDomain = getDomain(hostname)
-    if (found.has(key) || [...found.values()].some((url) => url.hostname === hostname)) {
-      return
+  const add = (match: string, rawUrl: string) => {
+    const url = assessUrl(match, rawUrl, lists)
+    if (url && !found.has(url.url)) {
+      found.set(url.url, url)
     }
-    found.set(key, {
-      match,
-      hostname,
-      registrableDomain,
-      allowlisted: isAllowlistedDomain(registrableDomain),
-    })
   }
 
   for (const match of linkify.match(views.deobfuscated) ?? []) {
-    if (match.schema === 'mailto:') {
-      continue
-    }
-    const hostname = hostnameOf(match.url)
-    if (hostname) {
-      add(match.url, match.raw, hostname)
+    if (match.schema !== 'mailto:') {
+      add(match.raw, match.url)
     }
   }
 
+  for (const match of linkify.match(unfolded(views)) ?? []) {
+    if (match.schema !== 'mailto:' && /\P{ASCII}/u.test(match.raw)) {
+      add(match.raw, match.url)
+    }
+  }
+
+  const hostnames = new Set([...found.values()].map((url) => url.hostname))
   for (const match of views.deobfuscated.matchAll(BARE_DOMAIN_PATTERN)) {
     const hostname = match[0]
     const parsed = parse(hostname)
-    if (!parsed.isIcann || !parsed.domain) {
+    if (!parsed.isIcann || !parsed.domain || hostnames.has(hostname)) {
       continue
     }
     const followedByPath = views.deobfuscated[match.index + hostname.length] === '/'
@@ -147,7 +185,7 @@ export function extractUrls(views: TextViews): ExtractedUrl[] {
     ) {
       continue
     }
-    add(hostname, hostname, hostname)
+    add(hostname, hostname)
   }
 
   return [...found.values()]
@@ -272,16 +310,20 @@ export function extractProfanity(views: TextViews): ProfanitySignal {
   return { count: matches.length, directed, terms: [...new Set(terms)] }
 }
 
-export function extractSignals(views: TextViews): Signals {
+export function extractSignals(
+  views: TextViews,
+  lists: EffectiveDomainLists = BUILTIN_LISTS
+): Signals {
   const phones = extractPhones(views)
   return {
     emails: extractEmails(views),
     phones,
-    urls: extractUrls(views),
+    urls: extractUrls(views, lists),
     handles: extractHandles(views),
     cryptoAddresses: extractCryptoAddresses(views),
     bankDetails: extractBankDetails(views),
     digitRuns: extractDigitRuns(views, phones),
     profanity: extractProfanity(views),
+    attachments: [],
   }
 }

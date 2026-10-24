@@ -270,11 +270,35 @@ const routes = {
     tokens: [{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"messages","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":1,"val":"messageUuid","end":""},{"old":"/v1/conversations/:uuid/messages/:messageUuid/report","type":0,"val":"report","end":""}],
     types: placeholder as Registry['messaging.message_reports.store']['types'],
   },
+  'messaging.conversation_attachments.store': {
+    methods: ["POST"],
+    pattern: '/v1/conversations/:uuid/attachments',
+    tokens: [{"old":"/v1/conversations/:uuid/attachments","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/attachments","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/attachments","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/attachments","type":0,"val":"attachments","end":""}],
+    types: placeholder as Registry['messaging.conversation_attachments.store']['types'],
+  },
+  'messaging.conversation_attachments.complete': {
+    methods: ["POST"],
+    pattern: '/v1/conversations/:uuid/attachments/:attachmentUuid/complete',
+    tokens: [{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid/complete","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid/complete","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid/complete","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid/complete","type":0,"val":"attachments","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid/complete","type":1,"val":"attachmentUuid","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid/complete","type":0,"val":"complete","end":""}],
+    types: placeholder as Registry['messaging.conversation_attachments.complete']['types'],
+  },
+  'messaging.conversation_attachments.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/conversations/:uuid/attachments/:attachmentUuid',
+    tokens: [{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid","type":0,"val":"v1","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid","type":0,"val":"conversations","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid","type":1,"val":"uuid","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid","type":0,"val":"attachments","end":""},{"old":"/v1/conversations/:uuid/attachments/:attachmentUuid","type":1,"val":"attachmentUuid","end":""}],
+    types: placeholder as Registry['messaging.conversation_attachments.show']['types'],
+  },
   'messaging.inquiries.store': {
     methods: ["POST"],
     pattern: '/v1/vendors/:vendorUuid/inquiries',
     tokens: [{"old":"/v1/vendors/:vendorUuid/inquiries","type":0,"val":"v1","end":""},{"old":"/v1/vendors/:vendorUuid/inquiries","type":0,"val":"vendors","end":""},{"old":"/v1/vendors/:vendorUuid/inquiries","type":1,"val":"vendorUuid","end":""},{"old":"/v1/vendors/:vendorUuid/inquiries","type":0,"val":"inquiries","end":""}],
     types: placeholder as Registry['messaging.inquiries.store']['types'],
+  },
+  'links.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/links/:token',
+    tokens: [{"old":"/v1/links/:token","type":0,"val":"v1","end":""},{"old":"/v1/links/:token","type":0,"val":"links","end":""},{"old":"/v1/links/:token","type":1,"val":"token","end":""}],
+    types: placeholder as Registry['links.show']['types'],
   },
   'shipping_options.index': {
     methods: ["GET","HEAD"],
@@ -641,6 +665,24 @@ const routes = {
     pattern: '/v1/admin/moderation/terms/:uuid',
     tokens: [{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":0,"val":"terms","end":""},{"old":"/v1/admin/moderation/terms/:uuid","type":1,"val":"uuid","end":""}],
     types: placeholder as Registry['admin.admin_moderation_terms.update']['types'],
+  },
+  'admin.admin_url_domains.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/moderation/domains',
+    tokens: [{"old":"/v1/admin/moderation/domains","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/domains","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/domains","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/domains","type":0,"val":"domains","end":""}],
+    types: placeholder as Registry['admin.admin_url_domains.index']['types'],
+  },
+  'admin.admin_url_domains.update': {
+    methods: ["PUT"],
+    pattern: '/v1/admin/moderation/domains/:domain',
+    tokens: [{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"v1","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"admin","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"moderation","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":0,"val":"domains","end":""},{"old":"/v1/admin/moderation/domains/:domain","type":1,"val":"domain","end":""}],
+    types: placeholder as Registry['admin.admin_url_domains.update']['types'],
+  },
+  'admin.admin_attachments.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/admin/attachments/:uuid',
+    tokens: [{"old":"/v1/admin/attachments/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/admin/attachments/:uuid","type":0,"val":"admin","end":""},{"old":"/v1/admin/attachments/:uuid","type":0,"val":"attachments","end":""},{"old":"/v1/admin/attachments/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['admin.admin_attachments.show']['types'],
   },
   'webhooks.stripe_webhooks': {
     methods: ["POST"],

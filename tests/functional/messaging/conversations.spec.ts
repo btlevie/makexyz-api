@@ -121,7 +121,7 @@ test.group('Messaging: conversations', (group) => {
     held.assertStatus(201)
     assert.equal(dataOf(blocked).status, 'blocked')
     assert.match(dataOf(blocked).reason, /phone numbers/)
-    assert.equal(dataOf(held).status, 'pending_review')
+    assert.equal(dataOf(held).status, 'held')
 
     const customerView = await client
       .get(`/v1/conversations/${uuid}/messages`)
@@ -139,7 +139,7 @@ test.group('Messaging: conversations', (group) => {
       [
         [1, 'delivered'],
         [2, 'blocked'],
-        [3, 'pending_review'],
+        [3, 'held'],
       ]
     )
   })

@@ -2,7 +2,8 @@
  * The human review queue (see docs/plans/messaging_moderation.md, "Human
  * moderation"). A moderator can:
  * - approve a case's message (a held message is delivered, keeping its
- *   original place in the thread);
+ *   original place in the thread, and attachments the scanner couldn't
+ *   check become downloadable);
  * - block it (held -> blocked; already delivered -> removed, shown to the
  *   recipient as a tombstone);
  * - restrict or suspend the sender's messaging, or lift that.
@@ -21,6 +22,7 @@ import type User from '#models/user'
 import Vendor from '#models/vendor'
 import { conversationChannel, deliverHeldMessage } from '#services/message_service'
 import { recordModerationAction } from '#services/moderation_action_service'
+import { approveAttachments } from '#services/attachment_service'
 
 export const MODERATOR_BLOCK_REASON =
   "This message wasn't delivered because it doesn't follow MakeXYZ's messaging rules."
@@ -62,6 +64,8 @@ export async function approveCase(moderationCase: ModerationCase, moderator: Use
 
   const message = moderationCase.messageId ? await Message.find(moderationCase.messageId) : null
   if (message && (message.status === 'pending_review' || message.status === 'held')) {
+    // Attachments the scanner couldn't vouch for were part of what was reviewed.
+    await approveAttachments(message)
     await deliverHeldMessage(message)
   }
 
