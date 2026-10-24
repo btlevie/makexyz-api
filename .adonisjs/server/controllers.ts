@@ -9,6 +9,7 @@ export const controllers = {
   AdminAttachments: () => import('#controllers/admin_attachments_controller'),
   AdminConversations: () => import('#controllers/admin_conversations_controller'),
   AdminInvitations: () => import('#controllers/admin_invitations_controller'),
+  AdminLlmModeration: () => import('#controllers/admin_llm_moderation_controller'),
   AdminMessagingProfiles: () => import('#controllers/admin_messaging_profiles_controller'),
   AdminModerationCases: () => import('#controllers/admin_moderation_cases_controller'),
   AdminModerationRules: () => import('#controllers/admin_moderation_rules_controller'),

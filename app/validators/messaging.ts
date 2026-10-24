@@ -141,6 +141,10 @@ export const adminListProfilesValidator = vine.create({
   held: vine.boolean().optional(),
 })
 
+export const llmStatsValidator = vine.create({
+  days: vine.number().withoutDecimals().range([1, 90]).optional(),
+})
+
 export const adminListCasesValidator = vine.create({
   status: vine.enum(['open', 'claimed', 'resolved']).optional(),
 })

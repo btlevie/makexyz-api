@@ -700,6 +700,20 @@ At send time the rules also see:
 
 Each day, `DetectBehaviorPatterns` opens cases for new accounts converging on one unlisted domain, and for vendors reported far more than their peers. `SampleAuditMessages` queues a small random sample of unflagged delivered messages, so moderators can find what the rules miss. Behavioral cases carry `details`, and `dedup_key` keeps them to one open case per pattern. Admins see profiles at `/v1/admin/moderation/profiles`.
 
+**LLM-assisted moderation.** Only messages the rules *escalated* (ambiguous, never blocked) reach Claude, which runs on Amazon Bedrock through the default AWS credentials, in `BEDROCK_REGION`. `LLM_MODERATION_MODE` sets what happens:
+* **`off`** (the default): escalations go to a person.
+* **`shadow`**: a person still decides, and the verdict is recorded alongside for comparison.
+* **`enforce`**: an escalation is held, and the verdict decides:
+  * an allow with confidence of at least 0.85 delivers;
+  * a block with confidence of at least 0.95, in contact, payment, spam or scam, blocks without a reason;
+  * everything else goes to a person, including any harassment or threat, any suspected prompt injection, a refusal, an error or a malformed reply.
+
+The model gets pseudonymized context: roles and relative times, never names, emails, phones or totals. That covers the last 10 messages (withheld ones as placeholders), the deal phase, the sender's counters, the rules that fired and the link verdicts. The content is wrapped in per-request delimiters.
+
+Each sender is limited to 10 calls an hour. The same text from the same sender within a day reuses the earlier verdict.
+
+Verdicts, token usage and estimated cost are stored in `moderation_evaluations.llm`. `/v1/admin/moderation/llm-stats` reports calls, cost, failures, and agreement with moderators' decisions. Run `node ace moderation:llm-eval` against the labelled set in `tests/fixtures/moderation/llm_eval.json` before enforcing.
+
 **Lifecycle.** An inquiry becomes `read_only` after 60 days without messages (the customer can reopen it by posting within 90 days), or when the vendor declines or blocks. An order thread stops accepting messages as soon as its order is refunded, cancelled, reassigned, or delivered more than 14 days ago. The hourly `CloseExpiredConversations` job records that as `read_only`.
 
 **Notifications.** A delivered message schedules one debounced email per recipient, about 3 minutes later, covering everything they haven't read or been emailed about (`conversation_participants.last_notified_seq`). Message text is only included when every message in the email is delivered, unflagged and from an established sender.

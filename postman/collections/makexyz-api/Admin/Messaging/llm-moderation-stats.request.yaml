@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'LLM Moderation Stats'
+method: GET
+url: '{{base_url}}/admin/moderation/llm-stats?days=7'
+order: 17000
+description: 'LLM-assisted moderation over the last N days (1-90, default 7): the mode in force (off, shadow, enforce), calls made, verdicts reused, calls skipped for the per-sender budget, failures by type (refusal, error, malformed, max_tokens), outcomes (allow, review, block), tokens (including cache reads), estimated cost in USD, average latency, and how often the LLM outcome matched the moderator decision on resolved cases - the evidence for moving from shadow to enforce.'

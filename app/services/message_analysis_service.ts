@@ -28,6 +28,7 @@ import {
   GENERIC_BLOCK_REASON,
   openMessageCase,
   queueAnalysis,
+  queueShadowReview,
   recordEvaluation,
   recordMessageUrls,
   statusFor,
@@ -35,7 +36,13 @@ import {
 import { behaviorLookups } from '#services/behavior_signal_service'
 import { effectiveTrustTier, noteBlockedAttempt } from '#services/messaging_risk_service'
 import type { HistoryKeys } from '#services/moderation/types'
-import { moderateMessage, type ModerationOutcome } from '#services/moderation/pipeline'
+import {
+  moderateMessage,
+  type ModerationInput,
+  type ModerationOutcome,
+} from '#services/moderation/pipeline'
+import { classifyEscalation, llmMode, type LlmDecision } from '#services/llm_moderation_service'
+import type { TrustTier } from '#services/messaging_risk_service'
 import { analyzeUrl } from '#services/url_analysis_service'
 
 /** A held message older than this gets a final pass by SweepHeldMessages. */
@@ -59,26 +66,31 @@ export async function releaseHeldMessage(messageId: number, reasonCode: string) 
 async function applyOutcome(
   messageId: number,
   outcome: ModerationOutcome,
-  status: Message['status']
+  status: Message['status'],
+  llm?: LlmDecision
 ): Promise<Message | null> {
+  const reasonCode = llm?.reasonCode ?? outcome.reasonCode
   const message = await db.transaction(async (trx) => {
     const locked = await Message.query({ client: trx }).where('id', messageId).forUpdate().first()
     // Someone else decided it meanwhile (a moderator, a parallel pass, a withdrawal).
     if (!locked || locked.status !== 'held') return null
 
-    await recordEvaluation(locked, outcome, trx, 'async')
+    await recordEvaluation(locked, outcome, trx, 'async', llm?.record ?? null)
     await recordMessageUrls(locked, outcome, trx)
 
     if (status === 'blocked') {
       locked.merge({
         status,
-        blockReasonCode: outcome.reasonCode,
-        userFacingReason: outcome.userFacingReason ?? GENERIC_BLOCK_REASON,
+        blockReasonCode: reasonCode,
+        // An LLM block never explains itself - like the spam and scam rules.
+        userFacingReason: llm
+          ? GENERIC_BLOCK_REASON
+          : (outcome.userFacingReason ?? GENERIC_BLOCK_REASON),
       })
       await locked.save()
       if (outcome.caseSource) await openMessageCase(locked, outcome.caseSource, trx)
     } else if (status === 'pending_review') {
-      locked.merge({ status, blockReasonCode: outcome.reasonCode ?? 'analysis_incomplete' })
+      locked.merge({ status, blockReasonCode: reasonCode ?? 'analysis_incomplete' })
       await locked.save()
       await openMessageCase(locked, 'auto_hold', trx)
     } else if (status === 'delivered_flagged') {
@@ -120,21 +132,7 @@ export async function analyzeHeldMessage(messageId: number, options: AnalyzeHeld
     return releaseHeldMessage(message.id, 'analysis_no_sender')
   }
   const conversation = await Conversation.findOrFail(message.conversationId)
-  const attachments = await MessageAttachment.query().where('messageId', message.id)
-  const tier = await effectiveTrustTier({
-    customerId: sender.customerId,
-    vendorId: sender.vendorId,
-  })
-
-  const input = {
-    text: message.body,
-    senderRole: sender.role,
-    channel: message.channel === 'email' ? ('email' as const) : ('web' as const),
-    conversation: await conversationContext(conversation),
-    trustTier: tier,
-    history: (keys: HistoryKeys) => behaviorLookups(sender, conversation.id, keys),
-    ...attachmentInputs(attachments),
-  }
+  const { input, tier } = await analysisInput(message, conversation, sender)
 
   // First pass finds the links still needing analysis; the second judges with the results.
   let outcome = await moderateMessage(input)
@@ -149,6 +147,22 @@ export async function analyzeHeldMessage(messageId: number, options: AnalyzeHeld
   }
 
   const restricted = tier === 'restricted' || tier === 'suspended'
+
+  // An escalation with the LLM enforcing: its verdict decides (section 4).
+  if (outcome.decision === 'escalate' && !restricted && llmMode() === 'enforce') {
+    const decision = await classifyEscalation({
+      message,
+      conversation,
+      sender,
+      outcome,
+      tier,
+      mode: 'enforce',
+    })
+    const llmStatus = LLM_STATUS[decision.outcome]
+    await applyOutcome(message.id, outcome, llmStatus, decision)
+    return
+  }
+
   let status = statusFor(outcome.decision, restricted)
   if (status === 'held') {
     if (!options.final) {
@@ -156,7 +170,41 @@ export async function analyzeHeldMessage(messageId: number, options: AnalyzeHeld
     }
     status = 'pending_review'
   }
-  await applyOutcome(message.id, outcome, status)
+  const applied = await applyOutcome(message.id, outcome, status)
+  if (applied && status === 'pending_review' && outcome.decision === 'escalate') {
+    await queueShadowReview(applied)
+  }
+}
+
+const LLM_STATUS: Record<LlmDecision['outcome'], Message['status']> = {
+  allow: 'delivered',
+  review: 'pending_review',
+  block: 'blocked',
+}
+
+/** The pipeline input for a stored message - shared by the async pass and the LLM shadow. */
+export async function analysisInput(
+  message: Message,
+  conversation: Conversation,
+  sender: ConversationParticipant
+): Promise<{ input: ModerationInput; tier: TrustTier }> {
+  const attachments = await MessageAttachment.query().where('messageId', message.id)
+  const tier = await effectiveTrustTier({
+    customerId: sender.customerId,
+    vendorId: sender.vendorId,
+  })
+  return {
+    tier,
+    input: {
+      text: message.body,
+      senderRole: sender.role,
+      channel: message.channel === 'email' ? 'email' : 'web',
+      conversation: await conversationContext(conversation, message),
+      trustTier: tier,
+      history: (keys: HistoryKeys) => behaviorLookups(sender, conversation.id, keys),
+      ...attachmentInputs(attachments),
+    },
+  }
 }
 
 /** Removes delivered messages containing a link that turned malicious, opening a case for each. */

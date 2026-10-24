@@ -204,6 +204,9 @@ export interface ApiDefinition {
     adminMessagingProfiles: {
       index: typeof routes['admin.admin_messaging_profiles.index']
     }
+    adminLlmModeration: {
+      stats: typeof routes['admin.admin_llm_moderation.stats']
+    }
     adminAttachments: {
       show: typeof routes['admin.admin_attachments.show']
     }

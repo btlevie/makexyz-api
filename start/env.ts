@@ -257,4 +257,29 @@ export default await Env.create(new URL('../', import.meta.url), {
   LINKS_URL: Env.schema.string.optionalWhen(() => process.env.NODE_ENV !== 'production'),
   WEB_RISK_API_KEY: Env.schema.string.optional(),
   ATTACHMENT_SCANNER: Env.schema.enum.optional(['guardduty', 'disabled'] as const),
+
+  /*
+  |----------------------------------------------------------
+  | LLM-assisted moderation (Claude on Amazon Bedrock)
+  |----------------------------------------------------------
+  | Auth is the default AWS credential chain (ECS task role / AWS_PROFILE) -
+  | no keys. BEDROCK_REGION is separate from AWS_REGION: pick one that serves
+  | the model (in-region or via a US cross-region profile). BEDROCK_MODEL_ID
+  | defaults to anthropic.claude-sonnet-5-5; set it to an inference-profile
+  | id if the account needs one.
+  |
+  | LLM_MODERATION_MODE: 'off' (default) - escalations go to a person, as
+  | before. 'shadow' - they still go to a person, and the LLM verdict is
+  | recorded alongside for comparison. 'enforce' - escalations are held and
+  | the verdict decides (confident allow delivers, confident block of a clear
+  | category blocks, anything else goes to a person). Run the offline eval
+  | (node ace moderation:llm-eval) before enforcing.
+  |
+  | LLM_SENDER_HOURLY_BUDGET caps calls per sender per hour (default 10);
+  | beyond it messages go straight to a person, so nobody can farm LLM spend.
+  */
+  BEDROCK_REGION: Env.schema.string.optional(),
+  BEDROCK_MODEL_ID: Env.schema.string.optional(),
+  LLM_MODERATION_MODE: Env.schema.enum.optional(['off', 'shadow', 'enforce'] as const),
+  LLM_SENDER_HOURLY_BUDGET: Env.schema.number.optional(),
 })

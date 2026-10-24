@@ -378,6 +378,8 @@ router
         router.put('moderation/domains/:domain', [controllers.AdminUrlDomains, 'update'])
         // Senders' messaging risk profiles: tiers, temporary holds, counters.
         router.get('moderation/profiles', [controllers.AdminMessagingProfiles, 'index'])
+        // LLM moderation: mode, calls, cost, and agreement with moderators.
+        router.get('moderation/llm-stats', [controllers.AdminLlmModeration, 'stats'])
         // Download an attachment under review (never a rejected one).
         router.get('attachments/:uuid', [controllers.AdminAttachments, 'show'])
       })

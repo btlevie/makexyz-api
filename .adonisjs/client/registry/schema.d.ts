@@ -1363,6 +1363,18 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_messaging_profiles_controller').default['index']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'admin.admin_llm_moderation.stats': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/llm-stats'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').llmStatsValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_llm_moderation_controller').default['stats']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_llm_moderation_controller').default['stats']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'admin.admin_attachments.show': {
     methods: ["GET","HEAD"]
     pattern: '/v1/admin/attachments/:uuid'

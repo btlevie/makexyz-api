@@ -31,6 +31,7 @@ import ModerationEvaluation from '#models/moderation_evaluation'
 import ModerationRuleHit from '#models/moderation_rule_hit'
 import Order from '#models/order'
 import AnalyzeMessage from '#jobs/analyze_message'
+import LlmShadowReview from '#jobs/llm_shadow_review'
 import { behaviorLookups } from '#services/behavior_signal_service'
 import { assertCanPost } from '#services/conversation_service'
 import { effectiveTrustTier, noteBlockedAttempt } from '#services/messaging_risk_service'
@@ -42,6 +43,7 @@ import {
 } from '#services/moderation/pipeline'
 import type { AttachmentSignal, ConversationContext, Decision } from '#services/moderation/types'
 import { recordDomainsSeen } from '#services/url_analysis_service'
+import { llmMode } from '#services/llm_moderation_service'
 
 /** Review-queue priority: lower sorts first. Someone waiting on a held message comes first. */
 const HELD_MESSAGE_PRIORITY = 10
@@ -83,19 +85,35 @@ export const GENERIC_BLOCK_REASON = "This message couldn't be delivered."
 /** A blocked prohibited-item message still goes to staff. */
 const PROHIBITED_ITEM_PRIORITY = 30
 
+/**
+ * The conversation as the rules see it. For a message already stored (the
+ * async pass) whether it opened the inquiry comes from its own seq, not from
+ * the conversation's current last seq.
+ */
 export async function conversationContext(
-  conversation: Conversation
+  conversation: Conversation,
+  message?: Pick<Message, 'seq'>
 ): Promise<ConversationContext> {
   const order = conversation.orderId ? await Order.find(conversation.orderId) : null
   return {
     kind: conversation.kind,
-    isFirstMessage: conversation.kind === 'inquiry' && conversation.lastSeq === 0,
+    isFirstMessage:
+      conversation.kind === 'inquiry' && (message ? message.seq === 1 : conversation.lastSeq === 0),
     orderStatus: order?.status ?? null,
   }
 }
 
-export function statusFor(decision: Decision, restricted: boolean): Message['status'] {
+/**
+ * With the LLM enforcing, an escalation is held for its verdict (the async
+ * pass, message_analysis_service.ts); otherwise a person decides.
+ */
+export function statusFor(
+  decision: Decision,
+  restricted: boolean,
+  llmEnforced = false
+): Message['status'] {
   if (decision === 'block') return 'blocked'
+  if (decision === 'escalate' && llmEnforced && !restricted) return 'held'
   if (decision === 'review' || decision === 'escalate' || restricted) return 'pending_review'
   if (decision === 'hold') return 'held'
   if (decision === 'flag') return 'delivered_flagged'
@@ -152,7 +170,8 @@ export async function recordEvaluation(
   message: Message,
   outcome: ModerationOutcome,
   trx: TransactionClientContract,
-  stage: ModerationEvaluation['stage'] = 'sync'
+  stage: ModerationEvaluation['stage'] = 'sync',
+  llm: Record<string, unknown> | null = null
 ) {
   const evaluation = await ModerationEvaluation.create(
     {
@@ -163,6 +182,7 @@ export async function recordEvaluation(
       riskScore: outcome.riskScore,
       signals: outcome.signals,
       rulesEvaluated: outcome.rulesEvaluated,
+      llm,
       durationMs: outcome.durationMs,
     },
     { client: trx }
@@ -283,7 +303,7 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
     history: (keys) => behaviorLookups(participant, conversation.id, keys),
     ...attachmentInputs(attachments),
   })
-  const status = statusFor(outcome.decision, restricted)
+  const status = statusFor(outcome.decision, restricted, llmMode() === 'enforce')
   const now = DateTime.now()
 
   let message: Message
@@ -360,7 +380,23 @@ export async function submitMessage(input: SubmitMessageInput): Promise<SubmitMe
   if (message.status === 'blocked') {
     await noteBlockedAttempt(message)
   }
+  if (message.status === 'pending_review' && outcome.decision === 'escalate') {
+    await queueShadowReview(message)
+  }
   return { message, created: true }
+}
+
+/** Shadow mode: record what the LLM would have said about an escalation a person is reviewing. */
+export async function queueShadowReview(message: Message) {
+  if (llmMode() !== 'shadow') return
+  try {
+    await LlmShadowReview.dispatch({ messageId: message.id }).run()
+  } catch (error) {
+    logger.error(
+      { messageUuid: message.uuid, error: String(error) },
+      'Failed to queue LLM shadow review'
+    )
+  }
 }
 
 /** Queues the async pass for a held message - deduplicated, so one pass at a time. */
