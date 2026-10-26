@@ -186,6 +186,17 @@ export interface ApiDefinition {
       approve: typeof routes['admin.admin_moderation_cases.approve']
       block: typeof routes['admin.admin_moderation_cases.block']
       restrict: typeof routes['admin.admin_moderation_cases.restrict']
+      show: typeof routes['admin.admin_moderation_cases.show']
+      claim: typeof routes['admin.admin_moderation_cases.claim']
+      release: typeof routes['admin.admin_moderation_cases.release']
+      label: typeof routes['admin.admin_moderation_cases.label']
+      warn: typeof routes['admin.admin_moderation_cases.warn']
+      closeConversation: typeof routes['admin.admin_moderation_cases.close_conversation']
+    }
+    adminModerationInsights: {
+      ruleStats: typeof routes['admin.admin_moderation_insights.rule_stats']
+      patternReports: typeof routes['admin.admin_moderation_insights.pattern_reports']
+      patternReport: typeof routes['admin.admin_moderation_insights.pattern_report']
     }
     adminModerationRules: {
       index: typeof routes['admin.admin_moderation_rules.index']

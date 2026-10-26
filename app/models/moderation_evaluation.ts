@@ -4,10 +4,11 @@ import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Message from '#models/message'
 import ModerationRuleHit from '#models/moderation_rule_hit'
 import type { Signals } from '#services/moderation/types'
+import type { ReplayContext } from '#services/moderation/pipeline'
 
 /**
  * Postgres returns a parsed object for JSON columns, SQLite (tests) a string -
- * same normalization as AuditEvent, shared by this model's three JSON columns.
+ * same normalization as AuditEvent, shared by this model's JSON columns.
  */
 const jsonColumn = {
   prepare: (value: unknown) =>
@@ -27,6 +28,10 @@ export default class ModerationEvaluation extends ModerationEvaluationSchema {
 
   @column(jsonColumn)
   declare llm: Record<string, unknown> | null
+
+  /** The replay snapshot (pipeline.ts ReplayContext) - see moderation_replay_service.ts. */
+  @column(jsonColumn)
+  declare context: ReplayContext | null
 
   @belongsTo(() => Message)
   declare message: BelongsTo<typeof Message>

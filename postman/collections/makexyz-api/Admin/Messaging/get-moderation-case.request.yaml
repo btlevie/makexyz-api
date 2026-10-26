@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Get Moderation Case'
+method: GET
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}'
+order: 3500
+description: 'Everything about one case in one response: the message (with evidence highlight spans), the thread around it (withheld messages included), participants'' real identities, the sender''s risk profile and past cases, the order, every link and attachment with its analysis, every moderation pass (rules that fired, score breakdown, the tier''s thresholds, the behavior snapshot, the LLM verdict), reports and actions taken.'

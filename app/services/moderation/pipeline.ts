@@ -11,7 +11,7 @@ import { createHash } from 'node:crypto'
 import { buildViews } from '#services/moderation/normalizer'
 import { extractSignals } from '#services/moderation/extractors'
 import { combine, type FiredRule } from '#services/moderation/combiner'
-import { getActiveRules } from '#services/moderation/rule_registry'
+import { getActiveRules, type ResolvedRule } from '#services/moderation/rule_registry'
 import {
   getEffectiveDomainLists,
   type EffectiveDomainLists,
@@ -27,6 +27,7 @@ import type {
   HistoryKeys,
   HistoryLookups,
   RuleAction,
+  RuleContext,
   RuleResult,
   SenderRole,
   Signals,
@@ -40,6 +41,7 @@ export const PIPELINE_VERSION = '3'
 export const NO_HISTORY: HistoryLookups = {
   sameTextOtherConversations: 0,
   sameTextOtherSenders: 0,
+  humanBlockedSameText: 0,
   nearDuplicateOtherConversations: 0,
   messagesLastHour: 0,
   messagesLastDay: 0,
@@ -98,7 +100,24 @@ export interface ModerationOutcome {
   userFacingReason: string | null
   /** Set when the deciding rule asks for a moderation case (e.g. a prohibited item). */
   caseSource: RuleResult['caseSource'] | null
+  /** Stored on the evaluation so the message can be replayed exactly. */
+  replay: ReplayContext
   durationMs: number
+}
+
+/**
+ * Everything the rules saw besides the text views and signals - stored with
+ * each evaluation (moderation_evaluations.context) so a candidate rule can
+ * be replayed over past messages (moderation_replay_service.ts).
+ */
+export interface ReplayContext {
+  senderRole: SenderRole
+  channel: Channel
+  conversation: ConversationContext
+  trustTier: TrustTier
+  history: HistoryLookups
+  /** Text found inside attachments, moderated with the body. */
+  attachmentText: string[]
 }
 
 export function hashNormalized(normalized: string): string {
@@ -140,7 +159,7 @@ export async function moderateMessage(input: ModerationInput): Promise<Moderatio
     ? await input.history({ contentHash, normalized: views.normalized, domains })
     : NO_HISTORY
 
-  const context = {
+  const context: RuleContext = {
     views,
     signals,
     senderRole: input.senderRole,
@@ -150,9 +169,35 @@ export async function moderateMessage(input: ModerationInput): Promise<Moderatio
     trustTier: input.trustTier ?? 'standard',
   }
 
-  const activeRules = await getActiveRules()
+  const evaluated = evaluateRules(context, await getActiveRules())
+  return {
+    ...evaluated,
+    views,
+    signals,
+    contentHash,
+    replay: {
+      senderRole: context.senderRole,
+      channel: context.channel,
+      conversation: context.conversation,
+      trustTier: context.trustTier,
+      history,
+      attachmentText,
+    },
+    durationMs: Math.round(performance.now() - startedAt),
+  }
+}
+
+/**
+ * Runs the rules over a prepared context and combines them. Pure: the live
+ * pipeline above and the replay command (moderation_replay_service.ts) both
+ * use it, which is what makes a replay over stored inputs reproduce the
+ * original decision.
+ */
+export function evaluateRules(context: RuleContext, activeRules: ResolvedRule[]) {
   const rules = activeRules.filter(({ rule }) =>
-    rule.senderRoles ? rule.senderRoles.includes(input.senderRole) : input.senderRole !== 'staff'
+    rule.senderRoles
+      ? rule.senderRoles.includes(context.senderRole)
+      : context.senderRole !== 'staff'
   )
 
   const fired: FiredRule[] = []
@@ -175,19 +220,14 @@ export async function moderateMessage(input: ModerationInput): Promise<Moderatio
     })
   }
 
-  const { decision, riskScore, decidedBy } = combine(fired, input.trustTier ?? 'standard')
-
+  const { decision, riskScore, decidedBy } = combine(fired, context.trustTier)
   return {
     decision,
     riskScore,
-    views,
-    signals,
-    contentHash,
     rulesEvaluated: rules.map(({ rule }) => `${rule.id}@${rule.version}`),
     hits,
     reasonCode: decidedBy?.result.reasonCode ?? null,
     userFacingReason: decidedBy?.result.userMessage ?? null,
     caseSource: decision === 'block' ? (decidedBy?.result.caseSource ?? null) : null,
-    durationMs: Math.round(performance.now() - startedAt),
   }
 }

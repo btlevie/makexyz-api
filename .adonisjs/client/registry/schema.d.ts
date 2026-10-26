@@ -1255,6 +1255,114 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['restrict']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'admin.admin_moderation_cases.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/cases/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['show']>>>
+    }
+  }
+  'admin.admin_moderation_cases.claim': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/cases/:uuid/claim'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['claim']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['claim']>>>
+    }
+  }
+  'admin.admin_moderation_cases.release': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/cases/:uuid/release'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['release']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['release']>>>
+    }
+  }
+  'admin.admin_moderation_cases.label': {
+    methods: ["PATCH"]
+    pattern: '/v1/admin/moderation/cases/:uuid/label'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').labelCaseValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').labelCaseValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['label']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['label']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_cases.warn': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/cases/:uuid/warn'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').warnSubjectValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').warnSubjectValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['warn']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['warn']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_cases.close_conversation': {
+    methods: ["POST"]
+    pattern: '/v1/admin/moderation/cases/:uuid/close-conversation'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/messaging').closeCaseConversationValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/messaging').closeCaseConversationValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['closeConversation']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_cases_controller').default['closeConversation']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_insights.rule_stats': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/rules/stats'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: ExtractQueryForGet<InferInput<(typeof import('#validators/messaging').statsWindowValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_insights_controller').default['ruleStats']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_insights_controller').default['ruleStats']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_moderation_insights.pattern_reports': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/pattern-reports'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_insights_controller').default['patternReports']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_insights_controller').default['patternReports']>>>
+    }
+  }
+  'admin.admin_moderation_insights.pattern_report': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/moderation/pattern-reports/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_moderation_insights_controller').default['patternReport']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_moderation_insights_controller').default['patternReport']>>>
+    }
+  }
   'admin.admin_moderation_rules.index': {
     methods: ["GET","HEAD"]
     pattern: '/v1/admin/moderation/rules'

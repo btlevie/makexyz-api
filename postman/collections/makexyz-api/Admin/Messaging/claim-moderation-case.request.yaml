@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Claim Moderation Case'
+method: POST
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/claim'
+order: 3600
+description: 'Takes the case so other moderators can''t act on it (409 for them) while you work it. The claim lapses after 30 minutes; claiming again renews it.'

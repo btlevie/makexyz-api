@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Close Case Conversation'
+method: POST
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/close-conversation'
+order: 8700
+description: 'Closes the case''s conversation early: read-only (closed_reason staff), with ''MakeXYZ closed this conversation.'' posted in the thread. 422 if the case has no message.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "note": "Repeated off-platform attempts"
+    }

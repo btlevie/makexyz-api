@@ -194,6 +194,8 @@ export interface HistoryLookups {
   sameTextOtherConversations: number
   /** Distinct other senders who sent the exact same text. */
   sameTextOtherSenders: number
+  /** Earlier messages with this exact text a moderator blocked as spam, advertising or a scam. */
+  humanBlockedSameText: number
   /** Other conversations this sender sent nearly the same text to (last 7 days, near_duplicate.ts). */
   nearDuplicateOtherConversations: number
   /** The sender's messages (any status) in the last hour / day. */

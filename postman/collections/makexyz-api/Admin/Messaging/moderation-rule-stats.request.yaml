@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Moderation Rule Stats'
+method: GET
+url: '{{base_url}}/admin/moderation/rules/stats?days=30'
+order: 7500
+description: 'Per rule over the last N days (1-365, default 30): mode, enforced and shadow hits, hits a moderator confirmed vs overturned, precision, recall against all confirmed violations, and suggestShadow for an enforcing rule whose hits keep being overturned (at least 5 judged, precision under 70%). Flags only - modes are changed with Update Moderation Rule.'

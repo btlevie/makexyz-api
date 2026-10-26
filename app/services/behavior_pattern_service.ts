@@ -34,6 +34,9 @@ export const PATTERN_RULES = {
   auditRate: 0.01,
   auditMax: 20,
   auditMin: 1,
+  /** Share of yesterday's automatic blocks re-checked by a person. */
+  blockedAuditRate: 0.05,
+  blockedAuditMax: 10,
 }
 
 const AUDIT_PRIORITY = 90
@@ -182,29 +185,13 @@ export async function detectReportRateOutliers(now = DateTime.now()): Promise<nu
   return opened
 }
 
-/**
- * A random slice of yesterday's delivered, unflagged messages, queued at low
- * priority. Labels moderators give these are how the rules' misses get found.
- */
-export async function sampleAuditMessages(now = DateTime.now()): Promise<number> {
-  const candidates = await Message.query()
-    .where('status', 'delivered')
-    .where('kind', 'text')
-    .whereNotNull('senderParticipantId')
-    .where('createdAt', '>', now.minus({ hours: 24 }).toSQL()!)
-    .whereNotIn('id', (query) =>
-      query.from('moderation_cases').whereNotNull('message_id').select('message_id')
-    )
-    .select('id', 'senderCustomerId', 'senderVendorId')
+/** Picks `rate` of the candidates (within min/max) at random and queues them for audit. */
+async function sample(candidates: Message[], rate: number, max: number): Promise<number> {
   if (candidates.length === 0) return 0
-
-  const size = Math.min(
-    PATTERN_RULES.auditMax,
-    Math.max(PATTERN_RULES.auditMin, Math.round(candidates.length * PATTERN_RULES.auditRate))
-  )
-  const shuffled = [...candidates].sort(() => Math.random() - 0.5).slice(0, size)
+  const size = Math.min(max, Math.max(PATTERN_RULES.auditMin, Math.round(candidates.length * rate)))
+  const picked = [...candidates].sort(() => Math.random() - 0.5).slice(0, size)
   await ModerationCase.createMany(
-    shuffled.map((message) => ({
+    picked.map((message) => ({
       uuid: string.uuid(),
       messageId: message.id,
       customerId: message.senderCustomerId,
@@ -215,5 +202,41 @@ export async function sampleAuditMessages(now = DateTime.now()): Promise<number>
       missedByAutomation: false,
     }))
   )
-  return shuffled.length
+  return picked.length
+}
+
+/**
+ * A random slice of yesterday's traffic nobody else looked at, queued at low
+ * priority (section 6 "Labels"):
+ * - delivered, unflagged messages - how moderators find what the rules let
+ *   through (the false-negative rate);
+ * - automatic blocks - approving one marks the block overturned, which is
+ *   how each rule's false-positive rate is measured (rule_stats_service.ts).
+ *   Approving an audited block doesn't deliver it.
+ */
+export async function sampleAuditMessages(now = DateTime.now()): Promise<number> {
+  const since = now.minus({ hours: 24 }).toSQL()!
+  const uncased = (query: any) =>
+    query.whereNotIn('id', (sub: any) =>
+      sub.from('moderation_cases').whereNotNull('message_id').select('message_id')
+    )
+  const delivered = await uncased(
+    Message.query()
+      .where('status', 'delivered')
+      .where('kind', 'text')
+      .whereNotNull('senderParticipantId')
+      .where('createdAt', '>', since)
+  ).select('id', 'senderCustomerId', 'senderVendorId')
+  const blocked = await uncased(
+    Message.query()
+      .where('status', 'blocked')
+      .whereNot('blockReasonCode', 'moderator')
+      .whereNotNull('senderParticipantId')
+      .where('createdAt', '>', since)
+  ).select('id', 'senderCustomerId', 'senderVendorId')
+
+  return (
+    (await sample(delivered, PATTERN_RULES.auditRate, PATTERN_RULES.auditMax)) +
+    (await sample(blocked, PATTERN_RULES.blockedAuditRate, PATTERN_RULES.blockedAuditMax))
+  )
 }

@@ -183,6 +183,7 @@ export async function recordEvaluation(
       signals: outcome.signals,
       rulesEvaluated: outcome.rulesEvaluated,
       llm,
+      context: outcome.replay,
       durationMs: outcome.durationMs,
     },
     { client: trx }

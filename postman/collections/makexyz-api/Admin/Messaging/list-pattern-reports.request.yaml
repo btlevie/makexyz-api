@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'List Pattern Reports'
+method: GET
+url: '{{base_url}}/admin/moderation/pattern-reports'
+order: 18000
+description: 'The weekly DiscoverAbusePatterns reports, newest first: period, confirmed violations, how many automation missed, number of clusters.'

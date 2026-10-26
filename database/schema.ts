@@ -553,7 +553,7 @@ export class ModerationActionSchema extends BaseModel {
   static $columns = ['action', 'actorUserId', 'caseId', 'createdAt', 'id', 'metadata', 'reason', 'targetId', 'targetType'] as const
   $columns = ModerationActionSchema.$columns
   @column()
-  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated'
+  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated' | 'warn_user' | 'close_conversation' | 'label_case'
   @column()
   declare actorUserId: number | null
   @column()
@@ -618,8 +618,10 @@ export class ModerationCaseSchema extends BaseModel {
 }
 
 export class ModerationEvaluationSchema extends BaseModel {
-  static $columns = ['createdAt', 'decision', 'durationMs', 'id', 'llm', 'messageId', 'pipelineVersion', 'riskScore', 'rulesEvaluated', 'signals', 'stage'] as const
+  static $columns = ['context', 'createdAt', 'decision', 'durationMs', 'id', 'llm', 'messageId', 'pipelineVersion', 'riskScore', 'rulesEvaluated', 'signals', 'stage'] as const
   $columns = ModerationEvaluationSchema.$columns
+  @column()
+  declare context: any | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
@@ -642,6 +644,29 @@ export class ModerationEvaluationSchema extends BaseModel {
   declare signals: any | null
   @column()
   declare stage: 'sync' | 'async' | 'rescan'
+}
+
+export class ModerationPatternReportSchema extends BaseModel {
+  static $columns = ['clusters', 'createdAt', 'id', 'missedByAutomation', 'periodEnd', 'periodStart', 'summaries', 'uuid', 'violations'] as const
+  $columns = ModerationPatternReportSchema.$columns
+  @column()
+  declare clusters: any | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare missedByAutomation: number
+  @column.dateTime()
+  declare periodEnd: DateTime
+  @column.dateTime()
+  declare periodStart: DateTime
+  @column()
+  declare summaries: any | null
+  @column()
+  declare uuid: string
+  @column()
+  declare violations: number
 }
 
 export class ModerationRuleConfigSchema extends BaseModel {

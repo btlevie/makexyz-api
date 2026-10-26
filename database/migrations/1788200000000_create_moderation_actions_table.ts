@@ -37,6 +37,11 @@ export default class extends BaseSchema {
           'term_disabled',
           // URL allow/block/user-content list changes (url_domains).
           'domain_list_updated',
+          // Moderator tooling (Step 7): a private warning email, closing a
+          // conversation early, labelling a case for the discovery loop.
+          'warn_user',
+          'close_conversation',
+          'label_case',
         ])
         .notNullable()
       // What was acted on: 'message' + uuid, 'customer'/'vendor' + uuid,

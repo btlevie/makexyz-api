@@ -365,6 +365,26 @@ router
           controllers.AdminModerationCases,
           'restrict',
         ])
+        // Step 7 tooling: the full case view, claiming, labels, warnings, closing.
+        router.get('moderation/cases/:uuid', [controllers.AdminModerationCases, 'show'])
+        router.post('moderation/cases/:uuid/claim', [controllers.AdminModerationCases, 'claim'])
+        router.post('moderation/cases/:uuid/release', [controllers.AdminModerationCases, 'release'])
+        router.patch('moderation/cases/:uuid/label', [controllers.AdminModerationCases, 'label'])
+        router.post('moderation/cases/:uuid/warn', [controllers.AdminModerationCases, 'warn'])
+        router.post('moderation/cases/:uuid/close-conversation', [
+          controllers.AdminModerationCases,
+          'closeConversation',
+        ])
+        // What the loop has learned: per-rule precision, weekly pattern reports.
+        router.get('moderation/rules/stats', [controllers.AdminModerationInsights, 'ruleStats'])
+        router.get('moderation/pattern-reports', [
+          controllers.AdminModerationInsights,
+          'patternReports',
+        ])
+        router.get('moderation/pattern-reports/:uuid', [
+          controllers.AdminModerationInsights,
+          'patternReport',
+        ])
         // Rule modes (off/shadow/enforce) and thresholds at runtime.
         router.get('moderation/rules', [controllers.AdminModerationRules, 'index'])
         router.patch('moderation/rules/:ruleId', [controllers.AdminModerationRules, 'update'])

@@ -126,8 +126,48 @@ export const restrictSubjectValidator = vine.create({
   note: vine.string().trim().maxLength(2000).optional(),
 })
 
+/** A moderator's label: the LLM categories, with 'none' for a message that was fine. */
+const ABUSE_CATEGORIES = [
+  'off_platform_contact',
+  'off_platform_payment',
+  'advertising',
+  'spam',
+  'scam_phishing',
+  'harassment',
+  'threat',
+  'sexual',
+  'prohibited_goods',
+  'other_violation',
+  'none',
+] as const
+
+function caseLabel() {
+  return {
+    abuseCategory: vine.enum(ABUSE_CATEGORIES).optional(),
+    patternNote: vine.string().trim().maxLength(2000).optional(),
+    missedByAutomation: vine.boolean().optional(),
+  }
+}
+
+/** Approve/block, optionally labelling the case in the same call. */
 export const resolveCaseValidator = vine.create({
   note: vine.string().trim().maxLength(2000).optional(),
+  ...caseLabel(),
+})
+
+export const labelCaseValidator = vine.create(caseLabel())
+
+export const warnSubjectValidator = vine.create({
+  // Shown to the user in the warning email.
+  message: vine.string().trim().minLength(10).maxLength(2000),
+})
+
+export const closeCaseConversationValidator = vine.create({
+  note: vine.string().trim().maxLength(2000).optional(),
+})
+
+export const statsWindowValidator = vine.create({
+  days: vine.number().withoutDecimals().range([1, 365]).optional(),
 })
 
 export const adminListConversationsValidator = vine.create({
@@ -146,5 +186,28 @@ export const llmStatsValidator = vine.create({
 })
 
 export const adminListCasesValidator = vine.create({
-  status: vine.enum(['open', 'claimed', 'resolved']).optional(),
+  // 'active' (the default) is open + claimed.
+  status: vine.enum(['active', 'open', 'claimed', 'resolved']).optional(),
+  source: vine
+    .enum([
+      'auto_hold',
+      'auto_flag',
+      'report',
+      'behavioral',
+      'audit_sample',
+      'url_rescan',
+      'quote_outlier',
+      'unconfirmed_delivery',
+      'prohibited_item',
+    ])
+    .optional(),
+  // 'mine': claimed by the caller; 'unassigned': nobody's working it.
+  assigned: vine.enum(['mine', 'unassigned']).optional(),
+  abuseCategory: vine.enum(ABUSE_CATEGORIES).optional(),
+  customerUuid: vine.string().uuid().optional(),
+  vendorUuid: vine.string().uuid().optional(),
+  // Cases whose message this rule fired on.
+  ruleId: vine.string().trim().maxLength(80).optional(),
+  // Who sent the message.
+  senderRole: vine.enum(['customer', 'vendor']).optional(),
 })

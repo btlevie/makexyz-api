@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Release Moderation Case'
+method: POST
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/release'
+order: 3700
+description: 'Puts a claimed case back in the queue.'

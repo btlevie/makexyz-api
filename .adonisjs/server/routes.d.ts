@@ -108,6 +108,15 @@ export type ScannedRoutes = {
     'admin.admin_moderation_cases.approve': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.block': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.restrict': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.claim': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.release': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.label': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.warn': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.close_conversation': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_insights.rule_stats': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_insights.pattern_reports': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_insights.pattern_report': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_rules.update': { paramsTuple: [ParamValue]; params: {'ruleId': ParamValue} }
     'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
@@ -159,6 +168,10 @@ export type ScannedRoutes = {
     'admin.admin_conversations.index': { paramsTuple?: []; params?: {} }
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_cases.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_insights.rule_stats': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_insights.pattern_reports': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_insights.pattern_report': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
     'admin.admin_url_domains.index': { paramsTuple?: []; params?: {} }
@@ -202,6 +215,10 @@ export type ScannedRoutes = {
     'admin.admin_conversations.index': { paramsTuple?: []; params?: {} }
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_cases.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_insights.rule_stats': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_insights.pattern_reports': { paramsTuple?: []; params?: {} }
+    'admin.admin_moderation_insights.pattern_report': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_rules.index': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_terms.index': { paramsTuple?: []; params?: {} }
     'admin.admin_url_domains.index': { paramsTuple?: []; params?: {} }
@@ -258,6 +275,10 @@ export type ScannedRoutes = {
     'admin.admin_moderation_cases.approve': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.block': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.restrict': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.claim': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.release': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.warn': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_moderation_cases.close_conversation': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_terms.store': { paramsTuple?: []; params?: {} }
     'admin.admin_moderation_terms.preview': { paramsTuple?: []; params?: {} }
     'webhooks.stripe_webhooks': { paramsTuple?: []; params?: {} }
@@ -281,6 +302,7 @@ export type ScannedRoutes = {
     'vendor.vendor_onboarding.update_profile': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.update_vendor': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.review_capability': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'technology': ParamValue} }
+    'admin.admin_moderation_cases.label': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_rules.update': { paramsTuple: [ParamValue]; params: {'ruleId': ParamValue} }
     'admin.admin_moderation_terms.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }

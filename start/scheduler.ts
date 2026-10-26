@@ -29,6 +29,8 @@ import SweepHeldMessages from '#jobs/sweep_held_messages'
 import RecomputeRiskProfiles from '#jobs/recompute_risk_profiles'
 import DetectBehaviorPatterns from '#jobs/detect_behavior_patterns'
 import SampleAuditMessages from '#jobs/sample_audit_messages'
+import DiscoverAbusePatterns from '#jobs/discover_abuse_patterns'
+import SendModerationDigest from '#jobs/send_moderation_digest'
 
 /**
  * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
@@ -101,3 +103,9 @@ RecomputeRiskProfiles.schedule({}).id('recompute-risk-profiles').cron('50 * * * 
 // Daily, after the night's other jobs: cross-account patterns, then the audit sample.
 DetectBehaviorPatterns.schedule({}).id('detect-behavior-patterns').cron('30 5 * * *').run()
 SampleAuditMessages.schedule({}).id('sample-audit-messages').cron('0 6 * * *').run()
+
+// Daily at 08:00: tell admins when senders are waiting on held messages.
+SendModerationDigest.schedule({}).id('send-moderation-digest').cron('0 8 * * *').run()
+
+// Weekly, Monday morning: cluster last week's confirmed violations for new rules.
+DiscoverAbusePatterns.schedule({}).id('discover-abuse-patterns').cron('0 7 * * 1').run()

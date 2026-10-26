@@ -350,6 +350,15 @@ async function closeConversation(
   await conversation.save()
 }
 
+/**
+ * MakeXYZ closes a conversation early (a moderator's decision): it becomes
+ * read-only and both sides see why in the thread.
+ */
+export async function closeConversationByStaff(conversation: Conversation) {
+  await closeConversation(conversation, 'staff')
+  await postSystemMessage(conversation, 'MakeXYZ closed this conversation.')
+}
+
 /** The vendor passes on an inquiry. The customer sees a system message. */
 export async function declineInquiry(
   conversation: Conversation,

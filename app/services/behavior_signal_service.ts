@@ -72,6 +72,26 @@ async function exactDuplicates(sender: Sender, conversationId: number, hash: str
   }
 }
 
+/** Categories a moderator's block makes the exact text blockable for everyone. */
+const BLOCKED_TEXT_CATEGORIES = ['spam', 'advertising', 'scam_phishing']
+
+/** Earlier copies of this exact text a moderator blocked or removed as spam/ads/scam. */
+async function humanBlockedSameText(hash: string): Promise<number> {
+  const row = await Message.query()
+    .where('contentHash', hash)
+    .where('blockReasonCode', 'moderator')
+    .whereIn('id', (query) =>
+      query
+        .from('moderation_cases')
+        .whereIn('abuse_category', BLOCKED_TEXT_CATEGORIES)
+        .whereNotNull('message_id')
+        .select('message_id')
+    )
+    .count('* as total')
+    .first()
+  return Number(row?.$extras.total ?? 0)
+}
+
 /** Other conversations this sender recently sent nearly the same text to (not identical). */
 async function nearDuplicates(
   sender: Sender,
@@ -184,7 +204,7 @@ export async function behaviorLookups(
     return NO_HISTORY
   }
 
-  const [exact, near, counts, spread, vendors, counters, age] = await Promise.all([
+  const [exact, near, counts, spread, vendors, counters, age, blockedText] = await Promise.all([
     exactDuplicates(sender, conversationId, keys.contentHash),
     nearDuplicates(sender, conversationId, keys),
     volume(sender),
@@ -192,9 +212,11 @@ export async function behaviorLookups(
     vendorsContacted(sender),
     profileCounters(sender),
     accountAgeDays(sender),
+    humanBlockedSameText(keys.contentHash),
   ])
   return {
     ...exact,
+    humanBlockedSameText: blockedText,
     nearDuplicateOtherConversations: near,
     ...counts,
     domainSenders: spread,

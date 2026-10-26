@@ -1,0 +1,15 @@
+$kind: http-request
+name: 'Warn Case Subject'
+method: POST
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/warn'
+order: 8600
+description: 'Emails the case subject (customer or vendor) a private warning with your message - not posted in the thread, where the other side would see it. Doesn''t resolve the case. 422 if the case has no subject.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "message": "Please keep links to your own shop out of MakeXYZ messages."
+    }

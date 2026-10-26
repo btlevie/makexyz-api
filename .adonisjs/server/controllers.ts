@@ -12,6 +12,7 @@ export const controllers = {
   AdminLlmModeration: () => import('#controllers/admin_llm_moderation_controller'),
   AdminMessagingProfiles: () => import('#controllers/admin_messaging_profiles_controller'),
   AdminModerationCases: () => import('#controllers/admin_moderation_cases_controller'),
+  AdminModerationInsights: () => import('#controllers/admin_moderation_insights_controller'),
   AdminModerationRules: () => import('#controllers/admin_moderation_rules_controller'),
   AdminModerationTerms: () => import('#controllers/admin_moderation_terms_controller'),
   AdminQuotes: () => import('#controllers/admin_quotes_controller'),

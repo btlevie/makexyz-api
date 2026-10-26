@@ -1,0 +1,17 @@
+$kind: http-request
+name: 'Label Moderation Case'
+method: PATCH
+url: '{{base_url}}/admin/moderation/cases/{{case_uuid}}/label'
+order: 8500
+description: 'Labels a case (resolved or not): abuseCategory (off_platform_contact, off_platform_payment, advertising, spam, scam_phishing, harassment, threat, sexual, prohibited_goods, other_violation, none), patternNote, missedByAutomation. Labels feed per-rule precision, replay and the weekly pattern report; a spam/advertising/scam label on a blocked message makes that exact text blocked for everyone. Approve and Block accept the same fields.'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "abuseCategory": "advertising",
+      "patternNote": "Vendor links own shop via 'my other site'",
+      "missedByAutomation": true
+    }

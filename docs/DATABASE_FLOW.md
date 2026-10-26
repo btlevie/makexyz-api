@@ -714,6 +714,30 @@ Each sender is limited to 10 calls an hour. The same text from the same sender w
 
 Verdicts, token usage and estimated cost are stored in `moderation_evaluations.llm`. `/v1/admin/moderation/llm-stats` reports calls, cost, failures, and agreement with moderators' decisions. Run `node ace moderation:llm-eval` against the labelled set in `tests/fixtures/moderation/llm_eval.json` before enforcing.
 
+**Moderator tooling.** A moderator claims a case while working it; the claim lapses after 30 minutes, and until then nobody else can act on the case. `GET /v1/admin/moderation/cases/:uuid` returns everything about a case in one response:
+* the message, with its evidence highlighted;
+* the thread around it, withheld messages included;
+* the participants' real identities;
+* the sender's risk profile and past cases;
+* the order;
+* every link and attachment with its analysis;
+* every moderation pass, with the rules that fired, the score breakdown, the tier's thresholds and the LLM verdict;
+* reports and the actions already taken.
+
+Moderators can approve, block or restrict. They can also warn the subject by private email (not in the thread, which the other side would see) and close the conversation early. And they can label a case with a category, a pattern note, and whether automation missed it. Each of these is logged in `moderation_actions`.
+
+Text a moderator blocks as spam, advertising or a scam is blocked at once for anyone who sends it again (`spam.known_blocked_text`). A daily digest emails admins when senders are waiting on held messages.
+
+**The learning loop.** Each evaluation stores `context`: the sender role, channel, conversation, tier and behavioral lookups. That makes past messages replayable:
+* `node ace moderation:replay --rule <id> --since 90d` measures a candidate rule's recall on confirmed violations and its false positives on known-clean messages.
+* `/v1/admin/moderation/rules/stats` reports each rule's precision against moderators' decisions, and flags enforcing rules that keep getting overturned.
+
+The daily audit sample also re-checks about 5% of automatic blocks.
+
+The weekly `DiscoverAbusePatterns` job groups the week's confirmed violations by shared domain, near-duplicate text, distinctive phrases, sender cohort and rule combination, with optional LLM summaries. The results are stored in `moderation_pattern_reports` and served at `/v1/admin/moderation/pattern-reports`. The job never changes rules.
+
+`node ace moderation:export-corpus` exports labelled messages, anonymized, as fixtures.
+
 **Lifecycle.** An inquiry becomes `read_only` after 60 days without messages (the customer can reopen it by posting within 90 days), or when the vendor declines or blocks. An order thread stops accepting messages as soon as its order is refunded, cancelled, reassigned, or delivered more than 14 days ago. The hourly `CloseExpiredConversations` job records that as `read_only`.
 
 **Notifications.** A delivered message schedules one debounced email per recipient, about 3 minutes later, covering everything they haven't read or been emailed about (`conversation_participants.last_notified_seq`). Message text is only included when every message in the email is delivered, unflagged and from an established sender.

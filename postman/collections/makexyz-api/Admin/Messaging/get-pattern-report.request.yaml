@@ -1,0 +1,6 @@
+$kind: http-request
+name: 'Get Pattern Report'
+method: GET
+url: '{{base_url}}/admin/moderation/pattern-reports/{{report_uuid}}'
+order: 19000
+description: 'One report''s clusters (kind: domain, near_duplicate, phrase, cohort, signals - each with size, how many were missed, categories, message uuids and redacted examples) and the optional LLM summaries (pattern, proposed rule, candidate phrases). Read-only; it never changes a rule.'

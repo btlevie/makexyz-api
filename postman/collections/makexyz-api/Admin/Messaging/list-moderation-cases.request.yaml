@@ -1,6 +1,6 @@
 $kind: http-request
 name: 'List Moderation Cases'
 method: GET
-url: '{{base_url}}/admin/moderation/cases?status=open'
+url: '{{base_url}}/admin/moderation/cases?assigned=unassigned'
 order: 3000
-description: 'The review queue - held messages first (someone is waiting), then flagged messages and vendor reports. status defaults to open.'
+description: 'The review queue, most urgent first: held messages (someone is waiting), reports, flagged messages, behavioral cases, audit samples. Filters: status (active = open + claimed, the default; open; claimed; resolved), source, assigned (mine, unassigned - a claim older than 30 minutes counts as unassigned), abuseCategory, customerUuid, vendorUuid, ruleId (cases whose message that rule fired on), senderRole (customer, vendor). Each case shows its claim and label.'

@@ -47,6 +47,7 @@ import prohibitedDrugs from '#services/moderation/rules/prohibited_drugs'
 import prohibitedFirearm from '#services/moderation/rules/prohibited_firearm'
 import prohibitedWeapon from '#services/moderation/rules/prohibited_weapon'
 import spamDuplicateCrossConversation from '#services/moderation/rules/spam_duplicate_cross_conversation'
+import spamKnownBlockedText from '#services/moderation/rules/spam_known_blocked_text'
 import spamNearDuplicate from '#services/moderation/rules/spam_near_duplicate'
 import urlDangerousFile from '#services/moderation/rules/url_dangerous_file'
 import urlDomainSpread from '#services/moderation/rules/url_domain_spread'
@@ -95,6 +96,7 @@ export const RULES: ModerationRule<any>[] = [
   // Advertising and spam
   adPromoLanguage,
   adUnrelatedUrl,
+  spamKnownBlockedText,
   spamDuplicateCrossConversation,
   spamNearDuplicate,
   inquiryColdPitch,

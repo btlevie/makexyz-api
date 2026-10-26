@@ -264,7 +264,7 @@ export default {
       columns: {
         ['action']: {
           tsType:
-            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated'",
+            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated' | 'warn_user' | 'close_conversation' | 'label_case'",
         },
       },
     },

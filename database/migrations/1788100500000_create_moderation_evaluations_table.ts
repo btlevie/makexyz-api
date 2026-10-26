@@ -26,6 +26,11 @@ export default class extends BaseSchema {
       // were checked and didn't fire?" without a row per rule per message.
       table.json('rules_evaluated').nullable()
       table.json('llm').nullable()
+      // What the rules saw besides the text and signals - sender role, channel,
+      // conversation context, trust tier and the behavioral lookups - so a
+      // candidate rule can be replayed over past messages exactly
+      // (node ace moderation:replay).
+      table.json('context').nullable()
       table.integer('duration_ms').notNullable().defaultTo(0)
 
       table.timestamp('created_at')
