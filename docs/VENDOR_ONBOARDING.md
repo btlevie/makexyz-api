@@ -154,6 +154,15 @@ Activation requires **both** checklists to be complete.
 
 `payout_rates` is the same rule acceptance applies per order (`computePayoutBreakdown`), checked ahead of time so an active vendor never hits "no payout rate for PLA" on their first order.
 
+## Optional checklist: the public directory profile
+
+`optionalChecklist` in the onboarding payload. It is **never** part of `onboardingComplete`, and it never blocks submitting or activation. But a vendor appears in the public directory, and can receive inquiries, only once it's done (see "What the gates check" below).
+
+| key | Complete when | Fixed with |
+|---|---|---|
+| `public_profile` | A profile slug and a bio are set, and the profile is published | `PATCH /v1/vendor/profile` |
+| `accepting_inquiries` | `acceptingInquiries` is on | `PATCH /v1/vendor/profile` |
+
 ---
 
 # Endpoint reference
@@ -194,13 +203,14 @@ Every endpoint returns the **onboarding payload**:
   capabilities: [{ technology, status, isPreferred, reviewedAt }],
   taxDocument: { uuid, formType, originalName, status, rejectedReason, createdAt } | null,
   checklist: [{ key, complete, detail }],
-  onboardingComplete }
+  onboardingComplete,
+  optionalChecklist: [{ key, complete, detail }] }
 ```
 
 | Method & path | Body | Notes |
 |---|---|---|
 | `GET /v1/vendor/onboarding` | – | |
-| `PATCH /v1/vendor/onboarding/profile` | `{ displayName?, legalName?, phone? }` | Allowed in any status except `suspended` |
+| `PATCH /v1/vendor/onboarding/profile` | `{ displayName?, legalName?, phone? }` | Allowed in any status except `suspended`. The display name is public (the directory), so a change is moderated like the rest of the profile: `422 { error, code: 'moderation_blocked' }`, with nothing saved, if it's blocked. |
 | `PUT /v1/vendor/onboarding/capabilities` | `{ technologies: ('fdm'\|'sla'\|'sls')[] }` (at least 1) | Sets the full list. New or previously rejected technologies become `requested`. Approved ones stay approved. Technologies left out are removed. Not allowed while `suspended`. |
 | `POST /v1/vendor/onboarding/agreement` | `{ version }` | `version` must equal the current version (`422` otherwise). Records the version, time, and client IP. |
 | `PUT /v1/vendor/onboarding/tax` | multipart: `taxClassification`, `formType` (`w9\|w8ben\|w8bene`), `file` (PDF, ≤ 10 MB) | Creates a new tax document and replaces the "current" one |
@@ -227,6 +237,52 @@ Every endpoint returns the **onboarding payload**:
 | `POST /v1/admin/vendors/:uuid/reinstate` | – | `vendor` | `409` not `suspended` |
 
 **Reused, unchanged:** `GET/PUT /v1/admin/vendors/:uuid/payout-rates` and `PATCH /v1/admin/vendors/:uuid` (payout hold days).
+
+## Public profile (vendor)
+
+The directory side of the vendor record (`docs/plans/manual_quotes.md`, section 2). Every write returns the **profile payload**:
+
+```
+{ uuid, displayName, profileSlug, bio, acceptingInquiries, publishedAt,
+  moderationStatus: 'approved' | 'pending_review' | 'rejected',
+  listed, notListedBecause: string[],
+  location: { city, state, country, geocodeStatus },
+  rating: { average, count }, responseRate, responseTime,
+  services: [{ service, active, disabledByAdmin, rate, rateUnit, description }],
+  indicativePrices: [{ materialUuid, materialName, pricePerCm3 }],
+  images: [{ uuid, kind, status, rejectReason, position, url, thumbnailUrl }] }
+```
+
+`notListedBecause` holds any of `vendor_not_active`, `not_accepting_inquiries`, `not_published`, `text_in_review` and `text_rejected`. None of the writes are allowed while `suspended` (`409`).
+
+| Method & path | Body | Notes |
+|---|---|---|
+| `GET /v1/vendor/profile` | – | |
+| `PATCH /v1/vendor/profile` | `{ displayName?, profileSlug?, bio?, acceptingInquiries?, published? }` | `profileSlug` is 3–60 lowercase letters, digits and inner hyphens. Reserved words are `422`, a taken slug `409`. `published: true` needs a display name, and generates a slug from it if none is set. Text is moderated before saving (below). |
+| `PUT /v1/vendor/profile/services` | `{ services: [{ service: 'design'\|'scanning'\|'cnc', rate?, rateUnit?: 'hour'\|'project', description? }] }` | The full set offered beyond printing (printing comes from approved capabilities). Services left out are switched off. A service an admin turned off stays off. Descriptions are moderated. |
+| `PUT /v1/vendor/profile/prices` | `{ prices: [{ materialUuid, pricePerCm3 }] }` | Indicative, non-binding prices behind the `$`–`$$$$` `priceTier`. Replaces the full set. |
+| `POST /v1/vendor/profile/images` | `{ kind: 'profile'\|'portfolio', fileName, sizeBytes }` | `201 { image, uploadUrl }`, a presigned PUT into quarantine. PNG, JPEG or WebP, up to 10 MB, and up to 12 portfolio images (`409` beyond). |
+| `POST /v1/vendor/profile/images/:uuid/complete` | – | Call after the PUT. Queues the checks: malware scan, re-encode, Rekognition, and text in the image. The image is public only once `approved`. A newly approved profile photo replaces the old one. |
+| `PUT /v1/vendor/profile/images/order` | `{ uuids }` | Every portfolio image, once each, in display order |
+| `DELETE /v1/vendor/profile/images/:uuid` | – | `204` |
+
+**Moderation of profile text.** The display name, bio and service descriptions go through the same pipeline as messages (`content_moderation_service.ts`):
+* A block is refused with `422 { error, code: 'moderation_blocked' }` and nothing is saved.
+* Anything a person must check is saved with `moderationStatus: 'pending_review'`, as is every edit by a vendor whose messaging is restricted. That keeps the vendor out of the directory until a moderator approves the `vendor_profile` case.
+* A moderator blocking the case sets `rejected`, and the vendor edits the text to resubmit.
+* An edit closes any earlier open case on the profile.
+
+## Public profile (admin)
+
+| Method & path | Body | Response | Errors |
+|---|---|---|---|
+| `GET /v1/admin/vendors/:uuid/profile` | – | profile payload | `404` |
+| `POST /v1/admin/vendors/:uuid/profile/unpublish` | `{ reason? }` | profile payload | `404` |
+| `PATCH /v1/admin/vendors/:uuid/services/:service` | `{ active, reason? }` | profile payload | `404`, `422` not offered |
+| `GET /v1/admin/vendor-images/:uuid` | – | `{ uuid, kind, status, rejectReason, moderationDetails, url }` (a 5-minute link) | `404` |
+| `POST /v1/admin/vendor-images/:uuid/reject` | `{ reason? }` | `204` | `404` |
+
+Profile text and images waiting for a person are approved or blocked through the moderation queue: `POST /v1/admin/moderation/cases/:uuid/approve` or `/block` on the `vendor_profile` or `vendor_image` case.
 
 ---
 
@@ -280,7 +336,16 @@ Accept re-checks the email inside its transaction. If someone signed up with tha
 | Can this vendor accept this order | `vendorCanAcceptOrder` + `acceptOrder` | Vendor is **active**, on the **current agreement version**, capabilities **approved** (and preferred during the preferred window), payout method ready, and a payout rate for every item's material |
 | Staff project access | `project_grant_service.ts` `isStaff` | Admins always. Vendors only when **active or suspended**. |
 | Messaging access | `conversation_access_service.ts` `resolveViewer` | Vendors only when **active or suspended**, and only in their own conversations (an order thread only while the order is still theirs) |
-| Receiving new inquiries | `conversation_service.ts` `createInquiry` | Vendor is **active** |
+| Receiving new inquiries | `conversation_service.ts` `createInquiry` | Vendor is **listed** (the next row) |
+| Directory listing (search, public profile) | `Vendor#isListed` and `vendor_profile_service.ts` `whereListed` | Vendor is **active**, `acceptingInquiries` is on, the profile is **published** (slug set), and its text is **approved**. A suspended vendor disappears from the directory. |
+
+## Directory location
+
+The vendor's public location is the city, state and country of its **default business address**, never the street or coordinates. Whenever a vendor address changes, `GeocodeVendor` (`geocoding_service.ts`):
+* copies those fields to the vendor;
+* geocodes the city to its Google place ID. `geocodeStatus` is `pending` (no Google key, or no address), `ok`, `not_found` or `failed` (retried);
+* caches the city's coordinates in `place_coordinates`, for at most 30 days;
+* creates a non-indexable city page for the vendor's city if it has none.
 
 ---
 
@@ -290,6 +355,9 @@ Accept re-checks the email inside its transaction. If someone signed up with tha
 |---|---|
 | `ACCOUNT_INVITE_URL` | Frontend page that handles invitation links. The admin invite response returns `${ACCOUNT_INVITE_URL}?link=…`. |
 | `VENDOR_AGREEMENT_VERSION` | Current vendor agreement version (e.g. `2026-09-01`). Bump it to require every vendor to re-accept. |
+| `GOOGLE_GEOCODING_API_KEY` | Locates vendors at city level (Geocoding API and Places API (New)). Unset, vendors stay `geocodeStatus: 'pending'`. |
+| `IMAGE_MODERATION` | `rekognition` checks profile images; `disabled` (local) sends every image to a person. |
+| `PUBLIC_ASSET_BASE_URL` | The public host for approved images under `${S3_FILE_STORAGE_KEY}/public/`. Unset, image URLs are short-lived presigned links. |
 
 ## Client IP for the agreement
 
@@ -333,6 +401,9 @@ Mail isn't configured yet. Each email below is marked with `// TODO(mail):` at t
 | Acceptance gate | `app/services/order_acceptance_service.ts` |
 | Staff project access | `app/services/project_grant_service.ts` (`isStaff`) |
 | Messaging access and inquiries | `app/services/conversation_access_service.ts`, `app/services/conversation_service.ts` |
+| Public profile, listing rule, profile moderation | `app/services/vendor_profile_service.ts`, `app/services/content_moderation_service.ts` |
+| Profile images | `app/services/vendor_image_service.ts`, `app/services/image_moderator.ts` |
+| Directory location | `app/services/geocoding_service.ts` |
 | Client IP trust | `config/app.ts` (`trustProxy`) |
 
 Adding a checklist item means adding it to the service's checklist function, to the tables above, and to the frontend checklist UI. **Update this document in the same PR.**

@@ -595,6 +595,66 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/links_controller').default['show']>>>
     }
   }
+  'vendors.search': {
+    methods: ["POST"]
+    pattern: '/v1/vendors/search'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').vendorSearchValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').vendorSearchValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendors_controller').default['search']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendors_controller').default['search']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendors.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendors/:slug'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { slug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendors_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendors_controller').default['show']>>>
+    }
+  }
+  'locations.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/locations'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/locations_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/locations_controller').default['index']>>>
+    }
+  }
+  'locations.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/locations/:slug'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { slug: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/locations_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/locations_controller').default['show']>>>
+    }
+  }
+  'landing_visits.store': {
+    methods: ["POST"]
+    pattern: '/v1/analytics/landing-visits'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').landingVisitValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').landingVisitValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/landing_visits_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/landing_visits_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
   'shipping_options.index': {
     methods: ["GET","HEAD"]
     pattern: '/v1/shipping-options'
@@ -895,6 +955,102 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_onboarding_controller').default['submit']>>>
     }
   }
+  'vendor.vendor_profile.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/profile'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['show']>>>
+    }
+  }
+  'vendor.vendor_profile.update': {
+    methods: ["PATCH"]
+    pattern: '/v1/vendor/profile'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').updatePublicProfileValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').updatePublicProfileValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['update']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['update']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_profile.set_services': {
+    methods: ["PUT"]
+    pattern: '/v1/vendor/profile/services'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').setVendorServicesValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').setVendorServicesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['setServices']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['setServices']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_profile.set_prices': {
+    methods: ["PUT"]
+    pattern: '/v1/vendor/profile/prices'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').setIndicativePricesValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').setIndicativePricesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['setPrices']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['setPrices']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_profile.create_image': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/profile/images'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').createVendorImageValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').createVendorImageValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['createImage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['createImage']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_profile.reorder_images': {
+    methods: ["PUT"]
+    pattern: '/v1/vendor/profile/images/order'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').reorderPortfolioValidator)>>
+      paramsTuple: []
+      params: {}
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').reorderPortfolioValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['reorderImages']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['reorderImages']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_profile.complete_image': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/profile/images/:uuid/complete'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['completeImage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['completeImage']>>>
+    }
+  }
+  'vendor.vendor_profile.destroy_image': {
+    methods: ["DELETE"]
+    pattern: '/v1/vendor/profile/images/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['destroyImage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['destroyImage']>>>
+    }
+  }
   'vendor.vendor_conversations.decline': {
     methods: ["POST"]
     pattern: '/v1/vendor/conversations/:uuid/decline'
@@ -1181,6 +1337,66 @@ export interface Registry {
       query: {}
       response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reinstate']>>>
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendors_controller').default['reinstate']>>>
+    }
+  }
+  'admin.admin_vendor_profiles.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/vendors/:uuid/profile'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['show']>>>
+    }
+  }
+  'admin.admin_vendor_profiles.unpublish': {
+    methods: ["POST"]
+    pattern: '/v1/admin/vendors/:uuid/profile/unpublish'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').adminUnpublishProfileValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').adminUnpublishProfileValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['unpublish']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['unpublish']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_vendor_profiles.set_service': {
+    methods: ["PATCH"]
+    pattern: '/v1/admin/vendors/:uuid/services/:service'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').adminSetServiceValidator)>>
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; service: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').adminSetServiceValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['setService']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['setService']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'admin.admin_vendor_profiles.show_image': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/admin/vendor-images/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['showImage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['showImage']>>>
+    }
+  }
+  'admin.admin_vendor_profiles.reject_image': {
+    methods: ["POST"]
+    pattern: '/v1/admin/vendor-images/:uuid/reject'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/vendor_directory').adminUnpublishProfileValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/vendor_directory').adminUnpublishProfileValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['rejectImage']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/admin_vendor_profiles_controller').default['rejectImage']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
   'admin.admin_conversations.index': {

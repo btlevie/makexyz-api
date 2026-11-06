@@ -13,3 +13,4 @@
 /// <reference path="../../config/queue.ts" />
 /// <reference path="../../config/shipping.ts" />
 /// <reference path="../../config/transmit.ts" />
+/// <reference path="../../config/vendor_search.ts" />

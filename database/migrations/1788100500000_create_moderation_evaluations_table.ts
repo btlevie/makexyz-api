@@ -13,6 +13,20 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('messages')
         .onDelete('CASCADE')
+      // Text moderated outside a conversation - a vendor's public profile, an
+      // image's decoded text - is the subject instead of a message (see
+      // docs/plans/manual_quotes.md, section 11). Exactly one of message_id
+      // or the subject is set.
+      table
+        .enum('subject_type', [
+          'vendor_profile',
+          'vendor_image',
+          'quote',
+          'vendor_rating',
+          'project_file',
+        ])
+        .nullable()
+      table.integer('subject_id').nullable()
       // One row per pipeline pass on a message: the synchronous pass at send,
       // then any later async analysis or rescan.
       table.enum('stage', ['sync', 'async', 'rescan']).notNullable()
@@ -34,6 +48,8 @@ export default class extends BaseSchema {
       table.integer('duration_ms').notNullable().defaultTo(0)
 
       table.timestamp('created_at')
+
+      table.index(['subject_type', 'subject_id'])
     })
   }
 

@@ -47,6 +47,7 @@ export function onboardingPayload(vendor: Vendor, snapshot: OnboardingSnapshot) 
       : null,
     checklist: snapshot.checklist,
     onboardingComplete: snapshot.onboardingComplete,
+    optionalChecklist: snapshot.optionalChecklist,
   }
 }
 

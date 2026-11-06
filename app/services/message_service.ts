@@ -44,6 +44,7 @@ import {
 import type { AttachmentSignal, ConversationContext, Decision } from '#services/moderation/types'
 import { recordDomainsSeen } from '#services/url_analysis_service'
 import { llmMode } from '#services/llm_moderation_service'
+import { recomputeResponseStatsSafely } from '#services/vendor_response_stats_service'
 
 /** Review-queue priority: lower sorts first. Someone waiting on a held message comes first. */
 const HELD_MESSAGE_PRIORITY = 10
@@ -502,4 +503,14 @@ async function afterDelivery(conversation: Conversation, message: Message) {
     )
   }
   await scheduleNotifications(conversation, message)
+  // A vendor's first answer to an inquiry moves its response rate and time.
+  if (
+    conversation.kind === 'inquiry' &&
+    message.senderVendorId !== null &&
+    conversation.firstVendorResponseAt !== null &&
+    message.deliveredAt !== null &&
+    conversation.firstVendorResponseAt.toMillis() === message.deliveredAt.toMillis()
+  ) {
+    await recomputeResponseStatsSafely(message.senderVendorId)
+  }
 }

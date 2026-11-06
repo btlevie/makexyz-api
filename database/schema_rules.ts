@@ -140,6 +140,12 @@ export default {
           tsType:
             "'individual' | 'sole_prop' | 'c_corp' | 's_corp' | 'partnership' | 'llc' | 'foreign_individual' | 'foreign_entity'",
         },
+        ['profile_moderation_status']: {
+          tsType: "'approved' | 'pending_review' | 'rejected'",
+        },
+        ['geocode_status']: {
+          tsType: "'pending' | 'ok' | 'not_found' | 'failed'",
+        },
       },
     },
     ['invitations']: {
@@ -250,6 +256,9 @@ export default {
         ['decision']: {
           tsType: "'allow' | 'flag' | 'escalate' | 'review' | 'hold' | 'block'",
         },
+        ['subject_type']: {
+          tsType: "'vendor_profile' | 'vendor_image' | 'quote' | 'vendor_rating' | 'project_file'",
+        },
       },
     },
     ['moderation_rule_hits']: {
@@ -264,7 +273,7 @@ export default {
       columns: {
         ['action']: {
           tsType:
-            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated' | 'warn_user' | 'close_conversation' | 'label_case'",
+            "'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated' | 'warn_user' | 'close_conversation' | 'label_case' | 'approve_content' | 'reject_content' | 'unpublish_profile' | 'disable_service' | 'enable_service'",
         },
       },
     },
@@ -298,6 +307,9 @@ export default {
         ['status']: {
           tsType: "'open' | 'claimed' | 'resolved'",
         },
+        ['subject_type']: {
+          tsType: "'vendor_profile' | 'vendor_image' | 'quote' | 'vendor_rating' | 'project_file'",
+        },
         ['resolution']: {
           tsType: "'approved' | 'blocked' | 'removed' | 'no_action'",
         },
@@ -328,6 +340,26 @@ export default {
       columns: {
         ['status']: {
           tsType: "'pending_upload' | 'uploaded' | 'clean' | 'rejected' | 'review'",
+        },
+      },
+    },
+    ['vendor_services']: {
+      columns: {
+        ['service']: {
+          tsType: "'design' | 'scanning' | 'cnc'",
+        },
+        ['rate_unit']: {
+          tsType: "'hour' | 'project'",
+        },
+      },
+    },
+    ['vendor_images']: {
+      columns: {
+        ['kind']: {
+          tsType: "'profile' | 'portfolio'",
+        },
+        ['status']: {
+          tsType: "'pending_upload' | 'uploaded' | 'approved' | 'rejected' | 'review'",
         },
       },
     },

@@ -24,16 +24,21 @@ import type OrderTransformer from '#transformers/order_transformer'
 import type ProductionTimeOptionTransformer from '#transformers/production_time_option_transformer'
 import type ProjectFileTransformer from '#transformers/project_file_transformer'
 import type PublicInvitationTransformer from '#transformers/public_invitation_transformer'
+import type PublicVendorProfileTransformer from '#transformers/public_vendor_profile_transformer'
 import type QuoteTransformer from '#transformers/quote_transformer'
+import type ServiceLocationTransformer from '#transformers/service_location_transformer'
 import type ServiceableCountryTransformer from '#transformers/serviceable_country_transformer'
 import type ShipmentTransformer from '#transformers/shipment_transformer'
 import type ShippingOptionTransformer from '#transformers/shipping_option_transformer'
 import type UrlDomainTransformer from '#transformers/url_domain_transformer'
 import type UserTransformer from '#transformers/user_transformer'
+import type VendorDirectoryCardTransformer from '#transformers/vendor_directory_card_transformer'
+import type VendorImageTransformer from '#transformers/vendor_image_transformer'
 import type VendorOnboardingTransformer from '#transformers/vendor_onboarding_transformer'
 import type VendorPayoutMethodTransformer from '#transformers/vendor_payout_method_transformer'
 import type VendorPayoutRateTransformer from '#transformers/vendor_payout_rate_transformer'
 import type VendorPayoutTransformer from '#transformers/vendor_payout_transformer'
+import type VendorProfileTransformer from '#transformers/vendor_profile_transformer'
 import type VendorShipmentTransformer from '#transformers/vendor_shipment_transformer'
 
 export namespace Data {
@@ -113,9 +118,17 @@ export namespace Data {
   export namespace PublicInvitation {
     export type Variants = InferVariants<PublicInvitationTransformer>
   }
+  export type PublicVendorProfile = InferData<PublicVendorProfileTransformer>
+  export namespace PublicVendorProfile {
+    export type Variants = InferVariants<PublicVendorProfileTransformer>
+  }
   export type Quote = InferData<QuoteTransformer>
   export namespace Quote {
     export type Variants = InferVariants<QuoteTransformer>
+  }
+  export type ServiceLocation = InferData<ServiceLocationTransformer>
+  export namespace ServiceLocation {
+    export type Variants = InferVariants<ServiceLocationTransformer>
   }
   export type ServiceableCountry = InferData<ServiceableCountryTransformer>
   export namespace ServiceableCountry {
@@ -137,6 +150,14 @@ export namespace Data {
   export namespace User {
     export type Variants = InferVariants<UserTransformer>
   }
+  export type VendorDirectoryCard = InferData<VendorDirectoryCardTransformer>
+  export namespace VendorDirectoryCard {
+    export type Variants = InferVariants<VendorDirectoryCardTransformer>
+  }
+  export type VendorImage = InferData<VendorImageTransformer>
+  export namespace VendorImage {
+    export type Variants = InferVariants<VendorImageTransformer>
+  }
   export type VendorOnboarding = InferData<VendorOnboardingTransformer>
   export namespace VendorOnboarding {
     export type Variants = InferVariants<VendorOnboardingTransformer>
@@ -152,6 +173,10 @@ export namespace Data {
   export type VendorPayout = InferData<VendorPayoutTransformer>
   export namespace VendorPayout {
     export type Variants = InferVariants<VendorPayoutTransformer>
+  }
+  export type VendorProfile = InferData<VendorProfileTransformer>
+  export namespace VendorProfile {
+    export type Variants = InferVariants<VendorProfileTransformer>
   }
   export type VendorShipment = InferData<VendorShipmentTransformer>
   export namespace VendorShipment {

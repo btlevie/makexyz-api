@@ -73,3 +73,25 @@ export const instantQuoteThrottle = limiter.define('instantQuote', () => {
     .allowRequests(env.get('INSTANT_QUOTE_RATE_LIMIT_REQUESTS', 10))
     .every(env.get('INSTANT_QUOTE_RATE_LIMIT_WINDOW', '1 hour'))
 })
+
+/**
+ * The public vendor directory search, per IP. A search can cost a Google
+ * reverse geocode (the city-page fallback), so it's capped like the link
+ * interstitial.
+ */
+export const vendorSearchThrottle = limiter.define('vendorSearch', (ctx) => {
+  return limiter.allowRequests(60).every('1 minute').usingKey(`ip_${ctx.request.ip()}`)
+})
+
+/** Landing-page visits recorded by the frontend, per IP - a floor against log flooding. */
+export const landingVisitThrottle = limiter.define('landingVisits', (ctx) => {
+  return limiter.allowRequests(30).every('1 minute').usingKey(`ip_${ctx.request.ip()}`)
+})
+
+/** Vendor profile image uploads, per account: each issues a presigned upload and queues checks. */
+export const vendorImageThrottle = limiter.define('vendorImages', (ctx) => {
+  return limiter
+    .allowRequests(20)
+    .every('10 minutes')
+    .usingKey(`user_${ctx.auth.user?.id ?? ctx.request.ip()}`)
+})

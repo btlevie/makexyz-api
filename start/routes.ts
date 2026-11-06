@@ -15,8 +15,11 @@ import {
   attachmentThrottle,
   emailVerificationThrottle,
   instantQuoteThrottle,
+  landingVisitThrottle,
   linkThrottle,
   messagingThrottle,
+  vendorImageThrottle,
+  vendorSearchThrottle,
 } from '#start/limiter'
 
 router.get('/', () => {
@@ -247,6 +250,19 @@ router
     // to people who may not be signed in.
     router.get('links/:token', [controllers.Links, 'show']).use(linkThrottle)
 
+    // Public vendor directory (docs/plans/manual_quotes.md, section 2).
+    // Search is a POST so the searcher's location stays out of URLs, logs
+    // and caches. Nothing here returns coordinates or street addresses.
+    router.post('vendors/search', [controllers.Vendors, 'search']).use(vendorSearchThrottle)
+    router.get('vendors/:slug', [controllers.Vendors, 'show'])
+    // City pages: the indexable ones (sitemap, city index), and any one by slug.
+    router.get('locations', [controllers.Locations, 'index'])
+    router.get('locations/:slug', [controllers.Locations, 'show'])
+    // Demand logging for city pages - the frontend records landing visits.
+    router
+      .post('analytics/landing-visits', [controllers.LandingVisits, 'store'])
+      .use(landingVisitThrottle)
+
     // Public: the configure step's shipping-method picker - the methods and
     // fees offered to ?country=XX. Not project-scoped (shipping depends only
     // on the destination), and not throttled: a read with no external calls.
@@ -307,6 +323,20 @@ router
         router.put('onboarding/tax', [controllers.VendorOnboarding, 'uploadTax'])
         router.post('onboarding/submit', [controllers.VendorOnboarding, 'submit'])
 
+        // The public directory profile: text, publishing, services,
+        // indicative prices, photo and portfolio (moderated - see
+        // vendor_profile_service.ts and vendor_image_service.ts).
+        router.get('profile', [controllers.VendorProfile, 'show'])
+        router.patch('profile', [controllers.VendorProfile, 'update'])
+        router.put('profile/services', [controllers.VendorProfile, 'setServices'])
+        router.put('profile/prices', [controllers.VendorProfile, 'setPrices'])
+        router
+          .post('profile/images', [controllers.VendorProfile, 'createImage'])
+          .use(vendorImageThrottle)
+        router.put('profile/images/order', [controllers.VendorProfile, 'reorderImages'])
+        router.post('profile/images/:uuid/complete', [controllers.VendorProfile, 'completeImage'])
+        router.delete('profile/images/:uuid', [controllers.VendorProfile, 'destroyImage'])
+
         // Vendor-only controls over inquiries: pass on one, or block the
         // customer (also opens a moderation case).
         router.post('conversations/:uuid/decline', [controllers.VendorConversations, 'decline'])
@@ -353,6 +383,20 @@ router
         router.post('vendors/:uuid/activate', [controllers.AdminVendors, 'activate'])
         router.post('vendors/:uuid/suspend', [controllers.AdminVendors, 'suspend'])
         router.post('vendors/:uuid/reinstate', [controllers.AdminVendors, 'reinstate'])
+
+        // The public directory: a vendor's profile as they see it, taking it
+        // out of the directory, turning off a service, vendor images.
+        router.get('vendors/:uuid/profile', [controllers.AdminVendorProfiles, 'show'])
+        router.post('vendors/:uuid/profile/unpublish', [
+          controllers.AdminVendorProfiles,
+          'unpublish',
+        ])
+        router.patch('vendors/:uuid/services/:service', [
+          controllers.AdminVendorProfiles,
+          'setService',
+        ])
+        router.get('vendor-images/:uuid', [controllers.AdminVendorProfiles, 'showImage'])
+        router.post('vendor-images/:uuid/reject', [controllers.AdminVendorProfiles, 'rejectImage'])
 
         // Messaging oversight: read-only conversations (every message, with
         // the moderation rules that fired) and the review queue.

@@ -8,7 +8,7 @@ import User from '#models/user'
 import Vendor from '#models/vendor'
 import { analyzeHeldMessage } from '#services/message_analysis_service'
 import { fakeWebRisk } from '#services/url_analysis_service'
-import { activeVendorAttributes, signupAs } from '#tests/helpers/vendors'
+import { activeVendorAttributes, listedVendorAttributes, signupAs } from '#tests/helpers/vendors'
 
 /** A signed-in customer whose email is already verified - able to message vendors. */
 export async function verifiedCustomer(client: any) {
@@ -38,6 +38,8 @@ export async function activeVendor(client: any, displayName = 'Acme Print') {
     userId: user.id,
     displayName,
     ...activeVendorAttributes(),
+    // Listed in the directory - only listed vendors take inquiries.
+    ...listedVendorAttributes(),
   })
   return { session: response.session(), user, vendor }
 }

@@ -53,6 +53,11 @@ export type ScannedRoutes = {
     'messaging.conversation_attachments.show': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
     'messaging.inquiries.store': { paramsTuple: [ParamValue]; params: {'vendorUuid': ParamValue} }
     'links.show': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'vendors.search': { paramsTuple?: []; params?: {} }
+    'vendors.show': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
+    'locations.index': { paramsTuple?: []; params?: {} }
+    'locations.show': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
+    'landing_visits.store': { paramsTuple?: []; params?: {} }
     'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
@@ -78,6 +83,14 @@ export type ScannedRoutes = {
     'vendor.vendor_onboarding.accept_agreement': { paramsTuple?: []; params?: {} }
     'vendor.vendor_onboarding.upload_tax': { paramsTuple?: []; params?: {} }
     'vendor.vendor_onboarding.submit': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.show': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.update': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.set_services': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.set_prices': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.create_image': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.reorder_images': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.complete_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_profile.destroy_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_conversations.decline': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_conversations.block_customer': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
@@ -102,6 +115,11 @@ export type ScannedRoutes = {
     'admin.admin_vendors.activate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.suspend': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.reinstate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.unpublish': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.set_service': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'service': ParamValue} }
+    'admin.admin_vendor_profiles.show_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.reject_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_conversations.index': { paramsTuple?: []; params?: {} }
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
@@ -149,6 +167,9 @@ export type ScannedRoutes = {
     'messaging.conversations.messages': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversation_attachments.show': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
     'links.show': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'vendors.show': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
+    'locations.index': { paramsTuple?: []; params?: {} }
+    'locations.show': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
     'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
@@ -158,6 +179,7 @@ export type ScannedRoutes = {
     'vendor.vendor_addresses.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_onboarding.show': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.show': { paramsTuple?: []; params?: {} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.index': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -165,6 +187,8 @@ export type ScannedRoutes = {
     'admin.admin_vendors.index': { paramsTuple?: []; params?: {} }
     'admin.admin_vendors.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.tax_document': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.show_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_conversations.index': { paramsTuple?: []; params?: {} }
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
@@ -196,6 +220,9 @@ export type ScannedRoutes = {
     'messaging.conversations.messages': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversation_attachments.show': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
     'links.show': { paramsTuple: [ParamValue]; params: {'token': ParamValue} }
+    'vendors.show': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
+    'locations.index': { paramsTuple?: []; params?: {} }
+    'locations.show': { paramsTuple: [ParamValue]; params: {'slug': ParamValue} }
     'shipping_options.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_orders.active': { paramsTuple?: []; params?: {} }
@@ -205,6 +232,7 @@ export type ScannedRoutes = {
     'vendor.vendor_addresses.index': { paramsTuple?: []; params?: {} }
     'vendor.vendor_addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_onboarding.show': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.show': { paramsTuple?: []; params?: {} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.index': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -212,6 +240,8 @@ export type ScannedRoutes = {
     'admin.admin_vendors.index': { paramsTuple?: []; params?: {} }
     'admin.admin_vendors.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.tax_document': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.show_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_conversations.index': { paramsTuple?: []; params?: {} }
     'admin.admin_conversations.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.index': { paramsTuple?: []; params?: {} }
@@ -250,6 +280,8 @@ export type ScannedRoutes = {
     'messaging.conversation_attachments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'messaging.conversation_attachments.complete': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'attachmentUuid': ParamValue} }
     'messaging.inquiries.store': { paramsTuple: [ParamValue]; params: {'vendorUuid': ParamValue} }
+    'vendors.search': { paramsTuple?: []; params?: {} }
+    'landing_visits.store': { paramsTuple?: []; params?: {} }
     'vendor.vendor_shipments.store': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_shipments.void': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'shipmentUuid': ParamValue} }
     'vendor.vendor_payout_methods.start_stripe': { paramsTuple?: []; params?: {} }
@@ -258,6 +290,8 @@ export type ScannedRoutes = {
     'vendor.vendor_addresses.store': { paramsTuple?: []; params?: {} }
     'vendor.vendor_onboarding.accept_agreement': { paramsTuple?: []; params?: {} }
     'vendor.vendor_onboarding.submit': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.create_image': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.complete_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_conversations.decline': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_conversations.block_customer': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_quotes.split': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -272,6 +306,8 @@ export type ScannedRoutes = {
     'admin.admin_vendors.activate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.suspend': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.reinstate': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.unpublish': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'admin.admin_vendor_profiles.reject_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.approve': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.block': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_cases.restrict': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -300,8 +336,10 @@ export type ScannedRoutes = {
     'vendor.vendor_orders.ready_to_ship': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_addresses.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_onboarding.update_profile': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.update': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.update_vendor': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_vendors.review_capability': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'technology': ParamValue} }
+    'admin.admin_vendor_profiles.set_service': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'service': ParamValue} }
     'admin.admin_moderation_cases.label': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_moderation_rules.update': { paramsTuple: [ParamValue]; params: {'ruleId': ParamValue} }
     'admin.admin_moderation_terms.update': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -309,10 +347,14 @@ export type ScannedRoutes = {
   DELETE: {
     'profile.addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_profile.destroy_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
   }
   PUT: {
     'vendor.vendor_onboarding.set_capabilities': { paramsTuple?: []; params?: {} }
     'vendor.vendor_onboarding.upload_tax': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.set_services': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.set_prices': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_profile.reorder_images': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.update_rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_url_domains.update': { paramsTuple: [ParamValue]; params: {'domain': ParamValue} }
   }

@@ -14,6 +14,18 @@ export default class extends BaseSchema {
         .references('id')
         .inTable('messages')
         .onDelete('SET NULL')
+      // A case about something other than a message - a vendor's public
+      // profile text or an image (docs/plans/manual_quotes.md, section 11).
+      table
+        .enum('subject_type', [
+          'vendor_profile',
+          'vendor_image',
+          'quote',
+          'vendor_rating',
+          'project_file',
+        ])
+        .nullable()
+      table.integer('subject_id').nullable()
       // The subject whose behavior is under review - one of these.
       table
         .integer('customer_id')
@@ -81,6 +93,7 @@ export default class extends BaseSchema {
       table.index(['status', 'priority', 'created_at'])
       table.index(['message_id'])
       table.index(['dedup_key', 'status'])
+      table.index(['subject_type', 'subject_id', 'status'])
     })
   }
 

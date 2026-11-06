@@ -38,7 +38,12 @@ export type SenderRole = 'customer' | 'vendor' | 'staff'
 
 export type Channel = 'web' | 'email'
 
-export type ConversationKind = 'inquiry' | 'order' | 'support'
+/**
+ * 'profile' is public text outside any conversation - a vendor's profile,
+ * text found in a vendor image (content_moderation_service.ts). Rules that
+ * only make sense in a thread (cold pitch, quote phase) skip it.
+ */
+export type ConversationKind = 'inquiry' | 'order' | 'support' | 'profile'
 
 /**
  * The same text seen several ways, so an obfuscated contact detail shows up

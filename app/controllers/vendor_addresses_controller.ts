@@ -4,6 +4,7 @@ import Address from '#models/address'
 import AddressTransformer from '#transformers/address_transformer'
 import { createAddressValidator, updateAddressValidator } from '#validators/address'
 import { createAddress, updateAddress, deleteAddress, AddressInUseError } from '#services/address_service'
+import { queueGeocode } from '#services/geocoding_service'
 
 export default class VendorAddressesController {
   async index(ctx: HttpContext) {
@@ -29,6 +30,8 @@ export default class VendorAddressesController {
 
     const input = await request.validateUsing(createAddressValidator)
     const address = await createAddress({ ownerType: 'vendor', vendorId: vendor.id, ...input })
+    // The default address is the vendor's public city (geocoding_service.ts).
+    await queueGeocode(vendor.id)
     return await serialize(AddressTransformer.transform(address))
   }
 
@@ -61,6 +64,7 @@ export default class VendorAddressesController {
     const input = await request.validateUsing(updateAddressValidator)
     try {
       const updated = await updateAddress(address, input)
+      await queueGeocode(vendor.id)
       return await serialize(AddressTransformer.transform(updated))
     } catch (error) {
       if (error instanceof AddressInUseError) {
@@ -84,6 +88,7 @@ export default class VendorAddressesController {
 
     try {
       await deleteAddress(address)
+      await queueGeocode(vendor.id)
       return response.noContent()
     } catch (error) {
       if (error instanceof AddressInUseError) {

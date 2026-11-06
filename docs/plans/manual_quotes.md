@@ -1,4 +1,4 @@
-> Approved plan, not yet implemented. Companion plan: [messaging_moderation.md](./messaging_moderation.md).
+> Approved plan. **Step 1 (vendor profiles, geocoding and search) is implemented**; see "Implementation notes" at the end. Step 7 (prohibited-item rules) landed with messaging Step 2. Companion plan: [messaging_moderation.md](./messaging_moderation.md).
 
 # Manual quotes: inquiry → vendor quote → order
 
@@ -195,7 +195,7 @@ The legacy app records every search so that places with real demand can be promo
   - **revenue:** a paid order shipped to that city in the last 730 days.
 
   Every other page is served as noindex and left out of `GET /v1/locations`. Each indexable page also records up to 15 **served area names** (non-indexable towns within 50 miles), which the frontend renders as "Serving: …".
-  - The columns on `service_locations` are `is_indexable`, `vendors_25mi`, `search_demand`, `recent_orders`, `served_area_names` (json), `scored_at`.
+  - The columns on `service_locations` are `is_indexable`, `nearby_vendor_count` (active vendors within 25 miles), `search_demand`, `recent_orders`, `served_area_names` (json), `scored_at`.
   - The thresholds are config constants, with the legacy values as defaults.
   - Distances use `place_coordinates` for both the city page and the vendors.
   - **The Search Console integration** (`search_console_service`) ports `xyz/apis/gsc.py`:
@@ -217,7 +217,7 @@ The legacy app records every search so that places with real demand can be promo
   - The search filter is `service = printing | design | scanning | cnc`.
   - These services are quoted through manual quotes as `service` lines. There's no instant quote for them.
   - Admins can deactivate a service.
-- **Price indicator:** a `vendor_indicative_prices` table (`vendor_id`, `material_id`, `price_per_cm3`) holds what the vendor publishes. It's not binding, and manual quotes stay freeform.
+- **Price indicator:** a `vendor_indicative_prices` table (`vendor_id`, `material_id`, `price_per_cubic_cm`) holds what the vendor publishes. It's not binding, and manual quotes stay freeform.
   - The profile and search results show `priceTier` 1–4 (the "$ to $$$$"), derived from the vendor's cheapest price with the legacy thresholds: under 0.49 → 1, under 1.49 → 2, under 3.24 → 3, otherwise 4. The thresholds are config values.
   - Designers show their hourly rate.
 - **Profile photo and portfolio images:** a `vendor_images` table: `uuid`, `vendor_id`, `kind` (`profile`, `portfolio`), `storage_key`, `position`, `status` (`pending`, `approved`, `rejected`). One profile photo and up to 12 portfolio images.
@@ -431,14 +431,14 @@ The legacy app records every search so that places with real demand can be promo
 | Table | Change |
 |---|---|
 | `vendors` | + `profile_slug` (unique), `bio`, `accepting_inquiries`, `profile_published_at`, `place_id` (the city's Google place ID, indexed), `place_type`, `place_id_refreshed_at`, `geocode_status`, `rating_count`, `rating_average`, `response_rate`, `response_time_hours` |
-| `service_locations` (new) | `slug` (unique), `city`, `state`, `country`, `place_id` (unique), `place_id_refreshed_at`, `is_indexable`, `vendors_25mi`, `search_demand`, `recent_orders`, `served_area_names` json, `scored_at`. No coordinates |
+| `service_locations` (new) | `slug` (unique), `city`, `state`, `country`, `place_id` (unique), `place_id_refreshed_at`, `is_indexable`, `nearby_vendor_count`, `search_demand`, `recent_orders`, `served_area_names` json, `scored_at`. No coordinates |
 | `search_events` (new) | See section 2g. Indexes on `created_at`, `matched_location_id`, `canonical_location_id`, `session_key` |
 | `landing_page_visits` (new) | `path`, `referrer`, `is_internal_referrer`, `session_key`, `created_at` |
 | `location_candidates` (new) | See section 2g |
 | `service_location_postal_codes` (new) | `service_location_id`, `country`, `postal_code`. Unique on (`country`, `postal_code`) |
 | `place_coordinates` (new) | `place_id` (unique), `lat`, `lng`, `expires_at` (≤ 30 days). One row per city in use, shared by vendors and city pages. No user data |
 | `vendor_services` (new) | `vendor_id`, `service` (`design`, `scanning`, `cnc`), `active`, `rate`, `rate_unit`, `description`. Unique on (`vendor_id`, `service`) |
-| `vendor_indicative_prices` (new) | `vendor_id`, `material_id`, `price_per_cm3`. Unique on (`vendor_id`, `material_id`) |
+| `vendor_indicative_prices` (new) | `vendor_id`, `material_id`, `price_per_cubic_cm`. Unique on (`vendor_id`, `material_id`) |
 | `vendor_images` (new) | `uuid`, `vendor_id`, `kind` (`profile`, `portfolio`), `storage_key`, `thumbnail_key`, `position`, `status`, `moderation_details` json |
 | `customer_ratings` (new) | `order_id` (unique), `vendor_id`, `customer_id`, `stars`, `note` |
 | `orders` | + `rating_request_count`, `rating_last_requested_at` |
@@ -554,3 +554,27 @@ Dependencies:
   - a prohibited term in a quote blocks the send, and an instant-quote upload named `auto_sear.stl` puts the quote into `needs_review`;
   - `mail.fake()` is used for all notifications.
 - **End to end locally:** `npm run dev` + `node ace queue:work`. Walk through customer inquiry → vendor project → quote → send → customer configure → pay (Stripe test mode) → vendor tracking → a simulated tracker webhook → payout.
+
+---
+
+## Implementation notes
+
+### Step 1 (done, 2026-11-05)
+
+Built as planned: profile fields, Google geocoding with the 30-day coordinate cache and the refresh jobs, city pages by place ID and postal code, the legacy ranking with the volume bonus fixed, the newcomer boost, services, the price indicator, profile photos and portfolio images, response rate and time, search-event and landing-visit logging, and the moderation hook. The onboarding doc covers the vendor-facing side.
+
+Where the build differs from the plan text above:
+- **Column names.** Lucid's snake-case naming turns `vendors25Mi` into `vendors_25_mi` and `pricePerCm3` into `price_per_cm_3`, so those columns are `service_locations.nearby_vendor_count` and `vendor_indicative_prices.price_per_cubic_cm`. The API field is still `pricePerCm3`.
+- **Extra columns.**
+  - `vendors.profile_moderation_status` (`approved`, `pending_review`, `rejected`) holds the review state of the public text, which the listing rule needs.
+  - `vendors.location_city`, `location_state`, `location_country` and `location_postal_code` are copied from the vendor's own default address, so search reads one row per vendor.
+  - `vendor_services.admin_disabled_at` stops a vendor re-enabling a service an admin turned off.
+  - `moderation_cases` gets `subject_type` / `subject_id` as well as `moderation_evaluations`.
+- **Profile text moderation** uses a new `ConversationKind` of `profile`, so thread-only rules (cold pitch, quote phase) skip it. Hold, review and escalate decisions all go to a person; profiles get no LLM pass. A restricted vendor's edits always go to review, as their messages do.
+- **Image serving.** Approved images are re-encoded to WebP under `${S3_FILE_STORAGE_KEY}/public/`. With `PUBLIC_ASSET_BASE_URL` set (a public-read prefix or CloudFront) they're linked directly; without it they're 1-hour presigned GETs. The bucket policy and CloudFront aren't set up yet.
+- **Search logging** records the first page of each search only, so paging doesn't inflate demand.
+- **Coordinate rounding.** 3 decimal places is about 100 m, not 1 km. Searcher coordinates are rounded to 3 places before use, and search events keep 2 places (about 1 km).
+
+Not done yet:
+- City-page scoring (2g) is Step 8, so every page stays non-indexable for now. `GET /v1/locations` is empty until then, and searches fall back to no canonical page.
+- The place-ID refresh uses the Places API (New) ID-only lookup, so the Google key must allow both the Geocoding API and the Places API (New).

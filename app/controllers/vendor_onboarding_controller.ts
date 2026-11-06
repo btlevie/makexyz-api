@@ -17,6 +17,7 @@ import {
   uploadTaxDocument,
   VendorStatusError,
 } from '#services/vendor_onboarding_service'
+import { ProfileBlockedError } from '#services/vendor_profile_service'
 
 /**
  * The vendor's own onboarding steps. Every endpoint returns the onboarding
@@ -117,6 +118,9 @@ export default class VendorOnboardingController {
   }
 
   private handleError(error: unknown, response: HttpContext['response']) {
+    if (error instanceof ProfileBlockedError) {
+      return response.unprocessableEntity({ error: error.reason, code: 'moderation_blocked' })
+    }
     if (error instanceof VendorStatusError) {
       return response.conflict({ error: error.message })
     }

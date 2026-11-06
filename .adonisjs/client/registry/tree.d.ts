@@ -101,6 +101,17 @@ export interface ApiDefinition {
   links: {
     show: typeof routes['links.show']
   }
+  vendors: {
+    search: typeof routes['vendors.search']
+    show: typeof routes['vendors.show']
+  }
+  locations: {
+    index: typeof routes['locations.index']
+    show: typeof routes['locations.show']
+  }
+  landingVisits: {
+    store: typeof routes['landing_visits.store']
+  }
   shippingOptions: {
     index: typeof routes['shipping_options.index']
   }
@@ -141,6 +152,16 @@ export interface ApiDefinition {
       uploadTax: typeof routes['vendor.vendor_onboarding.upload_tax']
       submit: typeof routes['vendor.vendor_onboarding.submit']
     }
+    vendorProfile: {
+      show: typeof routes['vendor.vendor_profile.show']
+      update: typeof routes['vendor.vendor_profile.update']
+      setServices: typeof routes['vendor.vendor_profile.set_services']
+      setPrices: typeof routes['vendor.vendor_profile.set_prices']
+      createImage: typeof routes['vendor.vendor_profile.create_image']
+      reorderImages: typeof routes['vendor.vendor_profile.reorder_images']
+      completeImage: typeof routes['vendor.vendor_profile.complete_image']
+      destroyImage: typeof routes['vendor.vendor_profile.destroy_image']
+    }
     vendorConversations: {
       decline: typeof routes['vendor.vendor_conversations.decline']
       blockCustomer: typeof routes['vendor.vendor_conversations.block_customer']
@@ -176,6 +197,13 @@ export interface ApiDefinition {
       activate: typeof routes['admin.admin_vendors.activate']
       suspend: typeof routes['admin.admin_vendors.suspend']
       reinstate: typeof routes['admin.admin_vendors.reinstate']
+    }
+    adminVendorProfiles: {
+      show: typeof routes['admin.admin_vendor_profiles.show']
+      unpublish: typeof routes['admin.admin_vendor_profiles.unpublish']
+      setService: typeof routes['admin.admin_vendor_profiles.set_service']
+      showImage: typeof routes['admin.admin_vendor_profiles.show_image']
+      rejectImage: typeof routes['admin.admin_vendor_profiles.reject_image']
     }
     adminConversations: {
       index: typeof routes['admin.admin_conversations.index']

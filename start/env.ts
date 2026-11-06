@@ -282,4 +282,28 @@ export default await Env.create(new URL('../', import.meta.url), {
   BEDROCK_MODEL_ID: Env.schema.string.optional(),
   LLM_MODERATION_MODE: Env.schema.enum.optional(['off', 'shadow', 'enforce'] as const),
   LLM_SENDER_HOURLY_BUDGET: Env.schema.number.optional(),
+
+  /*
+  |----------------------------------------------------------
+  | Vendor directory (docs/plans/manual_quotes.md, section 2)
+  |----------------------------------------------------------
+  | GOOGLE_GEOCODING_API_KEY is a server-side Google key restricted to the
+  | Geocoding API and the Places API (New) (the free ID-only place refresh).
+  | Without it nothing is geocoded: vendors stay geocode_status 'pending'
+  | and rank on reputation alone, and city-page resolution skips the
+  | reverse-geocode fallback.
+  |
+  | IMAGE_MODERATION: 'rekognition' checks every vendor profile/portfolio
+  | image with Rekognition DetectModerationLabels (the task role needs
+  | rekognition:DetectModerationLabels). 'disabled' (the default, for local
+  | dev) sends every image to a person instead.
+  |
+  | PUBLIC_ASSET_BASE_URL serves approved vendor images from a public-read
+  | prefix (`${S3_FILE_STORAGE_KEY}/public/`, e.g. through CloudFront) as
+  | `${PUBLIC_ASSET_BASE_URL}/<key>`. Unset, image URLs are short-lived
+  | presigned GETs instead.
+  */
+  GOOGLE_GEOCODING_API_KEY: Env.schema.string.optional(),
+  IMAGE_MODERATION: Env.schema.enum.optional(['rekognition', 'disabled'] as const),
+  PUBLIC_ASSET_BASE_URL: Env.schema.string.optional(),
 })

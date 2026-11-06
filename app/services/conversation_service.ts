@@ -25,6 +25,7 @@ import type Vendor from '#models/vendor'
 import { isEmailVerified } from '#services/email_verification_service'
 import { postSystemMessage } from '#services/message_service'
 import { noteVendorBlock } from '#services/messaging_risk_service'
+import { recomputeResponseStatsSafely } from '#services/vendor_response_stats_service'
 
 /** An inquiry with no messages for this long becomes read-only. */
 export const INQUIRY_IDLE_DAYS = 60
@@ -120,9 +121,9 @@ export async function createInquiry(input: {
       'Confirm your email address before messaging vendors'
     )
   }
-  // TODO(manual-quotes): also require the vendor's published profile and
-  // accepting_inquiries flag once vendor profiles exist (docs/plans/manual_quotes.md).
-  if (vendor.status !== 'active') {
+  // Only vendors listed in the directory take inquiries: active, accepting
+  // inquiries, published, profile text approved (Vendor#isListed).
+  if (!vendor.isListed) {
     throw new InquiryNotAllowedError('vendor_unavailable', 'This vendor is not taking inquiries')
   }
 
@@ -403,7 +404,8 @@ export async function declineInquiry(
     reason
       ? `The manufacturer declined this inquiry: ${reason}`
       : 'The manufacturer declined this inquiry.'
-  )
+  ) // A decline counts as a response.
+  await recomputeResponseStatsSafely(conversation.vendorId)
 }
 
 /**

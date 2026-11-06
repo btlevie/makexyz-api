@@ -328,6 +328,23 @@ export class InvitationSchema extends BaseModel {
   declare uuid: string
 }
 
+export class LandingPageVisitSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'isInternalReferrer', 'path', 'referrer', 'sessionKey'] as const
+  $columns = LandingPageVisitSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isInternalReferrer: boolean
+  @column()
+  declare path: string
+  @column()
+  declare referrer: string | null
+  @column()
+  declare sessionKey: string | null
+}
+
 export class MaterialColorSchema extends BaseModel {
   static $columns = ['createdAt', 'hex', 'id', 'isDefault', 'materialId', 'name', 'updatedAt', 'uuid'] as const
   $columns = MaterialColorSchema.$columns
@@ -553,7 +570,7 @@ export class ModerationActionSchema extends BaseModel {
   static $columns = ['action', 'actorUserId', 'caseId', 'createdAt', 'id', 'metadata', 'reason', 'targetId', 'targetType'] as const
   $columns = ModerationActionSchema.$columns
   @column()
-  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated' | 'warn_user' | 'close_conversation' | 'label_case'
+  declare action: 'approve_message' | 'block_message' | 'remove_message' | 'restrict_user' | 'suspend_user' | 'lift_restriction' | 'rule_config_change' | 'term_added' | 'term_updated' | 'term_disabled' | 'domain_list_updated' | 'warn_user' | 'close_conversation' | 'label_case' | 'approve_content' | 'reject_content' | 'unpublish_profile' | 'disable_service' | 'enable_service'
   @column()
   declare actorUserId: number | null
   @column()
@@ -573,7 +590,7 @@ export class ModerationActionSchema extends BaseModel {
 }
 
 export class ModerationCaseSchema extends BaseModel {
-  static $columns = ['abuseCategory', 'assignedToId', 'claimedAt', 'createdAt', 'customerId', 'dedupKey', 'details', 'id', 'messageId', 'missedByAutomation', 'patternNote', 'priority', 'resolution', 'resolvedAt', 'resolvedById', 'source', 'status', 'updatedAt', 'uuid', 'vendorId'] as const
+  static $columns = ['abuseCategory', 'assignedToId', 'claimedAt', 'createdAt', 'customerId', 'dedupKey', 'details', 'id', 'messageId', 'missedByAutomation', 'patternNote', 'priority', 'resolution', 'resolvedAt', 'resolvedById', 'source', 'status', 'subjectId', 'subjectType', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = ModerationCaseSchema.$columns
   @column()
   declare abuseCategory: string | null
@@ -609,6 +626,10 @@ export class ModerationCaseSchema extends BaseModel {
   declare source: 'auto_hold' | 'auto_flag' | 'report' | 'behavioral' | 'audit_sample' | 'url_rescan' | 'quote_outlier' | 'unconfirmed_delivery' | 'prohibited_item'
   @column()
   declare status: 'open' | 'claimed' | 'resolved'
+  @column()
+  declare subjectId: number | null
+  @column()
+  declare subjectType: 'vendor_profile' | 'vendor_image' | 'quote' | 'vendor_rating' | 'project_file' | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
@@ -618,7 +639,7 @@ export class ModerationCaseSchema extends BaseModel {
 }
 
 export class ModerationEvaluationSchema extends BaseModel {
-  static $columns = ['context', 'createdAt', 'decision', 'durationMs', 'id', 'llm', 'messageId', 'pipelineVersion', 'riskScore', 'rulesEvaluated', 'signals', 'stage'] as const
+  static $columns = ['context', 'createdAt', 'decision', 'durationMs', 'id', 'llm', 'messageId', 'pipelineVersion', 'riskScore', 'rulesEvaluated', 'signals', 'stage', 'subjectId', 'subjectType'] as const
   $columns = ModerationEvaluationSchema.$columns
   @column()
   declare context: any | null
@@ -644,6 +665,10 @@ export class ModerationEvaluationSchema extends BaseModel {
   declare signals: any | null
   @column()
   declare stage: 'sync' | 'async' | 'rescan'
+  @column()
+  declare subjectId: number | null
+  @column()
+  declare subjectType: 'vendor_profile' | 'vendor_image' | 'quote' | 'vendor_rating' | 'project_file' | null
 }
 
 export class ModerationPatternReportSchema extends BaseModel {
@@ -908,6 +933,27 @@ export class PaymentSchema extends BaseModel {
   declare status: 'pending' | 'authorized' | 'captured' | 'failed' | 'refunded' | 'cancelled'
   @column()
   declare transactionId: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class PlaceCoordinateSchema extends BaseModel {
+  static $columns = ['createdAt', 'expiresAt', 'id', 'lat', 'lng', 'placeId', 'refreshedAt', 'updatedAt'] as const
+  $columns = PlaceCoordinateSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column.dateTime()
+  declare expiresAt: DateTime
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare lat: number
+  @column()
+  declare lng: number
+  @column()
+  declare placeId: string
+  @column.dateTime()
+  declare refreshedAt: DateTime
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 }
@@ -1306,6 +1352,99 @@ export class RememberMeTokenSchema extends BaseModel {
   declare updatedAt: DateTime
 }
 
+export class SearchEventSchema extends BaseModel {
+  static $columns = ['canonicalLocationId', 'city', 'country', 'createdAt', 'customerId', 'filters', 'id', 'lat', 'lng', 'localityPlaceId', 'matchedLocationId', 'placeId', 'postalCode', 'rawQuery', 'resultCount', 'service', 'sessionKey', 'state'] as const
+  $columns = SearchEventSchema.$columns
+  @column()
+  declare canonicalLocationId: number | null
+  @column()
+  declare city: string | null
+  @column()
+  declare country: string | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare customerId: number | null
+  @column()
+  declare filters: any | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare lat: number | null
+  @column()
+  declare lng: number | null
+  @column()
+  declare localityPlaceId: string | null
+  @column()
+  declare matchedLocationId: number | null
+  @column()
+  declare placeId: string | null
+  @column()
+  declare postalCode: string | null
+  @column()
+  declare rawQuery: string | null
+  @column()
+  declare resultCount: number
+  @column()
+  declare service: string | null
+  @column()
+  declare sessionKey: string | null
+  @column()
+  declare state: string | null
+}
+
+export class ServiceLocationPostalCodeSchema extends BaseModel {
+  static $columns = ['country', 'createdAt', 'id', 'postalCode', 'serviceLocationId', 'updatedAt'] as const
+  $columns = ServiceLocationPostalCodeSchema.$columns
+  @column()
+  declare country: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare postalCode: string
+  @column()
+  declare serviceLocationId: number
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
+export class ServiceLocationSchema extends BaseModel {
+  static $columns = ['city', 'country', 'createdAt', 'id', 'isIndexable', 'nearbyVendorCount', 'placeId', 'placeIdRefreshedAt', 'recentOrders', 'scoredAt', 'searchDemand', 'servedAreaNames', 'slug', 'state', 'updatedAt'] as const
+  $columns = ServiceLocationSchema.$columns
+  @column()
+  declare city: string
+  @column()
+  declare country: string
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare isIndexable: boolean
+  @column()
+  declare nearbyVendorCount: number
+  @column()
+  declare placeId: string | null
+  @column.dateTime()
+  declare placeIdRefreshedAt: DateTime | null
+  @column()
+  declare recentOrders: number
+  @column.dateTime()
+  declare scoredAt: DateTime | null
+  @column()
+  declare searchDemand: number
+  @column()
+  declare servedAreaNames: any | null
+  @column()
+  declare slug: string
+  @column()
+  declare state: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+}
+
 export class ServiceableCountrySchema extends BaseModel {
   static $columns = ['countryCode', 'countryName', 'createdAt', 'isActive', 'updatedAt'] as const
   $columns = ServiceableCountrySchema.$columns
@@ -1503,6 +1642,62 @@ export class UserSchema extends BaseModel {
   declare uuid: string
 }
 
+export class VendorImageSchema extends BaseModel {
+  static $columns = ['checkedAt', 'createdAt', 'extname', 'id', 'kind', 'moderationDetails', 'position', 'quarantineKey', 'rejectReason', 'sizeBytes', 'status', 'storageKey', 'thumbnailKey', 'updatedAt', 'uploadedAt', 'uuid', 'vendorId'] as const
+  $columns = VendorImageSchema.$columns
+  @column.dateTime()
+  declare checkedAt: DateTime | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare extname: string
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare kind: 'profile' | 'portfolio'
+  @column()
+  declare moderationDetails: any | null
+  @column()
+  declare position: number
+  @column()
+  declare quarantineKey: string
+  @column()
+  declare rejectReason: string | null
+  @column()
+  declare sizeBytes: number
+  @column()
+  declare status: 'pending_upload' | 'uploaded' | 'approved' | 'rejected' | 'review'
+  @column()
+  declare storageKey: string | null
+  @column()
+  declare thumbnailKey: string | null
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column.dateTime()
+  declare uploadedAt: DateTime | null
+  @column()
+  declare uuid: string
+  @column()
+  declare vendorId: number
+}
+
+export class VendorIndicativePriceSchema extends BaseModel {
+  static $columns = ['createdAt', 'id', 'materialId', 'pricePerCubicCm', 'updatedAt', 'vendorId'] as const
+  $columns = VendorIndicativePriceSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare materialId: number
+  @column()
+  declare pricePerCubicCm: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number
+}
+
 export class VendorPayoutRateSchema extends BaseModel {
   static $columns = ['createdAt', 'id', 'materialId', 'percentage', 'updatedAt', 'vendorId'] as const
   $columns = VendorPayoutRateSchema.$columns
@@ -1567,6 +1762,31 @@ export class VendorPayoutSchema extends BaseModel {
   declare vendorId: number | null
 }
 
+export class VendorServiceSchema extends BaseModel {
+  static $columns = ['active', 'adminDisabledAt', 'createdAt', 'description', 'id', 'rate', 'rateUnit', 'service', 'updatedAt', 'vendorId'] as const
+  $columns = VendorServiceSchema.$columns
+  @column()
+  declare active: boolean
+  @column.dateTime()
+  declare adminDisabledAt: DateTime | null
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare description: string | null
+  @column({ isPrimary: true })
+  declare id: number
+  @column()
+  declare rate: string | null
+  @column()
+  declare rateUnit: 'hour' | 'project' | null
+  @column()
+  declare service: 'design' | 'scanning' | 'cnc'
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column()
+  declare vendorId: number
+}
+
 export class VendorTaxDocumentSchema extends BaseModel {
   static $columns = ['createdAt', 'formType', 'id', 'originalName', 'rejectedAt', 'rejectedReason', 'storageKey', 'updatedAt', 'uuid', 'vendorId', 'verifiedAt', 'verifiedById'] as const
   $columns = VendorTaxDocumentSchema.$columns
@@ -1620,8 +1840,10 @@ export class VendorTechnologyCapabilitySchema extends BaseModel {
 }
 
 export class VendorSchema extends BaseModel {
-  static $columns = ['activatedAt', 'activatedById', 'agreementAcceptedAt', 'agreementAcceptedIp', 'agreementVersion', 'createdAt', 'displayName', 'id', 'legalName', 'payoutHoldDays', 'payoutMethodError', 'payoutMethodErrorAt', 'payoutProvider', 'paypalEmail', 'paypalPayerId', 'phone', 'quickbooksVendorId', 'status', 'stripeAccountId', 'stripePayoutsEnabled', 'submittedAt', 'suspendedAt', 'suspensionReason', 'taxClassification', 'updatedAt', 'userId', 'uuid'] as const
+  static $columns = ['acceptingInquiries', 'activatedAt', 'activatedById', 'agreementAcceptedAt', 'agreementAcceptedIp', 'agreementVersion', 'bio', 'createdAt', 'displayName', 'geocodeStatus', 'id', 'legalName', 'locationCity', 'locationCountry', 'locationPostalCode', 'locationState', 'payoutHoldDays', 'payoutMethodError', 'payoutMethodErrorAt', 'payoutProvider', 'paypalEmail', 'paypalPayerId', 'phone', 'placeId', 'placeIdRefreshedAt', 'placeType', 'profileModerationStatus', 'profilePublishedAt', 'profileSlug', 'quickbooksVendorId', 'ratingAverage', 'ratingCount', 'responseRate', 'responseStatsAt', 'responseTimeHours', 'status', 'stripeAccountId', 'stripePayoutsEnabled', 'submittedAt', 'suspendedAt', 'suspensionReason', 'taxClassification', 'updatedAt', 'userId', 'uuid'] as const
   $columns = VendorSchema.$columns
+  @column()
+  declare acceptingInquiries: boolean
   @column.dateTime()
   declare activatedAt: DateTime | null
   @column()
@@ -1632,14 +1854,26 @@ export class VendorSchema extends BaseModel {
   declare agreementAcceptedIp: string | null
   @column()
   declare agreementVersion: string | null
+  @column()
+  declare bio: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare displayName: string | null
+  @column()
+  declare geocodeStatus: 'pending' | 'ok' | 'not_found' | 'failed'
   @column({ isPrimary: true })
   declare id: number
   @column()
   declare legalName: string | null
+  @column()
+  declare locationCity: string | null
+  @column()
+  declare locationCountry: string | null
+  @column()
+  declare locationPostalCode: string | null
+  @column()
+  declare locationState: string | null
   @column()
   declare payoutHoldDays: number | null
   @column()
@@ -1655,7 +1889,29 @@ export class VendorSchema extends BaseModel {
   @column()
   declare phone: string | null
   @column()
+  declare placeId: string | null
+  @column.dateTime()
+  declare placeIdRefreshedAt: DateTime | null
+  @column()
+  declare placeType: string | null
+  @column()
+  declare profileModerationStatus: 'approved' | 'pending_review' | 'rejected'
+  @column.dateTime()
+  declare profilePublishedAt: DateTime | null
+  @column()
+  declare profileSlug: string | null
+  @column()
   declare quickbooksVendorId: string | null
+  @column()
+  declare ratingAverage: string | null
+  @column()
+  declare ratingCount: number
+  @column()
+  declare responseRate: number | null
+  @column.dateTime()
+  declare responseStatsAt: DateTime | null
+  @column()
+  declare responseTimeHours: number | null
   @column()
   declare status: 'onboarding' | 'pending_review' | 'active' | 'suspended'
   @column()

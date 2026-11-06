@@ -31,6 +31,10 @@ import DetectBehaviorPatterns from '#jobs/detect_behavior_patterns'
 import SampleAuditMessages from '#jobs/sample_audit_messages'
 import DiscoverAbusePatterns from '#jobs/discover_abuse_patterns'
 import SendModerationDigest from '#jobs/send_moderation_digest'
+import RefreshPlaceCoordinates from '#jobs/refresh_place_coordinates'
+import RefreshPlaceIds from '#jobs/refresh_place_ids'
+import PurgeSearchEventCoordinates from '#jobs/purge_search_event_coordinates'
+import RecomputeVendorResponseStats from '#jobs/recompute_vendor_response_stats'
 
 /**
  * Abandoned instant-quote cleanup, in two stages so it stays reversible for a
@@ -109,3 +113,24 @@ SendModerationDigest.schedule({}).id('send-moderation-digest').cron('0 8 * * *')
 
 // Weekly, Monday morning: cluster last week's confirmed violations for new rules.
 DiscoverAbusePatterns.schedule({}).id('discover-abuse-patterns').cron('0 7 * * 1').run()
+
+/**
+ * Vendor directory (docs/plans/manual_quotes.md, section 2). Google lets us
+ * keep coordinates for 30 days: daily, re-fetch city coordinates about to
+ * expire and delete expired ones. Monthly, refresh place IDs older than 12
+ * months (free). Overlap-safe: refreshes are upserts keyed by place ID.
+ */
+RefreshPlaceCoordinates.schedule({}).id('refresh-place-coordinates').cron('40 2 * * *').run()
+RefreshPlaceIds.schedule({}).id('refresh-place-ids').cron('10 2 1 * *').run()
+
+// Daily: search events keep coordinates for 30 days only.
+PurgeSearchEventCoordinates.schedule({})
+  .id('purge-search-event-coordinates')
+  .cron('55 3 * * *')
+  .run()
+
+// Daily: response rate/time, so unanswered inquiries age into the rate.
+RecomputeVendorResponseStats.schedule({})
+  .id('recompute-vendor-response-stats')
+  .cron('25 4 * * *')
+  .run()

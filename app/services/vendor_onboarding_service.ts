@@ -27,6 +27,7 @@ import VendorPayoutRate from '#models/vendor_payout_rate'
 import VendorTaxDocument from '#models/vendor_tax_document'
 import VendorTechnologyCapability from '#models/vendor_technology_capability'
 import { isPayoutMethodReady } from '#services/vendor_payout_method_service'
+import { moderateDisplayName } from '#services/vendor_profile_service'
 
 type Technology = VendorTechnologyCapability['technology']
 type TaxClassification = NonNullable<Vendor['taxClassification']>
@@ -96,6 +97,12 @@ export type OnboardingSnapshot = {
   taxDocument: VendorTaxDocument | null
   checklist: ChecklistItem[]
   onboardingComplete: boolean
+  /**
+   * The public directory profile (docs/plans/manual_quotes.md, section 2).
+   * Optional - never part of onboardingComplete - but needed to be listed
+   * and to receive inquiries.
+   */
+  optionalChecklist: ChecklistItem[]
 }
 
 /**
@@ -200,11 +207,25 @@ export async function getOnboardingSnapshot(vendor: Vendor): Promise<OnboardingS
     ),
   ]
 
+  const optionalChecklist: ChecklistItem[] = [
+    item(
+      'public_profile',
+      !!vendor.profileSlug && !!vendor.bio && vendor.profilePublishedAt !== null,
+      'Write a bio and publish your public profile'
+    ),
+    item(
+      'accepting_inquiries',
+      vendor.acceptingInquiries,
+      'Turn on inquiries so customers can request quotes from you'
+    ),
+  ]
+
   return {
     capabilities,
     taxDocument,
     checklist,
     onboardingComplete: checklist.every((entry) => entry.complete),
+    optionalChecklist,
   }
 }
 
@@ -291,6 +312,11 @@ export async function updateProfile(
   input: { displayName?: string; legalName?: string; phone?: string | null }
 ): Promise<Vendor> {
   assertNotSuspended(vendor)
+  // The display name is public (the directory), so it's moderated like the
+  // rest of the profile - a block throws ProfileBlockedError.
+  if (input.displayName !== undefined) {
+    await moderateDisplayName(vendor, input.displayName)
+  }
   vendor.merge(input)
   await vendor.save()
   return vendor

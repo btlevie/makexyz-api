@@ -24,6 +24,20 @@ export function activeVendorAttributes() {
   }
 }
 
+/**
+ * Vendor columns for a vendor listed in the public directory - which is also
+ * what taking inquiries requires (Vendor#isListed). Spread after
+ * activeVendorAttributes().
+ */
+export function listedVendorAttributes(slug = `vendor-${string.generateRandom(8).toLowerCase()}`) {
+  return {
+    acceptingInquiries: true,
+    profilePublishedAt: DateTime.now(),
+    profileSlug: slug.replace(/[^a-z0-9-]/g, 'x'),
+    profileModerationStatus: 'approved' as const,
+  }
+}
+
 /** Signs up through the public endpoint (for a session), then sets the role. */
 export async function signupAs(client: any, role: 'admin' | 'customer') {
   const email = `${role}-${string.uuid()}@test.com`

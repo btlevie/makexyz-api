@@ -31,6 +31,9 @@ import { closeConversationByStaff } from '#services/conversation_service'
 import ModerationWarningNotification from '#mails/moderation_warning_notification'
 import { approveAttachments } from '#services/attachment_service'
 import { principalOf, refreshRiskProfile } from '#services/messaging_risk_service'
+import VendorImage from '#models/vendor_image'
+import { approveProfileText, rejectProfileText } from '#services/vendor_profile_service'
+import { approveImage, rejectImage } from '#services/vendor_image_service'
 
 export const MODERATOR_BLOCK_REASON =
   "This message wasn't delivered because it doesn't follow MakeXYZ's messaging rules."
@@ -108,6 +111,34 @@ function resolve(
   })
 }
 
+/**
+ * Applies a moderator's decision to a case about non-message content: a
+ * vendor's public profile text (approved -> listed again; blocked -> the
+ * vendor must edit it) or a vendor image (approved -> public; blocked ->
+ * deleted). Returns what was acted on, for the audit trail.
+ */
+async function decideSubject(
+  moderationCase: ModerationCase,
+  decision: 'approve' | 'block'
+): Promise<{ type: string; uuid: string } | null> {
+  if (!moderationCase.subjectType || !moderationCase.subjectId) return null
+  if (moderationCase.subjectType === 'vendor_profile') {
+    const vendor = await Vendor.find(moderationCase.subjectId)
+    if (!vendor) return null
+    if (decision === 'approve') await approveProfileText(vendor)
+    else await rejectProfileText(vendor)
+    return { type: 'vendor_profile', uuid: vendor.uuid }
+  }
+  if (moderationCase.subjectType === 'vendor_image') {
+    const image = await VendorImage.find(moderationCase.subjectId)
+    if (!image) return null
+    if (decision === 'approve') await approveImage(image)
+    else await rejectImage(image)
+    return { type: 'vendor_image', uuid: image.uuid }
+  }
+  return null
+}
+
 /** Approves the case's message: a held message is delivered now. */
 export async function approveCase(
   moderationCase: ModerationCase,
@@ -124,9 +155,21 @@ export async function approveCase(
     await deliverHeldMessage(message)
   }
 
+  const subject = await decideSubject(moderationCase, 'approve')
+
   resolve(moderationCase, moderator, 'approved', note)
   applyLabel(moderationCase, label)
   await moderationCase.save()
+  if (subject) {
+    await recordModerationAction({
+      actorUserId: moderator.id,
+      caseId: moderationCase.id,
+      action: 'approve_content',
+      targetType: subject.type,
+      targetId: subject.uuid,
+      reason: note,
+    })
+  }
   if (message) {
     await recordModerationAction({
       actorUserId: moderator.id,
@@ -185,9 +228,22 @@ export async function blockCase(
     }
   }
 
+  const subject = await decideSubject(moderationCase, 'block')
+  if (subject) resolution = 'blocked'
+
   resolve(moderationCase, moderator, resolution, note)
   applyLabel(moderationCase, label)
   await moderationCase.save()
+  if (subject) {
+    await recordModerationAction({
+      actorUserId: moderator.id,
+      caseId: moderationCase.id,
+      action: 'reject_content',
+      targetType: subject.type,
+      targetId: subject.uuid,
+      reason: note,
+    })
+  }
   if (message && resolution !== 'no_action') {
     await recordModerationAction({
       actorUserId: moderator.id,

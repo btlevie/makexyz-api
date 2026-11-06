@@ -70,6 +70,51 @@ export default class extends BaseSchema {
       table.timestamp('suspended_at').nullable()
       table.string('suspension_reason').nullable()
 
+      // Public directory profile - see docs/plans/manual_quotes.md (section 2).
+      // A vendor is listed only when active, accepting inquiries, published
+      // and with its profile text approved (vendor_profile_service.ts).
+      table.string('profile_slug', 80).nullable().unique()
+      table.text('bio').nullable()
+      table.boolean('accepting_inquiries').notNullable().defaultTo(false)
+      table.timestamp('profile_published_at').nullable()
+      // The moderation state of the public text (display name, bio, service
+      // descriptions). pending_review: a person is checking it, so the vendor
+      // is hidden from the directory. rejected: a moderator blocked it; the
+      // vendor must edit it.
+      table
+        .enum('profile_moderation_status', ['approved', 'pending_review', 'rejected'])
+        .notNullable()
+        .defaultTo('approved')
+
+      // Location, at city precision. place_id is the Google place ID of the
+      // business address's city (the locality, or a sublocality/postal code
+      // where there's none), which Google allows to be stored indefinitely.
+      // Coordinates are never stored here - they live in place_coordinates,
+      // shared per city, within Google's 30-day caching limit.
+      table.string('place_id', 255).nullable().index()
+      table.string('place_type', 40).nullable()
+      table.timestamp('place_id_refreshed_at').nullable()
+      table
+        .enum('geocode_status', ['pending', 'ok', 'not_found', 'failed'])
+        .notNullable()
+        .defaultTo('pending')
+      // The city shown publicly, copied from the vendor's own default address
+      // (user data, not Google content) when it's geocoded. The street address
+      // is never public.
+      table.string('location_city').nullable()
+      table.string('location_state').nullable()
+      table.string('location_country', 2).nullable()
+      table.string('location_postal_code', 20).nullable()
+
+      // Cached aggregates the search ranks on, so it reads one row per vendor.
+      table.integer('rating_count').notNullable().defaultTo(0)
+      table.decimal('rating_average', 3, 2).nullable()
+      // 0-100, null = unknown (vendor_response_stats_service.ts).
+      table.integer('response_rate').nullable()
+      // Median hours to first reply over the last 6 responded inquiries.
+      table.float('response_time_hours').nullable()
+      table.timestamp('response_stats_at').nullable()
+
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

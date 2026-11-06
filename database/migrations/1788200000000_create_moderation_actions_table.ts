@@ -42,6 +42,14 @@ export default class extends BaseSchema {
           'warn_user',
           'close_conversation',
           'label_case',
+          // Vendor directory (docs/plans/manual_quotes.md, section 2):
+          // profile text and images held for a person, an admin taking a
+          // profile out of the directory or turning off a listed service.
+          'approve_content',
+          'reject_content',
+          'unpublish_profile',
+          'disable_service',
+          'enable_service',
         ])
         .notNullable()
       // What was acted on: 'message' + uuid, 'customer'/'vendor' + uuid,
