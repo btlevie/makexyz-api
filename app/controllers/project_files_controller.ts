@@ -40,6 +40,14 @@ import {
   resolveDefaultMaterial,
 } from '#services/material_service'
 
+/**
+ * Manual projects' files are copied in by their vendor from the inquiry
+ * thread and priced by hand (manual_project_service.ts) - the instant-quote
+ * upload, slicing and option endpoints don't apply to them.
+ */
+const MANUAL_FILE_ERROR =
+  "This is a manufacturer's custom project - its files are managed in the conversation"
+
 export default class ProjectFilesController {
   /**
    * The public instant-quote entry point: upload models, get a price, no account
@@ -84,6 +92,9 @@ export default class ProjectFilesController {
       const existing = await resolveProject(ctx, projectUuid)
       if (!existing) {
         return response.notFound({ error: 'Project not found' })
+      }
+      if (existing.source === 'manual') {
+        return response.conflict({ error: MANUAL_FILE_ERROR })
       }
       project = existing
     }
@@ -149,6 +160,9 @@ export default class ProjectFilesController {
     const projectFile = await resolveProjectFile(ctx, params.uuid)
     if (!projectFile) {
       return response.notFound({ error: 'Project file not found' })
+    }
+    if (projectFile.project.source === 'manual') {
+      return response.conflict({ error: MANUAL_FILE_ERROR })
     }
 
     // A redundant call must not throw away slice data that is still valid - and
@@ -304,6 +318,9 @@ export default class ProjectFilesController {
     if (!projectFile) {
       return response.notFound({ error: 'Project file not found' })
     }
+    if (projectFile.project.source === 'manual') {
+      return response.conflict({ error: MANUAL_FILE_ERROR })
+    }
 
     const newMaterial = await findMaterialByUuid(materialUuid)
     if (!newMaterial) {
@@ -414,6 +431,9 @@ export default class ProjectFilesController {
     const projectFile = await resolveProjectFile(ctx, params.uuid)
     if (!projectFile) {
       return response.notFound({ error: 'Project file not found' })
+    }
+    if (projectFile.project.source === 'manual') {
+      return response.conflict({ error: MANUAL_FILE_ERROR })
     }
     if (!projectFile.material) {
       return response.unprocessableEntity({

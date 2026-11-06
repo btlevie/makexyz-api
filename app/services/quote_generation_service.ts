@@ -64,7 +64,8 @@ export async function getRequiredTechnologiesForQuote(quote: Quote): Promise<str
   await quote.load('items', (q) => q.preload('projectFile'))
   const technologies = new Set<string>()
   for (const item of quote.items) {
-    if (item.projectFile) {
+    // A file with no technology (a manual project's file) requires none.
+    if (item.projectFile?.technology) {
       technologies.add(item.projectFile.technology)
     }
   }
@@ -214,7 +215,13 @@ export async function persistQuote(
   // no single vendor covers) for review, rather than letting it silently
   // become an unfulfillable order later - see docs on Quote.status's
   // 'needs_review' value.
-  const requiredTechnologies = [...new Set(pricedLines.map((line) => line.projectFile.technology))]
+  const requiredTechnologies = [
+    ...new Set(
+      pricedLines
+        .map((line) => line.projectFile.technology)
+        .filter((technology): technology is NonNullable<typeof technology> => technology !== null)
+    ),
+  ]
   const fulfillable = await hasAnyCapableVendor(requiredTechnologies)
 
   const run = async (trx: TransactionClientContract) => {

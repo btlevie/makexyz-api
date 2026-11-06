@@ -46,6 +46,7 @@ export const controllers = {
   StripeWebhooks: () => import('#controllers/stripe_webhooks_controller'),
   VendorAddresses: () => import('#controllers/vendor_addresses_controller'),
   VendorConversations: () => import('#controllers/vendor_conversations_controller'),
+  VendorManualProjects: () => import('#controllers/vendor_manual_projects_controller'),
   VendorOnboarding: () => import('#controllers/vendor_onboarding_controller'),
   VendorOrders: () => import('#controllers/vendor_orders_controller'),
   VendorPayoutMethods: () => import('#controllers/vendor_payout_methods_controller'),

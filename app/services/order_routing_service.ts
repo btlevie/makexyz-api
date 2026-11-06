@@ -60,7 +60,8 @@ export async function getRequiredTechnologies(order: Order): Promise<string[]> {
   await order.load('items', (query) => query.preload('projectFile'))
   const technologies = new Set<string>()
   for (const item of order.items) {
-    if (item.projectFile) {
+    // A file with no technology (a manual project's file) requires none.
+    if (item.projectFile?.technology) {
       technologies.add(item.projectFile.technology)
     }
   }

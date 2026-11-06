@@ -528,6 +528,42 @@ const routes = {
     tokens: [{"old":"/v1/vendor/profile/images/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/vendor/profile/images/:uuid","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/profile/images/:uuid","type":0,"val":"profile","end":""},{"old":"/v1/vendor/profile/images/:uuid","type":0,"val":"images","end":""},{"old":"/v1/vendor/profile/images/:uuid","type":1,"val":"uuid","end":""}],
     types: placeholder as Registry['vendor.vendor_profile.destroy_image']['types'],
   },
+  'vendor.vendor_manual_projects.store': {
+    methods: ["POST"],
+    pattern: '/v1/vendor/inquiries/:conversationUuid/project',
+    tokens: [{"old":"/v1/vendor/inquiries/:conversationUuid/project","type":0,"val":"v1","end":""},{"old":"/v1/vendor/inquiries/:conversationUuid/project","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/inquiries/:conversationUuid/project","type":0,"val":"inquiries","end":""},{"old":"/v1/vendor/inquiries/:conversationUuid/project","type":1,"val":"conversationUuid","end":""},{"old":"/v1/vendor/inquiries/:conversationUuid/project","type":0,"val":"project","end":""}],
+    types: placeholder as Registry['vendor.vendor_manual_projects.store']['types'],
+  },
+  'vendor.vendor_manual_projects.index': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/vendor/projects',
+    tokens: [{"old":"/v1/vendor/projects","type":0,"val":"v1","end":""},{"old":"/v1/vendor/projects","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/projects","type":0,"val":"projects","end":""}],
+    types: placeholder as Registry['vendor.vendor_manual_projects.index']['types'],
+  },
+  'vendor.vendor_manual_projects.show': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/vendor/projects/:uuid',
+    tokens: [{"old":"/v1/vendor/projects/:uuid","type":0,"val":"v1","end":""},{"old":"/v1/vendor/projects/:uuid","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/projects/:uuid","type":0,"val":"projects","end":""},{"old":"/v1/vendor/projects/:uuid","type":1,"val":"uuid","end":""}],
+    types: placeholder as Registry['vendor.vendor_manual_projects.show']['types'],
+  },
+  'vendor.vendor_manual_projects.add_files': {
+    methods: ["POST"],
+    pattern: '/v1/vendor/projects/:uuid/files',
+    tokens: [{"old":"/v1/vendor/projects/:uuid/files","type":0,"val":"v1","end":""},{"old":"/v1/vendor/projects/:uuid/files","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/projects/:uuid/files","type":0,"val":"projects","end":""},{"old":"/v1/vendor/projects/:uuid/files","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/projects/:uuid/files","type":0,"val":"files","end":""}],
+    types: placeholder as Registry['vendor.vendor_manual_projects.add_files']['types'],
+  },
+  'vendor.vendor_manual_projects.download_file': {
+    methods: ["GET","HEAD"],
+    pattern: '/v1/vendor/projects/:uuid/files/:fileUuid/download',
+    tokens: [{"old":"/v1/vendor/projects/:uuid/files/:fileUuid/download","type":0,"val":"v1","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid/download","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid/download","type":0,"val":"projects","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid/download","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid/download","type":0,"val":"files","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid/download","type":1,"val":"fileUuid","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid/download","type":0,"val":"download","end":""}],
+    types: placeholder as Registry['vendor.vendor_manual_projects.download_file']['types'],
+  },
+  'vendor.vendor_manual_projects.destroy_file': {
+    methods: ["DELETE"],
+    pattern: '/v1/vendor/projects/:uuid/files/:fileUuid',
+    tokens: [{"old":"/v1/vendor/projects/:uuid/files/:fileUuid","type":0,"val":"v1","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid","type":0,"val":"vendor","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid","type":0,"val":"projects","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid","type":1,"val":"uuid","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid","type":0,"val":"files","end":""},{"old":"/v1/vendor/projects/:uuid/files/:fileUuid","type":1,"val":"fileUuid","end":""}],
+    types: placeholder as Registry['vendor.vendor_manual_projects.destroy_file']['types'],
+  },
   'vendor.vendor_conversations.decline': {
     methods: ["POST"],
     pattern: '/v1/vendor/conversations/:uuid/decline',

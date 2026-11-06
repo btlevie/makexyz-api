@@ -1,8 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Order from '#models/order'
-import Project from '#models/project'
 import OrderTransformer from '#transformers/order_transformer'
-import { isStaff, resolveProject } from '#services/project_grant_service'
+import { resolveProjectAsStaffOrOwner } from '#services/project_grant_service'
 
 export default class OrdersController {
   /**
@@ -16,9 +15,7 @@ export default class OrdersController {
   async show(ctx: HttpContext) {
     const { params, response, serialize } = ctx
 
-    const project = (await isStaff(ctx))
-      ? await Project.findBy('uuid', params.projectUuid)
-      : await resolveProject(ctx, params.projectUuid)
+    const project = await resolveProjectAsStaffOrOwner(ctx, params.projectUuid)
     if (!project) {
       return response.notFound({ error: 'Project not found' })
     }

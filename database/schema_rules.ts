@@ -30,7 +30,7 @@ export default {
     ['project_files']: {
       columns: {
         ['status']: {
-          tsType: "'pending' | 'processing' | 'completed' | 'failed'",
+          tsType: "'pending' | 'processing' | 'completed' | 'failed' | 'stored'",
         },
         ['technology']: {
           tsType: "'fdm' | 'sla' | 'sls'",

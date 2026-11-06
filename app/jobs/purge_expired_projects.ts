@@ -39,6 +39,9 @@ export default class PurgeExpiredProjects extends Job<PurgeExpiredProjectsPayloa
     const cutoff = DateTime.now().minus({ days: graceDays })
 
     const projects = await Project.query()
+      // Only instant quotes are expired automatically; a manual project's
+      // files are the vendor's and customer's working material.
+      .where('source', 'instant_quote')
       .where('status', 'expired')
       .where('expiredAt', '<', cutoff.toSQL()!)
       // "Still has files" is the idempotency marker - once purged a project has

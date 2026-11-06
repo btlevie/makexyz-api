@@ -29,6 +29,11 @@ export default class ProjectsController {
     if (!project) {
       return response.notFound({ error: 'Project not found' })
     }
+    // Lead capture is for anonymous instant quotes; a manual project already
+    // belongs to the inquiry's customer.
+    if (project.source === 'manual') {
+      return response.conflict({ error: 'This project already belongs to an account' })
+    }
 
     const wasOwned = project.customerId !== null
     const customer = await attachLeadCustomer(project, email, marketingOptIn)

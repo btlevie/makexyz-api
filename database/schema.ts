@@ -1053,7 +1053,7 @@ export class ProjectFileSliceVariantSchema extends BaseModel {
 }
 
 export class ProjectFileSchema extends BaseModel {
-  static $columns = ['colorId', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'mimeType', 'modelMaterialGrams', 'originalName', 'printTimeEstimatedSeconds', 'projectId', 'slicingProgressPercent', 'slicingProgressStage', 'status', 'supportMaterialGrams', 'surfaceAreaMm2', 'technology', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
+  static $columns = ['colorId', 'createdAt', 'fileSize', 'fileStorageKey', 'gcodeStorageKey', 'id', 'infill', 'layerHeight', 'materialId', 'messageAttachmentId', 'mimeType', 'modelMaterialGrams', 'originalName', 'printTimeEstimatedSeconds', 'projectId', 'slicingProgressPercent', 'slicingProgressStage', 'status', 'supportMaterialGrams', 'surfaceAreaMm2', 'technology', 'updatedAt', 'uuid', 'volume', 'x', 'y', 'z'] as const
   $columns = ProjectFileSchema.$columns
   @column()
   declare colorId: number | null
@@ -1074,6 +1074,8 @@ export class ProjectFileSchema extends BaseModel {
   @column()
   declare materialId: number | null
   @column()
+  declare messageAttachmentId: number | null
+  @column()
   declare mimeType: string
   @column()
   declare modelMaterialGrams: number | null
@@ -1088,13 +1090,13 @@ export class ProjectFileSchema extends BaseModel {
   @column()
   declare slicingProgressStage: string | null
   @column()
-  declare status: 'pending' | 'processing' | 'completed' | 'failed'
+  declare status: 'pending' | 'processing' | 'completed' | 'failed' | 'stored'
   @column()
   declare supportMaterialGrams: number | null
   @column()
   declare surfaceAreaMm2: number | null
   @column()
-  declare technology: 'fdm' | 'sla' | 'sls'
+  declare technology: 'fdm' | 'sla' | 'sls' | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()
@@ -1110,10 +1112,12 @@ export class ProjectFileSchema extends BaseModel {
 }
 
 export class ProjectSchema extends BaseModel {
-  static $columns = ['cancelledAt', 'createdAt', 'customerId', 'description', 'expiredAt', 'fulfilledAt', 'id', 'metadata', 'source', 'status', 'title', 'updatedAt', 'uuid'] as const
+  static $columns = ['cancelledAt', 'conversationId', 'createdAt', 'customerId', 'description', 'expiredAt', 'fulfilledAt', 'id', 'metadata', 'source', 'status', 'title', 'updatedAt', 'uuid', 'vendorId'] as const
   $columns = ProjectSchema.$columns
   @column.dateTime()
   declare cancelledAt: DateTime | null
+  @column()
+  declare conversationId: number | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
@@ -1138,6 +1142,8 @@ export class ProjectSchema extends BaseModel {
   declare updatedAt: DateTime | null
   @column()
   declare uuid: string
+  @column()
+  declare vendorId: number | null
 }
 
 export class QueueJobSchema extends BaseModel {

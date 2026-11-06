@@ -1,4 +1,4 @@
-> Approved plan. **Step 1 (vendor profiles, geocoding and search) is implemented**; see "Implementation notes" at the end. Step 7 (prohibited-item rules) landed with messaging Step 2. Companion plan: [messaging_moderation.md](./messaging_moderation.md).
+> Approved plan. **Steps 1 (vendor profiles, geocoding and search) and 2 (manual projects from inquiries) are implemented**; see "Implementation notes" at the end. Step 7 (prohibited-item rules) landed with messaging Step 2. Companion plan: [messaging_moderation.md](./messaging_moderation.md).
 
 # Manual quotes: inquiry → vendor quote → order
 
@@ -578,3 +578,18 @@ Where the build differs from the plan text above:
 Not done yet:
 - City-page scoring (2g) is Step 8, so every page stays non-indexable for now. `GET /v1/locations` is empty until then, and searches fall back to no canonical page.
 - The place-ID refresh uses the Places API (New) ID-only lookup, so the Google key must allow both the Geocoding API and the Places API (New).
+
+### Step 2 (done, 2026-11-05)
+
+Built as planned: `POST /v1/vendor/inquiries/:conversationUuid/project` creates a manual project for the thread's customer, directed to the thread's vendor, and copies the chosen scanned attachments into project storage under the usual key. The instant-quote cleanup jobs skip manual projects. The vendor also gets `GET /v1/vendor/projects`, `GET /v1/vendor/projects/:uuid`, `POST /v1/vendor/projects/:uuid/files` (copy more attachments in), `DELETE /v1/vendor/projects/:uuid/files/:fileUuid` (refused once a quote line uses the file) and a 5-minute download link per file.
+
+Where the build differs from the plan text above:
+- **Project history.** `projects.conversation_id` records which inquiry each project came from, so the history needs no extra table. `conversations.project_id` points at the latest.
+- **File rows.**
+  - `project_files.technology` is now nullable.
+  - Manual files use a new status, `stored` (never sliced).
+  - `project_files.message_attachment_id` records which attachment a file was copied from. It's unique per project, so copying the same attachment again is a no-op.
+- **What can be copied.** Only attachments with status `clean` (not `review`), sent on a delivered message in that same thread. The thread must be open: a declined, blocked or closed inquiry can't become a project.
+- **Staff access.** `isStaff` lets every active vendor reach any project, which suits the white-label instant-quote pool. For a manual project, staff access (`project_grant_service.ts` `staffCanReach`) is now limited to admins and the project's own vendor. It covers project files, quotes, checkout and the order endpoints.
+- **Instant-quote endpoints refuse manual projects** with a 409: uploading into one, changing a file's technology, material or colour, auto-quoting, and email capture.
+- No system message is posted when a project is created. The customer first hears about it from Step 3's `quote_ref` message.

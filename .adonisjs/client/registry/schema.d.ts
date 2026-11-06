@@ -1051,6 +1051,78 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_profile_controller').default['destroyImage']>>>
     }
   }
+  'vendor.vendor_manual_projects.store': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/inquiries/:conversationUuid/project'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/manual_project').createManualProjectValidator)>>
+      paramsTuple: [ParamValue]
+      params: { conversationUuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/manual_project').createManualProjectValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['store']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['store']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_manual_projects.index': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/projects'
+    types: {
+      body: {}
+      paramsTuple: []
+      params: {}
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['index']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['index']>>>
+    }
+  }
+  'vendor.vendor_manual_projects.show': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/projects/:uuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['show']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['show']>>>
+    }
+  }
+  'vendor.vendor_manual_projects.add_files': {
+    methods: ["POST"]
+    pattern: '/v1/vendor/projects/:uuid/files'
+    types: {
+      body: ExtractBody<InferInput<(typeof import('#validators/manual_project').addManualProjectFilesValidator)>>
+      paramsTuple: [ParamValue]
+      params: { uuid: ParamValue }
+      query: ExtractQuery<InferInput<(typeof import('#validators/manual_project').addManualProjectFilesValidator)>>
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['addFiles']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['addFiles']>>> | { status: 422; response: { errors: SimpleError[] } }
+    }
+  }
+  'vendor.vendor_manual_projects.download_file': {
+    methods: ["GET","HEAD"]
+    pattern: '/v1/vendor/projects/:uuid/files/:fileUuid/download'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; fileUuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['downloadFile']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['downloadFile']>>>
+    }
+  }
+  'vendor.vendor_manual_projects.destroy_file': {
+    methods: ["DELETE"]
+    pattern: '/v1/vendor/projects/:uuid/files/:fileUuid'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue, ParamValue]
+      params: { uuid: ParamValue; fileUuid: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['destroyFile']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/vendor_manual_projects_controller').default['destroyFile']>>>
+    }
+  }
   'vendor.vendor_conversations.decline': {
     methods: ["POST"]
     pattern: '/v1/vendor/conversations/:uuid/decline'

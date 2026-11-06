@@ -337,6 +337,25 @@ router
         router.post('profile/images/:uuid/complete', [controllers.VendorProfile, 'completeImage'])
         router.delete('profile/images/:uuid', [controllers.VendorProfile, 'destroyImage'])
 
+        // Manual projects (docs/plans/manual_quotes.md, section 3): started
+        // from this vendor's inquiry thread, files copied in from the thread's
+        // scanned attachments (manual_project_service.ts).
+        router.post('inquiries/:conversationUuid/project', [
+          controllers.VendorManualProjects,
+          'store',
+        ])
+        router.get('projects', [controllers.VendorManualProjects, 'index'])
+        router.get('projects/:uuid', [controllers.VendorManualProjects, 'show'])
+        router.post('projects/:uuid/files', [controllers.VendorManualProjects, 'addFiles'])
+        router.get('projects/:uuid/files/:fileUuid/download', [
+          controllers.VendorManualProjects,
+          'downloadFile',
+        ])
+        router.delete('projects/:uuid/files/:fileUuid', [
+          controllers.VendorManualProjects,
+          'destroyFile',
+        ])
+
         // Vendor-only controls over inquiries: pass on one, or block the
         // customer (also opens a moderation case).
         router.post('conversations/:uuid/decline', [controllers.VendorConversations, 'decline'])

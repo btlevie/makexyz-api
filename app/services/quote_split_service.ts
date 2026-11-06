@@ -108,7 +108,13 @@ export async function splitQuote(
   const groupResolutions = await Promise.all(
     groupItems.map(async (items) => {
       const requiredTechnologies = [
-        ...new Set(items.map((item) => item.projectFile!.technology)),
+        ...new Set(
+          items
+            .map((item) => item.projectFile!.technology)
+            .filter(
+              (technology): technology is NonNullable<typeof technology> => technology !== null
+            )
+        ),
       ]
       const fulfillable = await hasAnyCapableVendor(requiredTechnologies)
       if (!fulfillable) {

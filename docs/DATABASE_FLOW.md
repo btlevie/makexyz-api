@@ -116,6 +116,15 @@ Projects may also become:
 * `cancelled`
 * `expired`
 
+### Instant-quote and manual projects
+
+`projects.source` says which flow a project came through, and it never changes:
+
+* **`instant_quote`**: a customer (often anonymous) uploads models, the slicer measures them, and the pricing engine quotes them. Only these projects are expired and purged automatically when abandoned.
+* **`manual`**: a vendor starts the project from one of their inquiry threads (`conversation_id`), for that thread's customer, and quotes it by hand (see `docs/plans/manual_quotes.md`). `vendor_id` is the vendor it's directed to. That vendor and admins are the only staff who can see it; other vendors' staff access to instant-quote projects doesn't extend to it. The instant-quote upload, slicing, option and auto-quote endpoints refuse manual projects.
+
+One inquiry can lead to several manual projects over time (repeat work). `conversations.project_id` points at the latest, and `projects.conversation_id` keeps the history.
+
 ---
 
 ## Project Files
@@ -138,6 +147,8 @@ Each file stores manufacturing-specific information including:
 These records represent the manufacturing inputs that are later used to generate quotes and order items.
 
 The material split, print time, and dimensions are produced by the slicer service and are what the pricing engine consumes. A file must have finished slicing before it can be priced.
+
+A manual project's files are different: the vendor copies them in from the inquiry thread's scanned attachments (`project_files.message_attachment_id`). They're stored as-is (`status = 'stored'`), with no technology, material or slicing, because the vendor prices them by hand.
 
 SLS files get a geometry-only analysis instead of a traditional slice: PrusaSlicer has no powder-bed-fusion process, so the slicer service reads volume, bounding box, and surface area directly from the mesh (`prusa-slicer --info` plus a small surface-area calculation) rather than generating toolpaths. There's no G-code, no support/model material split (the surrounding powder bed is the support, reclaimed after the build), and `printTimeEstimatedSeconds` is a geometry-based approximation rather than a physics-simulated slicer output. Like SLA, SLS files aren't priceable yet - no pricing algorithm exists for either.
 

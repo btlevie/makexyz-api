@@ -6,7 +6,9 @@ export default class extends BaseSchema {
   async up() {
     this.schema.alterTable(this.tableName, (table) => {
       table
-        .enum('status', ['pending', 'processing', 'completed', 'failed'])
+        // 'stored': a file kept as-is, never sliced - files a vendor copies
+        // into a manual project from the inquiry thread (manual_project_service.ts).
+        .enum('status', ['pending', 'processing', 'completed', 'failed', 'stored'])
         .notNullable()
         .defaultTo('pending')
     })

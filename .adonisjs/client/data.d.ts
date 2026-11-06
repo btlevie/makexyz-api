@@ -13,6 +13,7 @@ import type ConversationTransformer from '#transformers/conversation_transformer
 import type CustomerTransformer from '#transformers/customer_transformer'
 import type InstantQuoteFileTransformer from '#transformers/instant_quote_file_transformer'
 import type InvitationTransformer from '#transformers/invitation_transformer'
+import type ManualProjectTransformer from '#transformers/manual_project_transformer'
 import type MaterialCatalogTransformer from '#transformers/material_catalog_transformer'
 import type MessageAttachmentTransformer from '#transformers/message_attachment_transformer'
 import type MessageTransformer from '#transformers/message_transformer'
@@ -73,6 +74,10 @@ export namespace Data {
   export type Invitation = InferData<InvitationTransformer>
   export namespace Invitation {
     export type Variants = InferVariants<InvitationTransformer>
+  }
+  export type ManualProject = InferData<ManualProjectTransformer>
+  export namespace ManualProject {
+    export type Variants = InferVariants<ManualProjectTransformer>
   }
   export type MaterialCatalog = InferData<MaterialCatalogTransformer>
   export namespace MaterialCatalog {

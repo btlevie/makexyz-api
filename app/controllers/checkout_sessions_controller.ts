@@ -1,10 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import Order from '#models/order'
-import Project from '#models/project'
+import type Project from '#models/project'
 import Quote from '#models/quote'
 import OrderTransformer from '#transformers/order_transformer'
 import { payValidator } from '#validators/checkout'
-import { isStaff, resolveProject } from '#services/project_grant_service'
+import { resolveProjectAsStaffOrOwner } from '#services/project_grant_service'
 import { attachLeadCustomer } from '#services/lead_customer_service'
 import { createPayPalOrder } from '#services/payment_gateway_service'
 import {
@@ -115,9 +115,7 @@ export default class CheckoutSessionsController {
     ctx: HttpContext
   ): Promise<{ project: Project; quote: Quote } | { error: string }> {
     const { params } = ctx
-    const project = (await isStaff(ctx))
-      ? await Project.findBy('uuid', params.projectUuid)
-      : await resolveProject(ctx, params.projectUuid)
+    const project = await resolveProjectAsStaffOrOwner(ctx, params.projectUuid)
     if (!project) {
       return { error: 'Project not found' }
     }

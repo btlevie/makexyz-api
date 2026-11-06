@@ -162,6 +162,14 @@ export interface ApiDefinition {
       completeImage: typeof routes['vendor.vendor_profile.complete_image']
       destroyImage: typeof routes['vendor.vendor_profile.destroy_image']
     }
+    vendorManualProjects: {
+      store: typeof routes['vendor.vendor_manual_projects.store']
+      index: typeof routes['vendor.vendor_manual_projects.index']
+      show: typeof routes['vendor.vendor_manual_projects.show']
+      addFiles: typeof routes['vendor.vendor_manual_projects.add_files']
+      downloadFile: typeof routes['vendor.vendor_manual_projects.download_file']
+      destroyFile: typeof routes['vendor.vendor_manual_projects.destroy_file']
+    }
     vendorConversations: {
       decline: typeof routes['vendor.vendor_conversations.decline']
       blockCustomer: typeof routes['vendor.vendor_conversations.block_customer']

@@ -91,6 +91,12 @@ export type ScannedRoutes = {
     'vendor.vendor_profile.reorder_images': { paramsTuple?: []; params?: {} }
     'vendor.vendor_profile.complete_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_profile.destroy_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_manual_projects.store': { paramsTuple: [ParamValue]; params: {'conversationUuid': ParamValue} }
+    'vendor.vendor_manual_projects.index': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_manual_projects.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_manual_projects.add_files': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_manual_projects.download_file': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'fileUuid': ParamValue} }
+    'vendor.vendor_manual_projects.destroy_file': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'fileUuid': ParamValue} }
     'vendor.vendor_conversations.decline': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_conversations.block_customer': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
@@ -180,6 +186,9 @@ export type ScannedRoutes = {
     'vendor.vendor_addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_onboarding.show': { paramsTuple?: []; params?: {} }
     'vendor.vendor_profile.show': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_manual_projects.index': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_manual_projects.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_manual_projects.download_file': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'fileUuid': ParamValue} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.index': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -233,6 +242,9 @@ export type ScannedRoutes = {
     'vendor.vendor_addresses.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_onboarding.show': { paramsTuple?: []; params?: {} }
     'vendor.vendor_profile.show': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_manual_projects.index': { paramsTuple?: []; params?: {} }
+    'vendor.vendor_manual_projects.show': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_manual_projects.download_file': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'fileUuid': ParamValue} }
     'admin.admin_quotes.needs_review': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.index': { paramsTuple?: []; params?: {} }
     'admin.admin_vendor_payouts.rates': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -292,6 +304,8 @@ export type ScannedRoutes = {
     'vendor.vendor_onboarding.submit': { paramsTuple?: []; params?: {} }
     'vendor.vendor_profile.create_image': { paramsTuple?: []; params?: {} }
     'vendor.vendor_profile.complete_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_manual_projects.store': { paramsTuple: [ParamValue]; params: {'conversationUuid': ParamValue} }
+    'vendor.vendor_manual_projects.add_files': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_conversations.decline': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_conversations.block_customer': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'admin.admin_quotes.split': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
@@ -348,6 +362,7 @@ export type ScannedRoutes = {
     'profile.addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_addresses.destroy': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
     'vendor.vendor_profile.destroy_image': { paramsTuple: [ParamValue]; params: {'uuid': ParamValue} }
+    'vendor.vendor_manual_projects.destroy_file': { paramsTuple: [ParamValue,ParamValue]; params: {'uuid': ParamValue,'fileUuid': ParamValue} }
   }
   PUT: {
     'vendor.vendor_onboarding.set_capabilities': { paramsTuple?: []; params?: {} }

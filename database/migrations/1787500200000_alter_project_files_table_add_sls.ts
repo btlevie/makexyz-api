@@ -15,7 +15,10 @@ export default class extends BaseSchema {
     })
 
     this.schema.alterTable(this.tableName, (table) => {
-      table.enum('technology', ['fdm', 'sla', 'sls']).notNullable().defaultTo('fdm')
+      // Null for a manual project's files: the vendor prices them by hand, so
+      // they never go through a slicing pipeline. Instant-quote uploads always
+      // set it explicitly.
+      table.enum('technology', ['fdm', 'sla', 'sls']).nullable().defaultTo('fdm')
       // double, not decimal - matches volume/x/y/z (also computed float
       // measurements from the slicer, not a money-like value needing exact
       // decimal precision), so this comes through as `number`, not `string`.

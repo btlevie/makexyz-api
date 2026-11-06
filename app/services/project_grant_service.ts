@@ -90,6 +90,37 @@ export function isAdmin(ctx: HttpContext): boolean {
 }
 
 /**
+ * Whether staff access (see isStaff) reaches this particular project. An
+ * instant-quote project is white-label work any vetted vendor may need to
+ * see, but a manual project belongs to one vendor and its customer
+ * (docs/plans/manual_quotes.md, section 3) - only admins and that vendor.
+ */
+export async function staffCanReach(ctx: HttpContext, project: Project): Promise<boolean> {
+  if (!(await isStaff(ctx))) return false
+  if (project.source !== 'manual') return true
+  const user = ctx.auth.user!
+  if (user.role === 'admin') return true
+  const vendor = await Vendor.findBy('userId', user.id)
+  return !!vendor && vendor.id === project.vendorId
+}
+
+/**
+ * The project for an endpoint open to staff and to the project's own
+ * customer or grant holder: staff (as far as staffCanReach allows) by uuid
+ * alone, everyone else through resolveProject. Null = 404.
+ */
+export async function resolveProjectAsStaffOrOwner(
+  ctx: HttpContext,
+  projectUuid: string
+): Promise<Project | null> {
+  if (await isStaff(ctx)) {
+    const project = await Project.findBy('uuid', projectUuid)
+    if (project && (await staffCanReach(ctx, project))) return project
+  }
+  return resolveProject(ctx, projectUuid)
+}
+
+/**
  * Resolves a project file the caller may act on, by the same three routes as
  * resolveProject plus staff access - staff need to reach anyone's file, since
  * correcting someone else's part is the entire point of the override.
@@ -116,7 +147,7 @@ export async function resolveProjectFile(
     return null
   }
 
-  if (await isStaff(ctx)) {
+  if (await staffCanReach(ctx, projectFile.project)) {
     return projectFile
   }
 

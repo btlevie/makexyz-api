@@ -33,7 +33,7 @@ import {
   listProductionTimeOptions,
 } from '#services/production_time_service'
 import { isServiceableCountry } from '#services/serviceable_country_service'
-import { isStaff, resolveProject } from '#services/project_grant_service'
+import { isStaff, resolveProjectAsStaffOrOwner } from '#services/project_grant_service'
 import { attachLeadCustomer } from '#services/lead_customer_service'
 
 export default class QuotesController {
@@ -49,9 +49,7 @@ export default class QuotesController {
   async index(ctx: HttpContext) {
     const { params, response, serialize } = ctx
 
-    const project = (await isStaff(ctx))
-      ? await Project.findBy('uuid', params.projectUuid)
-      : await resolveProject(ctx, params.projectUuid)
+    const project = await resolveProjectAsStaffOrOwner(ctx, params.projectUuid)
     if (!project) {
       return response.notFound({ error: 'Project not found' })
     }
@@ -89,9 +87,7 @@ export default class QuotesController {
   async productionTimeOptions(ctx: HttpContext) {
     const { params, response, serialize } = ctx
 
-    const project = (await isStaff(ctx))
-      ? await Project.findBy('uuid', params.projectUuid)
-      : await resolveProject(ctx, params.projectUuid)
+    const project = await resolveProjectAsStaffOrOwner(ctx, params.projectUuid)
     if (!project) {
       return response.notFound({ error: 'Project not found' })
     }
@@ -138,6 +134,13 @@ export default class QuotesController {
     // confirm it exists.
     if (!project) {
       return response.notFound({ error: 'Project not found' })
+    }
+    // Manual projects are quoted by their vendor (docs/plans/manual_quotes.md,
+    // section 4), never auto-priced.
+    if (project.source === 'manual') {
+      return response.conflict({
+        error: "A manufacturer's custom project is quoted by the manufacturer",
+      })
     }
 
     // One configuration snapshot for the whole quote: every line must be priced
@@ -227,9 +230,7 @@ export default class QuotesController {
     } = await request.validateUsing(configureQuoteValidator)
 
     const staff = await isStaff(ctx)
-    const project = staff
-      ? await Project.findBy('uuid', params.projectUuid)
-      : await resolveProject(ctx, params.projectUuid)
+    const project = await resolveProjectAsStaffOrOwner(ctx, params.projectUuid)
     if (!project) {
       return response.notFound({ error: 'Project not found' })
     }
@@ -342,9 +343,7 @@ export default class QuotesController {
     const { params, request, response, serialize } = ctx
     const { items } = await request.validateUsing(updateQuoteQuantitiesValidator)
 
-    const project = (await isStaff(ctx))
-      ? await Project.findBy('uuid', params.projectUuid)
-      : await resolveProject(ctx, params.projectUuid)
+    const project = await resolveProjectAsStaffOrOwner(ctx, params.projectUuid)
     if (!project) {
       return response.notFound({ error: 'Project not found' })
     }
@@ -406,9 +405,7 @@ export default class QuotesController {
   async accept(ctx: HttpContext) {
     const { params, response, serialize } = ctx
 
-    const project = (await isStaff(ctx))
-      ? await Project.findBy('uuid', params.projectUuid)
-      : await resolveProject(ctx, params.projectUuid)
+    const project = await resolveProjectAsStaffOrOwner(ctx, params.projectUuid)
     if (!project) {
       return response.notFound({ error: 'Project not found' })
     }
